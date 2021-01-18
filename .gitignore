@@ -1,3 +1,6 @@
 *.lnk
 old_*
 *.nss
+Jiggers.dbg
+labels.txt
+mapfile.txt

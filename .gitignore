@@ -1,2 +1,3 @@
 *.ink
-old*
+old_*
+*.nss

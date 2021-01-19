@@ -10,6 +10,4 @@ ld65 -C nes.cfg HEADER.o bank_00.o bank_01.o bank_02.o bank_0F.o -m mapfile.txt 
 
 @echo.
 
-@del *.bin
-
 @pause

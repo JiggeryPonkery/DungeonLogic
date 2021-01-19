@@ -13,10 +13,10 @@
 ; The Rod
 ; The Hammer
 
-; The Treasure
+; The Hope
 ; The Disappointment
 ; The Torch
-; The Ladder
+; The Descent
 ; Glumskull
 ; The Key
 ; The Door

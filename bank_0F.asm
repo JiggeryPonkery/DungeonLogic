@@ -8,7 +8,10 @@ CHR:
 
 
 ;; This uses some RLE:
-;; High bit set = do
+;; High bit set = remove high bit, that's your tile ID
+;; then do it by the NEXT tile's amount! 
+;; No high bit = just print that one tile.
+
 GameArea_Nametable:
 .byte $C9,$20
 .byte $03,$01,$82,$0E,$03,$01,$82,$05,$03,$01,$82,$07
@@ -115,7 +118,7 @@ OnReset:
     STA $8000      ; this write will get NOPped out when the multicart is built
     DEX
     STX $5000
-    LDA #$1F ;C       ; $10: 64 KiB; $0C: fixed C000; $00: 1-screen mirroring
+    LDA #$1F       ; $10: 64 KiB; $0C: fixed C000; the rest = horizontal mirroring
     STA $8000
     LDX #$01
     STX $5000      ; bit 4: which nametable to use; bits 1-0: PRG bank
@@ -195,6 +198,7 @@ GameStart:
     STA cursor_y
     STA cursor2_x
     STA cursor2_y
+    STA cursor_dot_y
     LDA #$1E       ; turn on screen/clear emphasis
     STA $2001
 
@@ -233,7 +237,7 @@ PlayerInput_Game:
         LDA cursor
         BMI Consider_Possibilities
     
-        LDA #$84
+        LDA #$82
         STA cursor
         LDA #$FF
         STA chosen        
@@ -303,10 +307,12 @@ MoveOptionsCursor:
     STA joy_prev
     CMP #DOWN
     BEQ @Down
+    CMP #UP
+    BNE @Done
 
    @Up:
     DEC cursor_dot_y
-    BEQ @Done
+    BPL @Done
     LDA cursor_y_max
     STA cursor_dot_y
     DEC cursor_dot_y
@@ -314,9 +320,6 @@ MoveOptionsCursor:
     RTS
 
    @Down:
-    LDA cursor
-    BMI @Done
-   
     INC cursor_dot_y
     LDA cursor_dot_y
     CMP cursor_y_max
@@ -464,12 +467,12 @@ DrawMainCursor:
     STA oam+10, X
     LDA #$00
     STA oam+14, X
-    
-    LDY cursor_x
-    LDA (tmp_pointer+2), Y
-    PHA
+
     LDY cursor_y
     LDA (tmp_pointer), Y
+    PHA
+    LDY cursor_x
+    LDA (tmp_pointer+2), Y
     TAY
     PLA
     JMP DrawCursor_SetCoords
@@ -478,7 +481,7 @@ DrawSecondCursor:
     LDA cursor
     BMI :+
         RTS
-  : LDX #$06
+  : LDX #$04
     JSR DrawCursor_SetPointers
 
     LDA #$C1       ; attributes ; palette and flipping
@@ -493,7 +496,7 @@ DrawSecondCursor:
     LDY cursor2_x
     LDA (tmp_pointer+2), Y
     TAY
-    LDA #$30       ; flow into...
+    LDA #$2F       ; flow into...
 
 DrawCursor_SetCoords: ; get Y coordinate and write to all 4 subtiles
     STA oam, X
@@ -529,15 +532,15 @@ DrawOptionsDot:
     
     LDX sprite
     
-    LDY cursor_dot
-    LDA Cursor_Options_Y-1, Y
+    LDY cursor_dot_y
+    LDA Cursor_Options_Y, Y
     STA oam, X
 
     LDA #$00      ; tile ID
     STA oam+1, X
-    STA oam+2, X
+    STA oam+2, X  ; attributes
 
-    LDA sprite_x
+    LDA #$88      ; X position
     STA oam+3, X
 
     TXA
@@ -568,7 +571,7 @@ Cursor_MainMenu_Y:
 Cursor_Game_Y:
     .byte $0F, $1F, $2F, $3F, $4F, $5F
 Cursor_Options_Y:
-    .byte $50, $58, $60, $70
+    .byte $47, $4F, $57, $5F, $67
 
 Cursor_Table_X:
     .word Cursor_MainMenu_X
@@ -886,65 +889,65 @@ MultiplyXA:
     RTS
 
 
-DoesTileBitExist:
-    JSR Inv_Setup_1BIT
-    ;AND item_bit_ram, Y
-    RTS                     ; Zero flag set if it does not exist
-
-AddTileBit:
-    JSR Inv_Setup_1BIT
-    ;ORA item_bit_ram, Y     ; add the bit!
-   ; BNE :+   
-    
-RemoveTileBit:
-    JSR Inv_Setup_1BIT
-    ;EOR item_bit_ram, Y     ; remove the bit while keeping the rest the same?
-  ;: STA (OneBitPointer), Y  ; save and exit
-    RTS
-
-
-
-;; get row (x)
-;; 
-
-
-
-
-
-
-
-Inv_Setup_1BIT:
-    PHA              ; backup item ID
-    LDX #$10         ; clear $10 bytes of temp RAM
-    LDA #0
-   @Loop:
-    ;STA item_bit_ram, X
-    DEX
-    BNE @Loop
-    PLA              ; restore item ID 
-    TAX              ; put in X for loop counter
-    LSR A            ; then shift right 3 times
-    LSR A
-    LSR A
-    PHA              ; item ID now = which byte of tmp RAM to check against
-    
-    SEC              ; set C
-   @ShiftLoop_X: 
-    LDY #0
-   @ShiftLoop_Y:
-    ;LDA item_bit_ram, Y
-    ROR A
-    ;STA item_bit_ram, Y  ; and shift C into the correct bit
-    INY
-    CPY #$10             ; when Y = $10, its done one shift of each byte of tmp RAM
-    BNE @ShiftLoop_Y
-    DEX              
-    BNE @ShiftLoop_X
-    
-    PLA
-    TAY
-    ;LDA (OneBitPointer), Y ; get byte of compressed inventory    
-    RTS    
+;DoesTileBitExist:
+;    JSR Inv_Setup_1BIT
+;    ;AND item_bit_ram, Y
+;    RTS                     ; Zero flag set if it does not exist
+;
+;AddTileBit:
+;    JSR Inv_Setup_1BIT
+;    ;ORA item_bit_ram, Y     ; add the bit!
+;   ; BNE :+   
+;    
+;RemoveTileBit:
+;    JSR Inv_Setup_1BIT
+;    ;EOR item_bit_ram, Y     ; remove the bit while keeping the rest the same?
+;  ;: STA (OneBitPointer), Y  ; save and exit
+;    RTS
+;
+;
+;
+;;; get row (x)
+;;; 
+;
+;
+;
+;
+;
+;
+;
+;Inv_Setup_1BIT:
+;    PHA              ; backup item ID
+;    LDX #$10         ; clear $10 bytes of temp RAM
+;    LDA #0
+;   @Loop:
+;    ;STA item_bit_ram, X
+;    DEX
+;    BNE @Loop
+;    PLA              ; restore item ID 
+;    TAX              ; put in X for loop counter
+;    LSR A            ; then shift right 3 times
+;    LSR A
+;    LSR A
+;    PHA              ; item ID now = which byte of tmp RAM to check against
+;    
+;    SEC              ; set C
+;   @ShiftLoop_X: 
+;    LDY #0
+;   @ShiftLoop_Y:
+;    ;LDA item_bit_ram, Y
+;    ROR A
+;    ;STA item_bit_ram, Y  ; and shift C into the correct bit
+;    INY
+;    CPY #$10             ; when Y = $10, its done one shift of each byte of tmp RAM
+;    BNE @ShiftLoop_Y
+;    DEX              
+;    BNE @ShiftLoop_X
+;    
+;    PLA
+;    TAY
+;    ;LDA (OneBitPointer), Y ; get byte of compressed inventory    
+;    RTS    
 
 
 

@@ -32,20 +32,23 @@ cursor_dot_y  = $18
 mult_A        = $19
 mult_X        = $1A
 
-puzzle        = $20 ; puzzle #
-clues         = $21 ; $8x = game paused, $x1 = vertical clues, $x0 horizontal clues
-options       = $22 ; $8x = music muted, $4x = sfx muted, $x# = background colour
-moves         = $23 ; moves taken
-;             = $24
+
+
+puzzle        = $27 ; puzzle #
+clues         = $28 ; $8x = game paused, $x1 = vertical clues, $x0 horizontal clues
+options       = $29 ; $8x = music muted, $4x = sfx muted, $x# = background colour
+
+moves         = $2A ; moves taken
+;             = $2B
 gametime      = $2C ; frames
 ;             = $2D ; seconds
 ;             = $2E ; minutes
 ;             = $2F ; hours
 
-tmp           = $30
-
-possibilities = $40 ; 7 bytes
-chosen        = $47
+possibilities = $30 ; 7 bytes
+total         = $37
+chosen        = $38
+drawjob       = $3A
 
 tmp_pointer   = $48 ; + $39
 ;             = $4A ; + $3B
@@ -64,6 +67,8 @@ row5          = $70
 row5_status   = $77
 row6          = $78
 row6_status   = $7F
+
+tmp           = $F0
 
 row1_solved   = $300
 row2_solved   = $308

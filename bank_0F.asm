@@ -193,12 +193,17 @@ Load_CHR:
 GameStart:
     LDA #1
     STA cursor    ; set cursor mode to "game" for now
+    STA drawjob
     LDA #$00
     STA cursor_x
     STA cursor_y
     STA cursor2_x
     STA cursor2_y
     STA cursor_dot_y
+
+    JSR WaitForVBlank    
+    LDA #>oam
+    STA $4014
     LDA #$1E       ; turn on screen/clear emphasis
     STA $2001
 
@@ -206,16 +211,121 @@ GameFrame:
     JSR WaitForVBlank
     LDA #>oam
     STA $4014
+    JSR Load_Possibilities
     JSR ClearOAM
     JSR DrawSprite0
     JSR UpdateJoy
     JSR MoveCursor
-    ;JSR Load_Possibilities
     JSR DrawCursor
     JSR PlayerInput_Game
     JSR Update_Gametime
-    JSR SetScroll
     JMP GameFrame
+
+
+
+Load_Possibilities:
+    LDA #0
+    LDX #$06
+   @Clear:
+    STA possibilities, X
+    DEX
+    BNE @Clear      ; clear out the list of tiles
+
+    LDA cursor_y
+    TAX
+    LDA TileOffset_LUT, X
+    STA tmp
+
+    LDA cursor_y
+    ASL A
+    ASL A
+    ASL A           ; times 8
+    TAX 
+    LDA row1_status, X
+    STA total
+   
+    LDX #$06
+   @Loop:
+    LSR A
+    BCS @NothingThere
+    
+    PHA
+    TXA
+    ASL A
+    ORA tmp
+    STA possibilities, X ; saves tile graphic ID in slot
+    PLA
+
+   @NothingThere:
+    DEX
+    BPL @Loop
+    
+    LDA drawjob
+    BEQ @Done
+    
+    LDA #$01
+    STA tmp
+    
+    LDA #>$20D2
+    LDX #<$20D2
+    STA $2006
+    STX $2006
+    
+    LDX #$00
+   @GetTile:
+    LDA possibilities, X
+    BNE @Draw
+   
+   @NoTile:
+    LDA #$49
+    STA $2007
+    STA $2007
+    BNE @Next
+   
+   @Draw:
+    TAY
+    ORA #$10
+    STA possibilities, X
+    
+    STY $2007
+    INY
+    STY $2007
+
+   @Next:
+    INX
+    CPX #$07
+    BNE @GetTile
+
+    LDA #>$20F2
+    LDX #<$20F2
+    STA $2006
+    STX $2006
+    
+    DEC tmp
+    LDX tmp
+    BEQ @GetTile
+   @Done: 
+    STX drawjob
+    JMP SetScroll
+
+
+
+
+TileOffset_LUT:
+.byte $40, $60, $80, $A0, $C0, $E0    
+
+
+Draw4x4Tile:
+
+
+
+
+
+
+
+
+
+
 
 PlayerInput_Game:
     LDA joy_b
@@ -241,6 +351,8 @@ PlayerInput_Game:
         STA cursor
         LDA #$FF
         STA chosen        
+        LDA #$03
+        STA cursor2_y
         BNE @Done
 
    @Check_Select:
@@ -261,22 +373,23 @@ PlayerInput_Game:
 
 
 Consider_Possibilities:
-    LDA chosen
-    CMP #$FF
-    BNE @Select
 
-    LDY cursor2_x        ; cursor position is same as tile ID
-    LDA possibilities, Y
-    CMP #$FF             ; if it is $FF, it was deleted; restore it
-    BEQ @Restore
-    
-    ;; First, highlight the tile chosen
-    
-    TYA
-    STA chosen
-    RTS
-    
-    ;; Then, 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    
    @Select: 
     LDA #$FF
@@ -332,9 +445,8 @@ MoveOptionsCursor:
 
 MoveCursor:
     LDA cursor_dot
-    BEQ :+
-        JMP MoveOptionsCursor
-  : LDA cursor
+    BNE MoveOptionsCursor
+    LDA cursor
     AND #$7F
     TAX
     LDA CursorMaxY, X
@@ -384,8 +496,10 @@ MoveCursor:
    @Down:
     LDA cursor
     BMI @Done
-   
-    INC cursor_y
+    CMP #$01
+    BNE :+
+        INC drawjob
+  : INC cursor_y
     LDA cursor_y
     CMP cursor_y_max
     BNE @Done
@@ -397,8 +511,10 @@ MoveCursor:
    @Up:
     LDA cursor
     BMI @Done
-   
-    DEC cursor_y
+    CMP #$01
+    BNE :+
+        INC drawjob
+  : DEC cursor_y
     BPL @Done
     LDA cursor_y_max
     STA cursor_y
@@ -414,6 +530,7 @@ MoveCursor:
 
     LDA #0
     STA cursor2_x
+    INC drawjob
     RTS
 
    @Left_2:
@@ -889,67 +1006,9 @@ MultiplyXA:
     RTS
 
 
-;DoesTileBitExist:
-;    JSR Inv_Setup_1BIT
-;    ;AND item_bit_ram, Y
-;    RTS                     ; Zero flag set if it does not exist
-;
-;AddTileBit:
-;    JSR Inv_Setup_1BIT
-;    ;ORA item_bit_ram, Y     ; add the bit!
-;   ; BNE :+   
-;    
-;RemoveTileBit:
-;    JSR Inv_Setup_1BIT
-;    ;EOR item_bit_ram, Y     ; remove the bit while keeping the rest the same?
-;  ;: STA (OneBitPointer), Y  ; save and exit
-;    RTS
-;
-;
-;
-;;; get row (x)
-;;; 
-;
-;
-;
-;
-;
-;
-;
-;Inv_Setup_1BIT:
-;    PHA              ; backup item ID
-;    LDX #$10         ; clear $10 bytes of temp RAM
-;    LDA #0
-;   @Loop:
-;    ;STA item_bit_ram, X
-;    DEX
-;    BNE @Loop
-;    PLA              ; restore item ID 
-;    TAX              ; put in X for loop counter
-;    LSR A            ; then shift right 3 times
-;    LSR A
-;    LSR A
-;    PHA              ; item ID now = which byte of tmp RAM to check against
-;    
-;    SEC              ; set C
-;   @ShiftLoop_X: 
-;    LDY #0
-;   @ShiftLoop_Y:
-;    ;LDA item_bit_ram, Y
-;    ROR A
-;    ;STA item_bit_ram, Y  ; and shift C into the correct bit
-;    INY
-;    CPY #$10             ; when Y = $10, its done one shift of each byte of tmp RAM
-;    BNE @ShiftLoop_Y
-;    DEX              
-;    BNE @ShiftLoop_X
-;    
-;    PLA
-;    TAY
-;    ;LDA (OneBitPointer), Y ; get byte of compressed inventory    
-;    RTS    
 
 
+;.align $100 ;; very important!!
 
 WaitForVBlank:
     LDA $2002      ; check VBlank flag

@@ -1,59 +1,73 @@
 
-oam         = $200
+oam           = $200
 
-joy         = $00
-joy_dir     = $01
-joy_a       = $02
-joy_b       = $03
-joy_select  = $04
-joy_start   = $05
-joy_prev    = $06
-joy_ignore  = $07
-joy_tmp     = $08
+joy           = $00
+joy_dir       = $01
+joy_a         = $02
+joy_b         = $03
+joy_select    = $04
+joy_start     = $05
+joy_prev      = $06
+joy_ignore    = $07
+joy_tmp       = $08
 
-return_bank = $09
-current_bank= $0A 
-sprite      = $0B ; sprite index
-sprite_y    = $0C
-sprite_x    = $0D
-soft2000    = $0E
-soft2001    = $0F
+return_bank   = $09
+current_bank  = $0A
+sprite        = $0B ; sprite index
+sprite_y      = $0C
+sprite_x      = $0D
+soft2000      = $0E
+soft2001      = $0F
 
-cursor_x    = $10
-cursor_y    = $11
-clues       = $12 ; $x1 = vertical clues, $x0 horizontal clues
-options     = $13 ; $x1 = sfx muted, $8x = music muted
-pause       = $14 ; $00 = unpaused,  $01 = paused
-puzzle      = $15 ; puzzle #
-;           = $16 ; used for building the puzzle
+cursor        = $10
+cursor_x      = $11
+cursor_y      = $12
+cursor2_x     = $13
+cursor2_y     = $14
+cursor_x_max  = $15
+cursor_y_max  = $16
+cursor_dot    = $17
+cursor_dot_y  = $18
 
-moves       = $1A ; moves taken
-;           = $1B
-gametime    = $1C ; frames
-;           = $1D ; seconds
-;           = $1E ; minutes
-;           = $1F ; hours
+mult_A        = $19
+mult_X        = $1A
 
-tmp         = $20
+puzzle        = $20 ; puzzle #
+clues         = $21 ; $8x = game paused, $x1 = vertical clues, $x0 horizontal clues
+options       = $22 ; $8x = music muted, $4x = sfx muted, $x# = background colour
+moves         = $23 ; moves taken
+;             = $24
+gametime      = $2C ; frames
+;             = $2D ; seconds
+;             = $2E ; minutes
+;             = $2F ; hours
 
-tmp_pointer = $30
+tmp           = $30
 
-row1        = $A0
-row1_status = $A7
-row2        = $A8
-row2_status = $AF
-row3        = $B0
-row3_status = $B7
-row4        = $B8
-row4_status = $BF
-row5        = $C0
-row5_status = $C7
-row6        = $C8
-row6_status = $CF
+possibilities = $40 ; 7 bytes
+chosen        = $47
 
-row1_solved = $D0
-row2_solved = $D8
-row3_solved = $E0
-row4_solved = $E8
-row5_solved = $F0
-row6_solved = $F8
+tmp_pointer   = $48 ; + $39
+;             = $4A ; + $3B
+;             = $4C ; + $3D
+;             = $4E ; + $3F
+
+row1          = $50
+row1_status   = $57
+row2          = $58
+row2_status   = $5F
+row3          = $60
+row3_status   = $67
+row4          = $68
+row4_status   = $6F
+row5          = $70
+row5_status   = $77
+row6          = $78
+row6_status   = $7F
+
+row1_solved   = $300
+row2_solved   = $308
+row3_solved   = $310
+row4_solved   = $318
+row5_solved   = $320
+row6_solved   = $328

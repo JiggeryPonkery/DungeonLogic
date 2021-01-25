@@ -2,7 +2,50 @@ RIGHT             = $01
 LEFT              = $02
 DOWN              = $04
 UP                = $08
-START             = $10
+
+HIGH_LEFT         = $06
+LOW_LEFT          = $04
+HIGH_RIGHT        = $02
+LOW_RIGHT         = $00
+
+PAUSE_WAIT        = $03 ; frames
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ;            ; for 112.5 bpm, 4/4:

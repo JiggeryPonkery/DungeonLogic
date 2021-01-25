@@ -31,13 +31,18 @@ cursor_dot_y  = $18
 
 mult_A        = $19
 mult_X        = $1A
+update_attr   = $1E ; $8x = update attributes
+drawjob       = $1F ; $8x = update tile with "chosen", $x1 = update possibilities
 
-
-
-puzzle        = $27 ; puzzle #
-clues         = $28 ; $8x = game paused, $x1 = vertical clues, $x0 horizontal clues
+puzzle        = $20 ; puzzle #
+clues         = $21 ; $8x = game paused, $x1 = vertical clues, $x0 horizontal clues
+row           = $22
+newtile       = $23
+oldtile       = $24
+position      = $25
+drawtile      = $26
+dest          = $27 ; + 28
 options       = $29 ; $8x = music muted, $4x = sfx muted, $x# = background colour
-
 moves         = $2A ; moves taken
 ;             = $2B
 gametime      = $2C ; frames
@@ -47,28 +52,24 @@ gametime      = $2C ; frames
 
 possibilities = $30 ; 7 bytes
 total         = $37
-chosen        = $38
-drawjob       = $3A
+tmp_pointer   = $38 ; + $39
+;             = $3A ; + $3B
+;             = $3C ; + $3D
+text          = $3E ; + $3F
 
-tmp_pointer   = $48 ; + $39
-;             = $4A ; + $3B
-;             = $4C ; + $3D
-;             = $4E ; + $3F
+unsolved      = $40 ; 42 bytes
+row1_status   = $47
+row2_status   = $4F
+row3_status   = $57
+row4_status   = $5F
+row5_status   = $67
+row6_status   = $6F
 
-row1          = $50
-row1_status   = $57
-row2          = $58
-row2_status   = $5F
-row3          = $60
-row3_status   = $67
-row4          = $68
-row4_status   = $6F
-row5          = $70
-row5_status   = $77
-row6          = $78
-row6_status   = $7F
+removed       = $70 ; 42 bytes up to $9F
 
-tmp           = $F0
+attributes    = $A0
+
+tmp           = $F0 ; $10 bytes
 
 row1_solved   = $300
 row2_solved   = $308
@@ -76,3 +77,10 @@ row3_solved   = $310
 row4_solved   = $318
 row5_solved   = $320
 row6_solved   = $328
+
+row1_player   = $330
+row2_player   = $338
+row3_player   = $340
+row4_player   = $348
+row5_player   = $350
+row6_player   = $358

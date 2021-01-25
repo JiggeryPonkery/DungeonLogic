@@ -29,8 +29,16 @@ cursor_y_max  = $16
 cursor_dot    = $17
 cursor_dot_y  = $18
 
+box_overdraw  = $18
+box_width     = $19
+box_height    = $1A
+
 mult_A        = $19
 mult_X        = $1A
+
+in_menu       = $1C
+game_over     = $1D ; $8x = game won, $00 = game over/menu, $x1 = game in progress
+
 update_attr   = $1E ; $8x = update attributes
 drawjob       = $1F ; $8x = update tile with "chosen", $x1 = update possibilities
 
@@ -57,20 +65,15 @@ tmp_pointer   = $38 ; + $39
 ;             = $3C ; + $3D
 text          = $3E ; + $3F
 
-unsolved      = $40 ; 42 bytes
-row1_status   = $47
-row2_status   = $4F
-row3_status   = $57
-row4_status   = $5F
-row5_status   = $67
-row6_status   = $6F
 
-removed       = $70 ; 42 bytes up to $9F
+
+
 
 attributes    = $A0
 
 tmp           = $F0 ; $10 bytes
 
+solved        = $300
 row1_solved   = $300
 row2_solved   = $308
 row3_solved   = $310
@@ -78,9 +81,26 @@ row4_solved   = $318
 row5_solved   = $320
 row6_solved   = $328
 
+selected      = $330
 row1_player   = $330
 row2_player   = $338
 row3_player   = $340
 row4_player   = $348
 row5_player   = $350
 row6_player   = $358
+
+unsolved      = $360
+row1_unsolved = $360
+row2_unsolved = $368
+row3_unsolved = $370
+row4_unsolved = $378
+row5_unsolved = $380
+row6_unsolved = $388
+
+removed       = $390
+row1_removed  = $390
+row2_removed  = $398
+row3_removed  = $3A0
+row4_removed  = $3A8
+row5_removed  = $3B0
+row6_removed  = $3B8

@@ -27,8 +27,8 @@ TextStrings:
 
 TextPositions:
 .word $0000 ; 0
-.word $23AF ; 1
-.word $280E ; 2
+.word $2AEF ; 1
+.word $2B0E ; 2
 .word $2052 ; 3
 .word $20B2 ; 4
 .word $2111 ; 5
@@ -36,7 +36,7 @@ TextPositions:
 .word $213C ; 7 - SFX ON
 .word $213C ; 8 - SFX OFF
 .word $215C ; 9 - Music OFF
-.word $0000 ; 10
+.word $2132 ; 10
 .word $0000 ; 11
 .word $0000 ; 12
 .word $0000 ; 13
@@ -60,28 +60,28 @@ POSSIBILITIES:
 .byte $8E,$0A,$FF
 
 OPTIONS:
-.byte $09,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$FE
-.byte $04,$67,$22,$1E,$24,$1D,$13,$67,$15,$27,$FE
-.byte $04,$67,$1C,$24,$22,$18,$12,$FE
-.byte $04,$67,$11,$1E,$21,$13,$14,$21,$FE
-.byte $FE
+.byte $09,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$FE
+.byte $04,$67,$22,$1E,$24,$1D,$13,$67,$15,$27,$67,$FE
+.byte $04,$67,$1C,$24,$22,$18,$12,$84,$FE
+.byte $04,$67,$11,$1E,$21,$13,$14,$21,$84,$FE
+.byte $04,$89,$FE
 .byte $04,$67,$10,$11,$10,$1D,$13,$1E,$1D,$67,$16,$10,$1C,$14,$FF
 
 PUZZLE_NO:
 .byte $1F,$24,$29,$29,$1B,$14,$67,$0D,$0C,$FF
 
 ON:
-.byte $67,$1E,$1D,$FF
+.byte $67,$1E,$1D,$67,$FF
 
 OFF:
-.byte $1E,$15,$15,$FF
+.byte $1E,$15,$15,$67,$FF
 
 GIVEUP:
 .byte $16,$18,$25,$14,$67,$24,$1F,$67,$22,$10,$25,$18,$1D,$16,$FE
 .byte $67,$23,$17,$14,$67,$10,$13,$1E,$21,$10,$11,$1B,$14,$FE
-.byte $67,$1B,$18,$1B,$67,$10,$1D,$18,$1C,$10,$1B,$22,$0E,$FE
+.byte $1B,$18,$0B,$1B,$67,$12,$21,$18,$23,$23,$14,$21,$22,$0E,$FE
 .byte $86,$28,$14,$22,$FE
-.byte $86,$1D,$1E,$EF,$FF
+.byte $86,$1D,$1E,$EF,$85,$FF
 
 GAMEOVER:
 .byte $13,$14,$22,$1F,$18,$23,$14,$67,$23,$10,$1A,$18,$1D,$16,$82,$0C,$82,$0C,$FE
@@ -432,7 +432,8 @@ GameFrame:
     JSR Draw_NewTile
     JSR Load_Possibilities
     JSR UpdateOptionText
-    JSR Print_Gametime_Play ; also sets scroll
+    JSR Print_Gametime_Play
+    JSR SetScroll
     JSR ClearOAM
     JSR DrawSprite0
     JSR DrawCursor
@@ -440,6 +441,16 @@ GameFrame:
     JSR MoveGameCursor
     JSR PlayerInput_Game
     JMP GameFrame
+
+GameFrame_Printing:
+    JSR Update_Gametime
+    JSR Print_Gametime_Play 
+    JSR SetScroll
+    JSR ClearOAM
+    JSR DrawSprite0
+    JSR DrawCursor
+    JMP WaitForVBlank
+    
 
 MenuFrame:
     JSR WaitForVBlank
@@ -458,24 +469,6 @@ MenuFrame:
     JSR PlayerInput_Menu
     JMP MenuFrame
 
-Pause_Switch:
-    LDA #PAUSE_WAIT
-    STA tmp
-    LDA #$00
-    STA soft2001
-
-   @BlankLoop:
-    JSR WaitForVBlank
-    LDA #>oam
-    STA $4014
-    JSR ClearOAM
-    LDA clues
-    ORA #$80
-    STA clues      ; set the pause toggle
-    DEC tmp
-    BNE @BlankLoop
-    RTS
-
 PauseGame:
     LDA #$30
     STA $4000      ; set square and noise volume to 0
@@ -483,7 +476,9 @@ PauseGame:
     STA $4008
     STA $400C
 
-    JSR Pause_Switch
+    LDA clues
+    ORA #$80
+    STA clues      ; set the pause toggle
 
     LDA #%11111110 ; set all colour emphasis, keep PPU on, no greyscale
     STA soft2001
@@ -492,22 +487,19 @@ PauseGame:
 
    @PauseLoop:
     JSR WaitForVBlank
-    LDA #$08
-    STA $2005
-    LDA #$70
-    STA $2005      ; set the scroll to the hidden Game Paused text
     LDA #>oam
     STA $4014
+    JSR SetScroll
     JSR ClearOAM
+    JSR DrawSprite0
     JSR UpdateJoy  ; keep checking if start is pressed again
     LDA joy_start
     BEQ @PauseLoop
 
-    JSR Pause_Switch
-
     LDA clues      ; remove the pause toggle
     AND #$7F
     STA clues
+    
     LDA #$1E       ; turn on screen/clear emphasis
     STA soft2001
     RTS
@@ -531,7 +523,10 @@ ChangeOptions:
     BEQ ChangeOptions_Border
     
 ChangeOptions_AbandonGame:
-    
+    INC abandon
+    DEC cursor_dot_y
+    DEC cursor_dot_y
+    RTS
     
 ChangeOptions_SFX:
     LDA options
@@ -592,7 +587,27 @@ ChangeOptions_Border:
     
 
 UpdateOptionText:
-    LDA border
+    LDA abandon
+    BEQ :+
+    BMI @RestoreOptions
+    CMP #$02
+    BEQ :+
+   
+   @ShowQuitText:
+    INC abandon       ; set to 2, so it skips updating text every frame
+    LDA #10
+    JMP Print
+
+   @RestoreOptions:    
+    LDA #$00
+    STA abandon
+    STA cursor_dot_y
+    STA cursor_dot
+    LDA #5
+    JSR Print
+    INC options
+
+  : LDA border
     BPL :+
     
     AND #$7F
@@ -654,6 +669,8 @@ UpdateOptionText:
     ADC #$01
     JSR Convert_Number
     STY $2007
+    STA $2007
+    LDA #$67
     STA $2007
 
    @Done:
@@ -808,13 +825,29 @@ PlayerInput_Options:
     LDA joy_b
     ORA joy_select
     BEQ @Check_A
-        DEC cursor_dot
+        LDA abandon
+        BEQ :+
+       
+       @RestoreOptions:
+        LDA #$80
+        STA abandon
+        BNE @Done
+        
+      : DEC cursor_dot
         BEQ @Done
 
    @Check_A:
     LDA joy_a
     BEQ @Check_Start
-        LDA #$01
+        LDA abandon
+        BEQ :+
+            LDA cursor_dot_y
+            BNE @RestoreOptions
+            LDA #$00
+            STA abandon
+            JMP MainMenu
+        
+      : LDA #$01
         JSR ChangeOptions
         JMP ClearButtons
    
@@ -1162,7 +1195,14 @@ MoveMenuCursor:
 ; Quit Game
 
 MoveOptionCursor:
-    LDA #$04
+    LDA abandon
+    BEQ :+
+    
+    LDY #$02 
+    BNE @SaveMax
+
+  : LDA #$04
+   @SaveMax:
     STA cursor_y_max
 
     LDA joy
@@ -1397,7 +1437,16 @@ DrawOptionsDot:
     LDA cursor_dot
     BEQ @Done
 
-    LDY cursor_dot_y
+    LDY cursor_dot_y 
+
+    LDA abandon
+    BEQ @Normal
+
+    LDA Cursor_Options_Abandon_Y, Y
+    LDY #$B0
+    BNE :+
+
+   @Normal:
     LDA Cursor_Options_Y, Y
     LDY #$88
 
@@ -1422,6 +1471,8 @@ Cursor_Game_X:
 Cursor_Possibilities_X:
     .byte $88, $98, $A8, $B8, $C8, $D8, $E8
 
+Cursor_Options_Abandon_Y:
+    .byte $5F, $67
 Cursor_Options_Y:
     .byte $47, $4F, $57, $67
 Cursor_MainMenu_Y:
@@ -1503,7 +1554,7 @@ Print_Gametime:
     JSR Convert_Number
     STY $2007
     STA $2007
-    JMP SetScroll
+    RTS
 
 PrintPuzzleNumber:
     JSR SetPPUAddress
@@ -1548,10 +1599,11 @@ Convert_Number: ; up to 99
     RTS
 
 ClearOAM:
-    LDX #$FF
+    LDX #$80
     LDA #$FF
    @Loop:
-    STA $0204, X
+    STA $0200-1, X
+    STA $0280-1, X
     DEX
     BNE @Loop
 
@@ -1905,6 +1957,8 @@ Print:
     DEC text+1
     ;; this will be incremented before drawing
 
+    LDA #1
+    STA row
     LDY #$FF
 
    @Newline:
@@ -1918,14 +1972,17 @@ Print:
     INC text+1
   : LDA (text), Y
     BMI @ControlCode
+   @Draw:
     STA $2007
-    BNE @Loop
+    JMP @Loop
 
    @ControlCode:
     CMP #$FF
     BEQ @Done
     CMP #$FE
     BEQ @NextLine
+    CMP #$EF
+    BEQ @Draw
 
     AND #$1F
     TAX
@@ -1941,6 +1998,21 @@ Print:
     CLC
     ADC #$20
     STA dest+1
+    LDA soft2001
+    BEQ @Newline
+        INC row
+        LDA row
+        AND #$04
+        BEQ @Newline
+        TYA
+        PHA
+        JSR GameFrame_Printing
+        LDA #>oam
+        STA $4014        
+        LDA #01
+        STA row
+        PLA
+        TAY
     JMP @Newline
 
    @Done:
@@ -2010,7 +2082,7 @@ WaitForVBlank:
 
    @ClueCheck:
     LDA clues
-    BMI OnIRQ
+    BMI @Paused
     AND #$7F
     BEQ OnIRQ      ; normal view
 
@@ -2029,6 +2101,32 @@ WaitForVBlank:
     STA $2006
     LDA #$1E
     STA $2001      ; turn on screen
+    BNE OnIRQ
+    
+   @Paused:
+    LDA $2002
+    BEQ @Paused
+
+    LDY #$0A
+    LDA #$C1
+    LDX #$2C       ; waits a few scanlines for H-blank so as not to draw weird dots on the screen
+  : DEX
+    BNE :-
+
+    STX $2001
+    STY $2006
+    STA $2006
+    LDA #$1E
+    STA $2001      ; turn on screen
+    
+    LDY #$03
+   @NoScreen:
+    DEX
+    BNE @NoScreen
+    DEY
+    BNE @NoScreen
+    STX $2001
+    
 
 OnIRQ:
     JMP OnIRQ

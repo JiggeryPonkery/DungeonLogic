@@ -51,7 +51,7 @@ position      = $25
 drawtile      = $26
 options       = $27 ; $8x = music muted, $4x = sfx muted, $x1 = update text
 border        = $28
-;             = $29 ;-- nothing here! 
+abandon       = $29
 moves         = $2A ; moves taken
 ;             = $2B
 gametime      = $2C ; frames

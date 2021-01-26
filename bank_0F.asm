@@ -19,25 +19,27 @@ TextStrings:
 .word PUZZLE_NO     ; #6
 .word ON            ; #7
 .word OFF           ; #8
-.word GIVEUP        ; #9
-.word GAMEOVER      ; #10
-.word WINNER        ; #11
-.word STORY         ; #12
+.word OFF           ; #9
+.word GIVEUP        ; #10
+.word GAMEOVER      ; #11
+.word WINNER        ; #12
+.word STORY         ; #13
 
 TextPositions:
 .word $0000 ; 0
-.word $23AF ; 1 
-.word $280E ; 2 
+.word $23AF ; 1
+.word $280E ; 2
 .word $2052 ; 3
-.word $20B2 ; 4 
+.word $20B2 ; 4
 .word $2111 ; 5
 .word $0000 ; 6
-.word $0000 ; 7
-.word $0000 ; 8
-.word $0000 ; 9
+.word $213C ; 7 - SFX ON
+.word $213C ; 8 - SFX OFF
+.word $215C ; 9 - Music OFF
 .word $0000 ; 10
 .word $0000 ; 11
 .word $0000 ; 12
+.word $0000 ; 13
 
 
 START:
@@ -59,9 +61,9 @@ POSSIBILITIES:
 
 OPTIONS:
 .byte $09,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$FE
-.byte $04,$67,$1C,$24,$22,$18,$12,$0C,$FE
-.byte $04,$67,$22,$15,$27,$0C,$FE
-.byte $04,$67,$11,$1E,$21,$13,$14,$21,$0C,$FE
+.byte $04,$67,$22,$1E,$24,$1D,$13,$67,$15,$27,$FE
+.byte $04,$67,$1C,$24,$22,$18,$12,$FE
+.byte $04,$67,$11,$1E,$21,$13,$14,$21,$FE
 .byte $FE
 .byte $04,$67,$10,$11,$10,$1D,$13,$1E,$1D,$67,$16,$10,$1C,$14,$FF
 
@@ -69,7 +71,7 @@ PUZZLE_NO:
 .byte $1F,$24,$29,$29,$1B,$14,$67,$0D,$0C,$FF
 
 ON:
-.byte $1E,$1D,$FF
+.byte $67,$1E,$1D,$FF
 
 OFF:
 .byte $1E,$15,$15,$FF
@@ -129,7 +131,7 @@ STORY:
 
 ;; This uses some RLE:
 ;; High bit set = remove high bit, that's your tile ID
-;; then do it by the NEXT tile's amount! 
+;; then do it by the NEXT tile's amount!
 ;; No high bit = just print that one tile.
 
 ;; Title screen will go here.
@@ -160,8 +162,33 @@ MenuPalette:
 .byte $3F,$0C,$1C,$2C
 .byte $3F,$06,$16,$26
 
-
-
+BorderPalettes:
+.byte $2D,$10 ; 00
+.byte $00,$3D ; 01
+.byte $01,$21 ; 02
+.byte $02,$22 ; 03
+.byte $03,$23 ; 04
+.byte $04,$24 ; 05
+.byte $05,$25 ; 06
+.byte $06,$26 ; 07
+.byte $07,$27 ; 08
+.byte $08,$28 ; 09
+.byte $09,$29 ; 0A
+.byte $0A,$2A ; 0B
+.byte $0B,$2B ; 0C
+.byte $0C,$2C ; 0D
+.byte $01,$11 ; 0E
+.byte $02,$12 ; 0F
+.byte $03,$13 ; 10
+.byte $04,$14 ; 11
+.byte $05,$15 ; 12
+.byte $06,$16 ; 13
+.byte $07,$17 ; 14
+.byte $08,$18 ; 15
+.byte $09,$19 ; 16
+.byte $0A,$1A ; 17
+.byte $0B,$1B ; 18
+.byte $0C,$1C ; 19
 
 OnReset:
     SEI            ; Set Interrupt flag (prevent IRQs from occuring)
@@ -216,7 +243,8 @@ OnReset:
     JSR Swap
 
 MainMenu:
-    LDA #$C7
+    LDA #$01
+    STA options
     STA puzzle
 
 LoadGame:
@@ -235,7 +263,7 @@ LoadGame:
     LDA #$3F
     LDX #$00
     JSR SetPPUAddress
-    
+
     INX               ; X = #01 to make sure the loop exits
     JSR Load_CHR_Loop
 
@@ -251,14 +279,14 @@ LoadGame:
 
     TAY
     LDX #$10
-    JSR Load_CHR_Loop 
+    JSR Load_CHR_Loop
 
     ; load sprites
     LDA #<CHR
     STA tmp_pointer
     LDA #>CHR
     STA tmp_pointer+1
-    
+
     LDX #$10
     JSR Load_CHR_Loop
 
@@ -267,18 +295,18 @@ LoadGame:
 
     LDA #9
     STA tmp
-   @BoxLoop: 
+   @BoxLoop:
     LDA tmp
     JSR DrawBox
     DEC tmp
     BPL @BoxLoop
 
     LDA #$2E
-    STA drawtile    
+    STA drawtile
     LDA #0
     STA cursor_y
     STA cursor_x
-    
+
     ;; draw the blank puzzle spaces
    @ClearPuzzleLoop:
     LDA #$80
@@ -294,35 +322,22 @@ LoadGame:
     LDA cursor_y
     CMP #$06
     BNE @ClearPuzzleLoop
-    
+
     ;; draw game area text
     LDA #$01
     STA tmp
-   @PrintLoop: 
+   @PrintLoop:
     JSR Print
     INC tmp
     LDA tmp
     CMP #$06
     BNE @PrintLoop
-    
-   @PrintPuzzleNumber: 
+
+   @PrintPuzzleNumber:
     LDA #>$2054
     LDX #<$2054
-    JSR SetPPUAddress
-    LDA puzzle
-    LDX #$00
-    JSR Convert_LargeNumber
-    PHA
-    TXA
-    ORA #$30
-    TAX
-    PLA
-    STX $2007
-    STY $2007
-    STA $2007       
-    
-    ;; finally, set the scroll!
-    JSR SetScroll
+    JSR PrintPuzzleNumber
+    ;; ^ this also sets the scroll
 
 Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     LDA #$06
@@ -330,7 +345,7 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     LDX #48-1
     STX tmp+8       ; loop counter
 
-    LDA #<RNG_DATA  
+    LDA #<RNG_DATA
     STA tmp_pointer
     LDA #>RNG_DATA
     STA tmp_pointer+1
@@ -378,28 +393,26 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     DEC tmp+9       ; decrement row counter
     BNE @Clear_Used
 
-   @Done:
-    ;LDA #$00        ; set the last 6 bytes for easier comparison against the player's puzzle RAM later
-    ;STA row1_solved+7
-    ;STA row2_solved+7
-    ;STA row3_solved+7
-    ;STA row4_solved+7
-    ;STA row5_solved+7
-    ;STA row6_solved+7
-
 
 GameStart:
     LDA #1
-    STA cursor       ; set cursor mode to "game"
     STA drawjob      ; immediately update possibilities
-    
-    LDA #$00         ; clear cursor variables   
+
+    LDA #$00         ; clear cursor variables
+    STA cursor
     STA cursor_x
     STA cursor_y
     STA cursor2_x
     STA cursor2_y
     STA cursor_dot
     STA cursor_dot_y
+    
+    STA music_track
+
+    LDA options
+    ORA #$20
+    STA options      ; toggle options to be drawn
+    JSR UpdateOptionText
 
     LDA #$FE         ; set each game area tile's possible tile list
     LDX #48
@@ -418,7 +431,8 @@ GameFrame:
     JSR Update_Gametime
     JSR Draw_NewTile
     JSR Load_Possibilities
-    JSR Print_Gametime_Play ; also sets scroll 
+    JSR UpdateOptionText
+    JSR Print_Gametime_Play ; also sets scroll
     JSR ClearOAM
     JSR DrawSprite0
     JSR DrawCursor
@@ -427,45 +441,39 @@ GameFrame:
     JSR PlayerInput_Game
     JMP GameFrame
 
-GameFrame_NoInput:
-    JSR WaitForVBlank
-    LDA #>oam
-    STA $4014
-    JSR Update_Gametime
-    JSR Draw_NewTile
-    JSR Load_Possibilities
-    JSR Print_Gametime_Play ; also sets scroll 
-    JSR ClearOAM
-    JSR DrawSprite0
-    JMP DrawCursor   
-    
 MenuFrame:
     JSR WaitForVBlank
     LDA #>oam
     STA $4014
-    JSR ClearOAM
-    JSR DrawCursor
+    LDA drawjob
+    BEQ :+
+        LDA #>$2022
+        LDX #<$2022
+        JSR PrintPuzzleNumber
+
+  : JSR ClearOAM
+    JSR DrawMenuCursor
     JSR UpdateJoy
     JSR MoveMenuCursor
-   ; JSR PlayerInput_Menu
+    JSR PlayerInput_Menu
     JMP MenuFrame
-    
+
 Pause_Switch:
     LDA #PAUSE_WAIT
     STA tmp
     LDA #$00
     STA soft2001
-    
-   @BlankLoop: 
+
+   @BlankLoop:
     JSR WaitForVBlank
     LDA #>oam
     STA $4014
-    JSR ClearOAM    
+    JSR ClearOAM
     LDA clues
     ORA #$80
-    STA clues      ; set the pause toggle    
+    STA clues      ; set the pause toggle
     DEC tmp
-    BNE @BlankLoop    
+    BNE @BlankLoop
     RTS
 
 PauseGame:
@@ -496,17 +504,165 @@ PauseGame:
     BEQ @PauseLoop
 
     JSR Pause_Switch
-    
+
     LDA clues      ; remove the pause toggle
     AND #$7F
     STA clues
     LDA #$1E       ; turn on screen/clear emphasis
     STA soft2001
-    JMP ClearButtons    
+    RTS
 
-
-
+ChangeOptions_LeftRight:
+    LDX cursor_dot_y
+    CPX #$03
+    BNE ChangeOptions
+    RTS
     
+    ;; do nothing if trying to abandon game by pressing left/right
+
+ChangeOptions:
+    LDX cursor_dot_y
+    BEQ ChangeOptions_SFX
+    
+    CPX #$01
+    BEQ ChangeOptions_Music
+    
+    CPX #$02
+    BEQ ChangeOptions_Border
+    
+ChangeOptions_AbandonGame:
+    
+    
+ChangeOptions_SFX:
+    LDA options
+    EOR #$40   
+    STA options
+    INC options
+    RTS
+    
+ChangeOptions_Music:
+    LSR A
+    BCC @MusicDown
+    
+   @MusicUp:
+    INC music_track
+    LDA music_track
+    CMP #$0F
+    BNE ChangeOptions_Done
+    
+    LDA #$00
+    STA music_track
+    BEQ ChangeOptions_Done
+    
+   @MusicDown:
+    DEC music_track
+    BPL ChangeOptions_Done
+    LDA #$0E
+    STA music_track
+
+ChangeOptions_Done: 
+    INC options
+    RTS
+    
+ChangeOptions_Border: 
+    LSR A
+    BCC @BorderDown
+    
+   @BorderUp:
+    INC border
+    LDA border
+    CMP #$1A
+    BNE @UpdatePalette
+    
+    LDA #$00
+    STA border
+    BEQ @UpdatePalette
+    
+   @BorderDown:
+    DEC border
+    BPL @UpdatePalette
+    LDA #$19
+    STA border
+   
+   @UpdatePalette:
+    LDA border
+    ORA #$80
+    STA border
+    BMI ChangeOptions_Done
+    
+
+UpdateOptionText:
+    LDA border
+    BPL :+
+    
+    AND #$7F
+    STA border
+    ASL A
+    TAY
+    LDA #$3F
+    LDX #$01
+    JSR SetPPUAddress
+    LDA BorderPalettes, Y
+    STA $2007
+    LDA BorderPalettes+1, Y
+    STA $2007
+
+  : LDA options
+    AND #$01
+    BNE @MusicOn
+    RTS
+
+   @MusicOn:
+    LDA music_track
+    BEQ @MusicOff
+    
+    LDA #$21
+    LDX #$5C
+    JSR SetPPUAddress
+    LDA music_track
+    JSR Convert_Number
+    LDX #$67
+    STX $2007
+    STY $2007
+    STA $2007
+    BNE @SFX    
+
+   @MusicOff:
+    LDA #$09
+    JSR Print
+   
+   @SFX:
+    LDA options
+    AND #$40
+    BNE @SFXOff
+
+   @SFXOn:
+    LDA #$07
+    JSR Print
+    BEQ @Border
+
+   @SFXOff:
+    LDA #$08
+    JSR Print
+
+   @Border:
+    LDA #$21
+    LDX #$7D
+    JSR SetPPUAddress
+    LDA border
+    CLC
+    ADC #$01
+    JSR Convert_Number
+    STY $2007
+    STA $2007
+
+   @Done:
+    DEC options
+    RTS
+
+
+
+
 
 TileOffset_LUT:
 .byte $40, $60, $80, $A0, $C0, $E0
@@ -515,7 +671,7 @@ Load_Possibilities:
     LDA drawjob
     AND #$7F
     BEQ @Done
-    
+
     LDA #0
     LDX #$06
    @Clear:
@@ -537,48 +693,48 @@ Load_Possibilities:
     TAX
     LDA unsolved, X
     STA total       ; and this is all possible tiles it can be
-   
+
     LDX #$06        ; unroll it into the possibilities list
     LSR A
    @Loop:
     LSR A
     BCC @NothingThere
-    
+
     PHA
-    TXA             
+    TXA
     ASL A           ; X * 2 + TileOffseT_LUT value =
     ORA tmp         ; the tile graphic for this slot
-    STA possibilities, X 
+    STA possibilities, X
     PLA
 
    @NothingThere:
     DEX
     BPL @Loop
-    
+
     LDA #$01
     STA tmp         ; tmp will be loop counter
-    
+
     LDA #>$20D2
     LDX #<$20D2
     STA $2006
     STX $2006
-    
+
     LDX #$00
    @GetTile:
     LDA possibilities, X
     BNE @Draw
-   
+
    @NoTile:
     LDA #$67        ; $67 = blank tile
     STA $2007
     STA $2007
     BNE @Next
-   
+
    @Draw:
     TAY
     ORA #$10        ; overwrite the old value with the bottom half of the tile
     STA possibilities, X
-    
+
     STY $2007
     INY
     STY $2007
@@ -592,81 +748,99 @@ Load_Possibilities:
     LDX #<$20F2     ; change the write address
     STA $2006
     STX $2006
-    
+
     DEC tmp         ; decrement the loop counter
     LDX tmp         ; so it will = 0, then put in X
     BEQ @GetTile    ; for the next loop!
-    
+
     LDA drawjob     ; remove low bit from drawjob
     EOR #$01
     STA drawjob
 
-   @Done: 
+   @Done:
     JMP SetScroll
 
 
 PlayerInput_Game:
+    LDA cursor_dot
+    BNE PlayerInput_Options
+
     LDA joy_b
     BEQ @Check_A
         LDA cursor
         BPL :+
-            LDA #$01
+            LDA #$00
             STA cursor
             BNE @Done
-    
+
       : LDA clues
         EOR #$01
         STA clues
         JMP @Done
-   
-   @Check_A: 
+
+   @Check_A:
     LDA joy_a
     BEQ @Check_Select
         LDA cursor
         BPL :+
            JSR Choose_Possibility
            JMP @Done
-    
-      : LDA #$82
+
+      : LDA #$81
         STA cursor
         BNE @Done
 
    @Check_Select:
     LDA joy_select
     BEQ @Check_Start
-        LDA #$01
-        STA cursor_dot
-        BNE @Done    
-    
-   @Check_Start: 
+        INC cursor_dot
+        BNE @Done
+
+   @Check_Start:
     LDA joy_start
     BEQ @Done
-        JMP PauseGame
+        JSR PauseGame
 
    @Done:
     JMP ClearButtons
 
+PlayerInput_Options:
+    LDA joy_b
+    ORA joy_select
+    BEQ @Check_A
+        DEC cursor_dot
+        BEQ @Done
+
+   @Check_A:
+    LDA joy_a
+    BEQ @Check_Start
+        LDA #$01
+        JSR ChangeOptions
+        JMP ClearButtons
+   
+   @Check_Start:
+    LDA joy_start
+    BEQ @Done
+        JSR PauseGame
+
+   @Done:
+    JMP ClearButtons
 
 PlayerInput_Menu:
     LDA joy_b
     BEQ @Check_A
-        LDA in_menu
-        BNE @Done
-        
         JMP MainMenu
-    
-   @Check_A: 
+
+   @Check_A:
     LDA joy_a
     BEQ @Check_Select
         LDA game_over
         BMI @NextPuzzle ; puzzle won, load next puzzle
-        
-        LDA in_menu
         BEQ @ReloadMenu ; puzzle lost, return to menu
-        
+
         LDA cursor_dot_y
         ASL A           ; else, in main menu, jump to chosen option
-        TAX             
+        TAX
         LDA MenuList, X
         STA tmp_pointer
         LDA MenuList+1, X
@@ -678,98 +852,56 @@ PlayerInput_Menu:
    @Check_Select:
     LDA joy_select
     BEQ @Check_Start
-        LDA in_menu
-        BEQ @Done
         INC puzzle
         INC drawjob
         BNE @Done
-    
-   @Check_Start: 
+
+   @Check_Start:
     LDA joy_start
     BEQ @Done
         JMP PauseGame
 
    @Done:
     JMP ClearButtons
-    
+
    @ReloadMenu:
     PLA
     PLA
-    JMP MainMenu 
-    
+    JMP MainMenu
+
    @NextPuzzle:
     INC puzzle
     PLA
     PLA
     JMP LoadGame
-    
+
 MenuList:
     .word LoadGame
     .word ViewStory
     .word ViewCredits
     .word QuitGame
-    
+
 QuitGame:
 ViewStory:
 ViewCredits:
-    
-    
 
-PlayerInput_Options:
-    LDA joy_b
-    BEQ @Check_A
-        LDA cursor
-        BPL :+
-            LDA #$01
-            STA cursor
-            BNE @Done
-    
-      : LDA clues
-        EOR #$01
-        STA clues
-        JMP @Done
-   
-   @Check_A: 
-    LDA joy_a
-    BEQ @Check_Select
-        LDA cursor
-        BPL :+
-           JSR Choose_Possibility
-           JMP @Done
-    
-      : LDA #$82
-        STA cursor
-        BNE @Done
 
-   @Check_Select:
-    LDA joy_select
-    BEQ @Check_Start
-        LDA cursor_dot
-        EOR #$01
-        STA cursor_dot
-        JMP @Done    
-    
-   @Check_Start: 
-    LDA joy_start
-    BEQ @Done
-        JMP PauseGame
 
-   @Done:
-    JMP ClearButtons
+
 
 
 
 
 ;   Game Area:        Possibilities:
-;1 [ + + + + + + + ] [ 1 2 3 4 5 6 7 ] 
+;1 [ + + + + + + + ] [ 1 2 3 4 5 6 7 ]
 ;2 [ + + + + + + + ]
 ;3 [ + + + + + + + ] [ _ _ 3 4 * * * ] < cursor view
 ;4 [ 1 + 2 + +[+]+ ]
 ;5 [ + + + + + + + ]
 ;6 [ + + + + + + + ]               /- values removed by player *
 ;                                  v
-; Row 4: $81, $3F, $40, $3E, $3E, $30, $3E <- values removed by game: _ 
- 
+; Row 4: $81, $3F, $40, $3E, $3E, $30, $3E <- values removed by game: _
+
 ;Each + is $FE: %11111110
 ;These bits are the possible tiles in that position in the Game Area
 ;The low bit is set to 1 when the player is sure it belongs there
@@ -792,7 +924,7 @@ PlayerInput_Options:
 ;Unsolved: All the possible bits for this tile.
 ;Removed: All removed bits for this tile.
 
-BIT_LUT:   
+BIT_LUT:
 .byte $80, $40, $20, $10, $08, $04, $02, $01
 
 
@@ -809,8 +941,8 @@ ScanRow_Solved:
 
     LDX #$06
     LDY row
-   @Loop: 
-    ;LDA 
+   @Loop:
+    ;LDA
 
 
 
@@ -819,16 +951,16 @@ ScanRow_Solved:
 Swap_Possibility:
     LDA #$00
     STA newtile
-    
+
     LDA cursor_y
     ASL A
     ASL A
-    ASL A    
+    ASL A
     STA row             ; save start of row
     CLC
     ADC cursor_x
     STA position
-    
+
     LDX cursor2_x
     LDA newtile         ; now get the tile's ID bit
     SEC
@@ -837,7 +969,7 @@ Swap_Possibility:
     DEX
     BPL @GetBitLoop
     STA newtile
-    
+
     LDY row
     LDX #$06
     ORA #$01
@@ -847,7 +979,7 @@ Swap_Possibility:
     INY
     DEX
     BPL @CheckLoop
-    
+
    @Swap:               ; else, swap the bits
     LDY position
     LDA removed, Y
@@ -858,11 +990,11 @@ Swap_Possibility:
     AND #$FE            ; remove the "solved" bit
     STA unsolved, Y
     INC drawjob         ; and mark possibilities to be updated on screen
-    
-   @Done: 
+
+   @Done:
     RTS
 
-   
+
 RemoveSelected:
     ;; the tile selected from possibilities has been set as "selected" by the player
     ;; and now they're choosing to remove it
@@ -870,34 +1002,34 @@ RemoveSelected:
     ;; A = the tile bit ID
     ;; X = position in possibilities
     ;; Y = position in game area
-    
+
     ;; first, fill this possibilities position byte in "unsolved" with all possible bytes
     ;; so scan "selected" and skip them...
-    
+
     LDA #$00
     STA newtile
-    
+
     LDY row
     LDX #$06
    @Scan:
     LDA selected, Y
     BEQ @Skip           ; this tile bit was not selected previously
-    
+
     ORA newtile         ; add selected bit to previous bits
     STA newtile         ; and save
-    
-   @Skip: 
+
+   @Skip:
     DEX
     BPL @Scan
-    
+
     ;; newtile now has all the selected tile bits
     LDA newtile
     EOR #$FE            ; so flip them all
     LDY position
     STA unsolved, Y     ; and save to the unsolved one
     RTS
-    
-    
+
+
 
 
 
@@ -908,20 +1040,20 @@ Choose_Possibility:
     LDA cursor_y
     ASL A
     ASL A
-    ASL A    
+    ASL A
     STA row             ; save start of row
     CLC
     ADC cursor_x
-    TAY    
+    TAY
     STY position        ; save position
-    
+
   ;  LDA selected, Y     ; see if game tile was set by player
   ;  BEQ @ChooseNew      ; if not, choose the selected tile!
   ;
-  ;  LDX cursor_2        ; get position for selected image    
+  ;  LDX cursor_2        ; get position for selected image
   ;  CMP BIT_LUT, X      ; else, see if this tile matches the one that was previously selected
-  ;  BEQ RemoveSelected  ; if it has, we need to reset the possibilities list with all unset tiles 
-   
+  ;  BEQ RemoveSelected  ; if it has, we need to reset the possibilities list with all unset tiles
+
    @ChooseNew:
 Choose_Possibility_New:
     LDA possibilities, X; so get the tile image ID from the possibilities list
@@ -929,41 +1061,41 @@ Choose_Possibility_New:
 
     AND #~$10           ; undo the +$10 to done to the tile ID when loading
     STA drawtile        ; then save as the tile ID to draw
-    
+
     LDA BIT_LUT, X      ; now get the tile's ID bit
     STA newtile
-    
+
     ORA #$01            ; set lowest bit to say "this tile was set"
     STA selected, Y     ; and save it to the tile in the palyer selected puzzle RAM
     STA unsolved, Y     ; and the unsolved version, removing other tile images from the possibilities
-    
-   @Resume: 
+
+   @Resume:
     LDY row             ; Y = start of the row
     LDX #$06
-    
+
    @ClearLoop:          ; then clear the bit from other position's lists
-    LDA selected, Y     
+    LDA selected, Y
     BNE @NextClear      ; if it was set, don't change this byte
 
     LDA removed, Y      ; if it was removed by the player previously
-    AND newtile         
+    AND newtile
     BNE @NextClear      ; then also skip it (else this would add it back...?)
 
     LDA unsolved, Y
     EOR newtile         ; finally, remove the chosen bit from the possibilities
     STA unsolved, Y
-    
+
    @NextClear:
     INY
     DEX
     BPL @ClearLoop
 
-    LDA #$81              
+    LDA #$81
     STA drawjob         ; mark "draw tile" and "update possibilities" jobs as "to do"
-    
-   @Done: 
+
+   @Done:
     RTS
-    
+
 
 
 
@@ -990,53 +1122,67 @@ Attribute_Position_LUT:
 
 
 UpdateAttributes:
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 MoveMenuCursor:
+; Start Game
+; Help
+; Story
+; Quit Game
+
+MoveOptionCursor:
     LDA #$04
     STA cursor_y_max
 
     LDA joy
-    AND #$0C
+    AND #$0F
     CMP joy_prev
     BEQ @Done
 
     STA joy_prev
+    CMP #$00
+    BEQ @Done
+
     CMP #DOWN
     BEQ @Down
     CMP #UP
+    BEQ @Up
+    
+    LDX game_over
     BNE @Done
+    
+    JMP ChangeOptions_LeftRight
 
    @Up:
     DEC cursor_dot_y
@@ -1059,6 +1205,9 @@ MoveMenuCursor:
 
 
 MoveGameCursor:
+    LDA cursor_dot
+    BNE MoveOptionCursor
+
     LDA cursor
     AND #$7F
     TAX
@@ -1071,31 +1220,31 @@ MoveGameCursor:
     AND #$0F
     CMP joy_prev
     BEQ @Done
+
     STA joy_prev
-    
-    ;; see if it needs to update the possibilities list after moving
+    CMP #$00
+    BEQ @Done
+
+    ;; see what cursor type it is
     LDX cursor
     BMI @Cursor2
-    CPX #$01
-    BNE :+
-      INC drawjob
-  : LSR A
+
+    INC drawjob
+    LSR A
     BCS @Right
     LSR A
     BCS @Left
     LSR A
     BCS @Down
-    LSR A
-    BCS @Up
-   @Done: 
+
+   @Up:
+    DEC cursor_y
+    BPL @Done
+    LDA cursor_y_max
+    STA cursor_y
+    DEC cursor_y
+   @Done:
     RTS
-    
-   @Cursor2: 
-    LSR A
-    BCS @Right_2
-    LSR A
-    BCS @Left_2
-    JMP Swap_Possibility ; else, it was up/down
 
    @Right:
     INC cursor_x
@@ -1125,13 +1274,12 @@ MoveGameCursor:
     STA cursor_y
     RTS
 
-   @Up:
-    DEC cursor_y
-    BPL @Done
-    LDA cursor_y_max
-    STA cursor_y
-    DEC cursor_y
-    RTS
+   @Cursor2:
+    LSR A
+    BCS @Right_2
+    LSR A
+    BCS @Left_2
+    JMP Swap_Possibility ; else, it was up/down
 
    @Right_2:
     INC cursor2_x
@@ -1158,25 +1306,25 @@ CursorMaxY:
 CursorMaxX:
     .byte $07 ; 01 Game
     .byte $07 ; 04 Possibilities
-    
-    
-    
+
+
+
 
 
 DrawCursor:
     LDA cursor_dot
     BEQ @Normal
       JSR DrawOptionsDot
-      
+
       LDA gametime ; causes main 2 cursors to flicker if in options menu
       AND #$01
       BEQ @Normal
       RTS
-      
-   @Normal: 
+
+   @Normal:
     JSR DrawMainCursor
     JMP DrawSecondCursor
-    
+
 DrawMainCursor:
     LDX #$04
     LDA #$C0       ; attributes ; palette and flipping
@@ -1196,12 +1344,12 @@ DrawMainCursor:
     TAY
     PLA
     JMP DrawCursor_SetCoords
-    
+
 DrawSecondCursor:
     LDA cursor
     BMI :+
         RTS
-  : LDX #$14       
+  : LDX #$14
     LDA #$C1       ; attributes ; palette and flipping
     STA oam+2, X
     LDA #$41
@@ -1239,68 +1387,76 @@ DrawCursor_SetCoords: ; get Y coordinate and write to all 4 subtiles
     STA oam+15, X
     RTS
 
+DrawMenuCursor:
+    LDY cursor_dot_y
+    LDA Cursor_MainMenu_Y
+    LDY #$88
+    BNE :+
+
 DrawOptionsDot:
     LDA cursor_dot
     BEQ @Done
-    
-    LDX #$FC
-    
+
     LDY cursor_dot_y
     LDA Cursor_Options_Y, Y
-    STA oam, X
+    LDY #$88
 
-    LDA #$00      ; tile ID
-    STA oam+1, X
+  : LDX #$FC
+
+    STA oam, X    ; Y position
+
+    LDA #$00
+    STA oam+1, X  ; tile ID
     STA oam+2, X  ; attributes
+    TYA
+    STA oam+3, X  ; X position
 
-    LDA #$88      ; X position
-    STA oam+3, X
-
-   @Done: 
+   @Done:
     RTS
 
 Cursor_Game_Y:
     .byte $0F, $1F, $2F, $3F, $4F, $5F
 Cursor_Game_X:
     .byte $08, $18, $28, $38, $48, $58, $68
+
 Cursor_Possibilities_X:
     .byte $88, $98, $A8, $B8, $C8, $D8, $E8
+
 Cursor_Options_Y:
     .byte $47, $4F, $57, $67
 Cursor_MainMenu_Y:
     .byte $50, $60, $70, $80
 
 DrawSprite0:
-    LDA #$74  ; y pos
-    STA oam
     LDA #$F4  ; x pos
     STA oam+3
-    LDA #$6D  ; tile
-    STA oam+1
-    LDA #$00 ;40  ; attributes
-    STA oam+2 ; also set is as behind background
+    LDA #$74  
+    STA oam   ; tile ID
+    STA oam+1 ; y pos - same! :D
+    LDA #$20  ; attributes - behind background
+    STA oam+2 
     RTS
-    
+
 Update_Gametime:
     INC gametime   ; frames
     LDA gametime
     CMP #60
     BCC :+
-  
+
     LDA #0         ; seconds
     STA gametime
     INC gametime+1
     LDA gametime+1
     CMP #60
     BCC :+
-  
+
     LDA #0         ; minutes
     STA gametime+1
     INC gametime+2
     LDA gametime+2
     CMP #60
     BCC :+
-  
+
     LDA #0          ; hours
     STA gametime+2
     INC gametime+3
@@ -1309,8 +1465,8 @@ Update_Gametime:
     BCC :+
     LDA #9
     STA gametime+3 ; cap at 9 hours
-    
-  : RTS         
+
+  : RTS
 
 Print_Gametime_Play:
     LDA #>$2059
@@ -1327,24 +1483,38 @@ Print_Gametime_GameOver:
 Print_Gametime_GameWon:
     LDA #>$2059        ; for the game won screen
     LDX #<$2059        ; these coordinates will need to be updated!
-    JSR SetPPUAddress    
+    JSR SetPPUAddress
 
-Print_Gametime:    
-    LDX #$0C ; : tile 
-    
+Print_Gametime:
+    LDX #$0C ; : tile
+
     LDA gametime+3 ; hours
     ORA #$30
     STA $2007
     STX $2007
-    
-    LDA gametime+2 ; minutes 
+
+    LDA gametime+2 ; minutes
     JSR Convert_Number
     STY $2007
     STA $2007
     STX $2007
-    
+
     LDA gametime+1 ; seconds
     JSR Convert_Number
+    STY $2007
+    STA $2007
+    JMP SetScroll
+
+PrintPuzzleNumber:
+    JSR SetPPUAddress
+    LDA puzzle
+    LDX #$00
+    JSR Convert_LargeNumber
+    PHA
+    TXA
+    ORA #$30
+    STA $2007
+    PLA
     STY $2007
     STA $2007
     JMP SetScroll
@@ -1352,23 +1522,23 @@ Print_Gametime:
 Convert_LargeNumber: ; up to 255
     CMP #100
     BCC Convert_Number
-    
+
     SBC #100
     INX
     BNE Convert_LargeNumber
 
 Convert_Number: ; up to 99
     LDY #$00
-   
-   @Loop:   
+
+   @Loop:
     CMP #10
     BCC @Under10
-    
+
     SBC #10
     INY
     BNE @Loop
-    
-   @Under10:    
+
+   @Under10:
     ORA #$30
     PHA
     TYA
@@ -1389,23 +1559,23 @@ ClearOAM:
     LDA #$25
     STA sprite
     RTS
-    
+
 ClearNametable:
     LDA #$20
     LDX #$00
     JSR SetPPUAddress
-    
+
     JSR @Clear
-    
+
     LDA #$28
     ;LDX #$00
     JSR SetPPUAddress
-   
+
    @Clear:
     LDA #$67
     LDY #$04
 
-   @OuterLoop:    
+   @OuterLoop:
     LDX #$F0
    @Loop:
     STA $2007
@@ -1413,17 +1583,14 @@ ClearNametable:
     BNE @Loop
     DEY
     BNE @OuterLoop
-    
+
     TYA
-    LDX #$40    
+    LDX #$40
    @NameTable:
     STA $2007
     DEX
     BNE @NameTable
     RTS
-   
-   
-    
 
 
 
@@ -1432,12 +1599,6 @@ ClearNametable:
 
 
 
-MiniOptions:
-    ; Music - ###
-    ; SFX   - On / Off
-    ; Color - ###
-    ; 
-    ; Give Up?
 
 
 
@@ -1561,7 +1722,7 @@ Decompress_Loop:
     JMP Decompress_Loop
 
    @Done:
-    RTS 
+    RTS
 
 DrawBox:
     ASL A
@@ -1569,7 +1730,7 @@ DrawBox:
     TAY
     LDA #$00
     STA box_overdraw
-    
+
     LDA BoxList+3, Y
     STA box_height
     LDA BoxList+2, Y
@@ -1581,14 +1742,14 @@ DrawBox:
         INC box_overdraw
     AND #$7F
   : STA dest
-    
+
     JSR SetPPUAddress
-    
+
     LDY #$FF
    @Top:
     JSR @Row
-    
-   @Middle: 
+
+   @Middle:
     LDY #2
     JSR @Row
     DEC box_height
@@ -1602,13 +1763,13 @@ DrawBox:
 
     LDA BoxTiles, Y
    @RowLoop:
-    STA $2007        
+    STA $2007
     DEX
     BNE @RowLoop
 
     LDA box_overdraw
     BEQ @NoOverdraw
-    
+
     ;; box is going to draw this next tile in the wrong place, so...
     LDA dest
     STA $2006
@@ -1619,14 +1780,14 @@ DrawBox:
     CMP #$FF
     BNE @Fix
     ADC #0
-    
-   @Fix: 
+
+   @Fix:
     STA $2006
-   
+
    @NoOverdraw:
-    INY 
+    INY
     JSR @DrawTile
-    
+
     LDA dest+1
     CLC
     ADC #$20
@@ -1635,18 +1796,18 @@ DrawBox:
     LDA dest
     ADC #0
     STA dest
-    JMP SetPPUAddress   
-    
+    JMP SetPPUAddress
+
    @DrawTile:
     LDA BoxTiles, Y
-    STA $2007    
-    RTS   
+    STA $2007
+    RTS
 
 BoxTiles:
     .byte $01, $02, $03
     .byte $04, $67, $05
     .byte $06, $07, $08
-    
+
 BoxList:
     ;; starting address
     ;; width
@@ -1658,10 +1819,10 @@ BoxList:
     .byte $21, $E1, 6,  12  ; 4 vert. clues
     .byte $21, $E9, 6,  12  ; 5
     .byte $21, $F1, 6,  12  ; 6
-    .byte $A1, $F9, 6,  12  ; 7 
+    .byte $A1, $F9, 6,  12  ; 7
     .byte $A8, $21, 30, 4   ; 8 horz. clues
     .byte $A8, $E1, 30, 4   ; 9
-    
+
 Draw_NewTile:
     LDA drawjob
     BPL @Done
@@ -1674,7 +1835,7 @@ Draw_NewTile:
 
     LDY cursor_y
     LDA NewTile_LUT, Y
-    
+
     ASL A
     ROL tmp
     ASL A
@@ -1683,27 +1844,27 @@ Draw_NewTile:
     ROL tmp
     ASL A
     ROL tmp
- 
+
     STA tmp+1
     LDA tmp
     ORA #$20
     STA $2006
-    
+
     LDA cursor_x
     ASL A
     ADC #$02
     ORA tmp+1
     STA tmp+1
     STA $2006
-    
+
     LDA drawtile
     TAY
     CMP #$67
     BEQ :+
-    INY 
+    INY
   : STA $2007
     STY $2007
-   
+
     LDA tmp
     CLC
     ADC #$20
@@ -1722,13 +1883,13 @@ Draw_NewTile:
     INY
   : STA $2007
     STY $2007
-   
-   @Done:   
-    RTS            
-    
+
+   @Done:
+    RTS
+
 NewTile_LUT:
-.byte $04, $08, $0C, $10, $14, $18    
-    
+.byte $04, $08, $0C, $10, $14, $18
+
 Print:
     ASL A
     TAX
@@ -1736,36 +1897,36 @@ Print:
     STA text
     LDA TextStrings+1, X
     STA text+1
-    
+
     LDA TextPositions+1, X
     STA dest
     LDA TextPositions, X
     STA dest+1
     DEC text+1
     ;; this will be incremented before drawing
-    
+
     LDY #$FF
-    
-   @Newline: 
+
+   @Newline:
     LDA dest
     LDX dest+1
     JSR SetPPUAddress
-   
+
    @Loop:
     INY
     BNE :+
-    INC text+1   
+    INC text+1
   : LDA (text), Y
     BMI @ControlCode
     STA $2007
     BNE @Loop
-    
+
    @ControlCode:
     CMP #$FF
     BEQ @Done
     CMP #$FE
     BEQ @NextLine
-    
+
     AND #$1F
     TAX
     LDA #$67
@@ -1774,15 +1935,15 @@ Print:
     DEX
     BNE @Spaces
     JMP @Loop
-   
+
    @NextLine:
     LDA dest+1
     CLC
     ADC #$20
     STA dest+1
     JMP @Newline
-    
-   @Done: 
+
+   @Done:
     RTS
 
 MultiplyXA:
@@ -1794,18 +1955,18 @@ MultiplyXA:
     STX mult_X
     LDA #0
     LDX #8
-   
-   @Loop:   
+
+   @Loop:
     BCC @Next
     CLC
     ADC mult_X
-   
+
    @Next:
     ROR A
     ROR mult_A
     DEX
     BNE @Loop
-    
+
     TAX
     LDA mult_A
     RTS
@@ -1835,13 +1996,13 @@ SetPPUAddress:
 WaitForVBlank:
     LDA $2002      ; check VBlank flag
     BMI @Wait
- 
+
     LDA #0
    @Loop:
     SEC
     SBC #$01
     BNE @Loop
- 
+
    @Wait:
     LDA soft2000   ; Load desired PPU state
     ORA #$80       ; flip on the Enable NMI bit
@@ -1860,12 +2021,12 @@ WaitForVBlank:
     LDY #$08
     LDA #$21
     LDX #$2C       ; waits a few scanlines for H-blank so as not to draw weird dots on the screen
-  : DEX        
-    BNE :-    
+  : DEX
+    BNE :-
 
     STX $2001
     STY $2006
-    STA $2006  
+    STA $2006
     LDA #$1E
     STA $2001      ; turn on screen
 
@@ -1877,7 +2038,7 @@ OnNMI:
     STA $2000      ; set the PPU state
     LDA $2002      ; clear VBlank flag and reset 2005/2006 toggle
     LDA soft2001
-    STA $2001      
+    STA $2001
     PLA
     PLA
     PLA            ; pull the RTI return info off the stack

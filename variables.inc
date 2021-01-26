@@ -36,8 +36,8 @@ box_height    = $1A
 mult_A        = $19
 mult_X        = $1A
 
-in_menu       = $1C
-game_over     = $1D ; $8x = game won, $00 = game over/menu, $x1 = game in progress
+dest          = $1B ; + 1C
+game_over     = $1D ; $8x = game won, $x1 = game over/menu, $00 = game in progress
 
 update_attr   = $1E ; $8x = update attributes
 drawjob       = $1F ; $8x = update tile with "chosen", $x1 = update possibilities
@@ -49,8 +49,9 @@ newtile       = $23
 oldtile       = $24
 position      = $25
 drawtile      = $26
-dest          = $27 ; + 28
-options       = $29 ; $8x = music muted, $4x = sfx muted, $x# = background colour
+options       = $27 ; $8x = music muted, $4x = sfx muted, $x1 = update text
+border        = $28
+;             = $29 ;-- nothing here! 
 moves         = $2A ; moves taken
 ;             = $2B
 gametime      = $2C ; frames
@@ -65,7 +66,7 @@ tmp_pointer   = $38 ; + $39
 ;             = $3C ; + $3D
 text          = $3E ; + $3F
 
-
+music_track   = $40
 
 
 

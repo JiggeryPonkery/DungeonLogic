@@ -54,6 +54,6 @@
 ; The Bardess             ; 03
 ; The Healer              ; 01
 ; The Spy                 ; 02
-; The Scholar             ; 03
 ; The Barbarian           ; 00
+; The Dragon              ; 02
 ; The Priestess           ; 03

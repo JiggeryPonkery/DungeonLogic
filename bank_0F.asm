@@ -416,6 +416,7 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
 GameStart:
     LDA #1
     STA drawjob      ; immediately update possibilities
+    STA update_attr
 
     LDA #$00         ; clear cursor variables
     STA cursor
@@ -706,7 +707,7 @@ TileOffset_LUT:
 Load_Possibilities:
     LDA drawjob
     AND #$7F
-    BEQ @Done
+    BEQ @Attributes
 
     LDA #0
     LDX #$06
@@ -793,8 +794,30 @@ Load_Possibilities:
     EOR #$01
     STA drawjob
 
-   @Done:
-    JMP SetScroll
+   @Attributes:
+    LDA update_attr
+    BEQ @Done
+    
+    DEC update_attr
+    LDA cursor_y
+    ASL A
+    ASL A
+    TAY
+    LDA #$23
+    LDX #$CC
+    JSR SetPPUAddress
+    
+    LDX #$00
+   @AttriLoop:
+    LDA Possibilities_Attributes, Y
+    STA $2007
+    INY
+    INX
+    CPX #$04
+    BNE @AttriLoop
+    
+   @Done: 
+    RTS
 
 
 PlayerInput_Game:
@@ -1097,16 +1120,26 @@ Choose_Possibility:
 
 
 
+Possibilities_Attributes: ;; drawn to 23C8
+;.byte %10 00 00 00, %01 11 00 00, %00 10 00 00, %11 10 00 00
+.byte $80,$70,$60,$E0 ; heroes
+.byte $40,$70,$70,$E0 ; weapons
+.byte $40,$90,$20,$40 ; dungeon
+.byte $80,$40,$90,$40 ; town
+.byte $80,$50,$90,$40 ; travel
+.byte $40,$90,$50,$60 ; critters
+
 
 ;; what palette each tile in each row uses
 Attribute_LUT:
 ; tile  1,   2,   3,   4,   5,   6,   7,  xx
-.byte $00, $00, $01, $01, $00, $03, $00, $00 ; row 1
-.byte $01, $01, $02, $02, $00, $00, $00, $00 ; row 2
-.byte $02, $00, $01, $01, $01, $00, $01, $00 ; row 3
-.byte $02, $01, $01, $01, $02, $00, $02, $00 ; row 4
-.byte $01, $01, $02, $01, $02, $01, $02, $00 ; row 5
-.byte $02, $03, $01, $02, $03, $00, $03, $00 ; row 6
+.byte $02, $03, $01, $02, $01, $02, $03, $00 ; heroes   : scoundrel, bard, healer, spy, barbarian, dragon, priestess 
+.byte $01, $03, $01, $03, $01, $02, $03, $00 ; weapons  : bow, sword, staff, knife, hammer, shield, rod
+.byte $01, $01, $02, $02, $00, $00, $01, $00 ; dungeon  : chest, opened chest, torch, ladder, skull, key, door
+.byte $02, $00, $01, $01, $02, $00, $01, $00 ; town     : tree, fence, weeds, grave, sign, fountain, inn
+.byte $02, $01, $01, $01, $02, $00, $02, $00 ; travel   : boat, airship, carriage, caravan, canoe, sub, boots 
+.byte $01, $01, $02, $01, $01, $02, $01, $00 ; critters : squirrel, bun, weasel, rat, bird, frog, snake
+
 
 
 Attribute_Position_LUT:
@@ -1242,6 +1275,7 @@ MoveGameCursor:
     BCS @Down
 
    @Up:
+    INC update_attr
     DEC cursor_y
     BPL @Done
     LDA cursor_y_max
@@ -1269,6 +1303,7 @@ MoveGameCursor:
     RTS
 
    @Down:
+    INC update_attr
     INC cursor_y
     LDA cursor_y
     CMP cursor_y_max

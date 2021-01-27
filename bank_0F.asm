@@ -393,6 +393,25 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     DEC tmp+9       ; decrement row counter
     BNE @Clear_Used
 
+    ;; JIGS - and just realized I've been using 1 through 7 for the solved puzzle...
+    ;; while using single bits for the rest. Oops.
+
+    LDY #$30
+   @Convert:
+    LDA solved-1, Y
+    TAX
+    LDA BIT_LUT, X
+    STA solved-1, Y
+    DEY
+    BNE @Convert
+   
+    STY row1_solved+7 ;; clear these out to 0
+    STY row2_solved+7
+    STY row3_solved+7
+    STY row4_solved+7
+    STY row5_solved+7
+    STY row6_solved+7
+
 
 GameStart:
     LDA #1
@@ -924,39 +943,6 @@ ViewCredits:
 
 
 
-
-;   Game Area:        Possibilities:
-;1 [ + + + + + + + ] [ 1 2 3 4 5 6 7 ]
-;2 [ + + + + + + + ]
-;3 [ + + + + + + + ] [ _ _ 3 4 * * * ] < cursor view
-;4 [ 1 + 2 + +[+]+ ]
-;5 [ + + + + + + + ]
-;6 [ + + + + + + + ]               /- values removed by player *
-;                                  v
-; Row 4: $81, $3F, $40, $3E, $3E, $30, $3E <- values removed by game: _
-
-;Each + is $FE: %11111110
-;These bits are the possible tiles in that position in the Game Area
-;The low bit is set to 1 when the player is sure it belongs there
-;So a value of $81 means "tile #1 is sure to be here"; or "solved"
-;A value of $80 means "tile #1 is the only possible tile here, but I haven't set it yet"
-;If the bit is missing from the tile values, it means it has been removed by the player...
-;....or the tile was set elsewhere, and the game removed the value from other tiles
-;The player can restore tile values to any position, at the cost of unsetting the "solved" bit
-;Which then requires them to re-set the tile to solve the puzzle.
-
-;The question is how to display to the player that the tile is no longer valid?
-;Option 1: Restore the tile on the Game Area to a +
-;Option 2: Restrict tiles to 3 palettes, saving the 4th for a red palette to say "check this!"
-;Option 3: Put a red dot sprite in the middle of the tile on the Game Area, which will cause flickering if more than 6 are set on rows 1 and 2, 4 on row 3, and 5 on rows 4, 5, and 6, since the option menu will be using its own green dot sprite.
-
-
-
-
-;Selected: The 1 bit the player selected.
-;Unsolved: All the possible bits for this tile.
-;Removed: All removed bits for this tile.
-
 BIT_LUT:
 .byte $80, $40, $20, $10, $08, $04, $02, $01
 
@@ -1015,7 +1001,7 @@ Refill_Possibility:
     STA tmp+2
     INY
     DEX
-    BNE @Loop
+    BPL @Loop
     RTS
 
 
@@ -1063,9 +1049,10 @@ Choose_Possibility:
     JSR Refill_Possibility
     LDY tmp
     LDX tmp+1
-    EOR #$FF
-    EOR removed, Y
-    STA unsolved, Y
+    EOR #$FE            ; swap the values 
+    EOR removed, Y      ; then swap out the removed bits
+    ORA oldtile         ; and swap in the old tile
+    STA unsolved, Y     ; hopefully...
     JMP @Next
     
    @NoMatch: 

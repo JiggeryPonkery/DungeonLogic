@@ -701,124 +701,6 @@ UpdateOptionText:
 
 
 
-TileOffset_LUT:
-.byte $40, $60, $80, $A0, $C0, $E0
-
-Load_Possibilities:
-    LDA drawjob
-    AND #$7F
-    BEQ @Attributes
-
-    LDA #0
-    LDX #$06
-   @Clear:
-    STA possibilities, X
-    DEX
-    BPL @Clear      ; clear out the list of tiles
-
-    LDA cursor_y
-    TAX
-    LDA TileOffset_LUT, X
-    STA tmp
-
-    LDA cursor_y    ; get the tile position
-    ASL A
-    ASL A
-    ASL A           ; times 8
-    CLC
-    ADC cursor_x
-    TAX
-    LDA unsolved, X
-    STA total       ; and this is all possible tiles it can be
-
-    LDX #$06        ; unroll it into the possibilities list
-    LSR A
-   @Loop:
-    LSR A
-    BCC @NothingThere
-
-    PHA
-    TXA
-    ASL A           ; X * 2 + TileOffseT_LUT value =
-    ORA tmp         ; the tile graphic for this slot
-    STA possibilities, X
-    PLA
-
-   @NothingThere:
-    DEX
-    BPL @Loop
-
-    LDA #$01
-    STA tmp         ; tmp will be loop counter
-
-    LDA #>$20D2
-    LDX #<$20D2
-    STA $2006
-    STX $2006
-
-    LDX #$00
-   @GetTile:
-    LDA possibilities, X
-    BNE @Draw
-
-   @NoTile:
-    LDA #$67        ; $67 = blank tile
-    STA $2007
-    STA $2007
-    BNE @Next
-
-   @Draw:
-    TAY
-    ORA #$10        ; overwrite the old value with the bottom half of the tile
-    STA possibilities, X
-
-    STY $2007
-    INY
-    STY $2007
-
-   @Next:
-    INX
-    CPX #$07
-    BNE @GetTile
-
-    LDA #>$20F2     ; on the second row of tiles
-    LDX #<$20F2     ; change the write address
-    STA $2006
-    STX $2006
-
-    DEC tmp         ; decrement the loop counter
-    LDX tmp         ; so it will = 0, then put in X
-    BEQ @GetTile    ; for the next loop!
-
-    LDA drawjob     ; remove low bit from drawjob
-    EOR #$01
-    STA drawjob
-
-   @Attributes:
-    LDA update_attr
-    BEQ @Done
-    
-    DEC update_attr
-    LDA cursor_y
-    ASL A
-    ASL A
-    TAY
-    LDA #$23
-    LDX #$CC
-    JSR SetPPUAddress
-    
-    LDX #$00
-   @AttriLoop:
-    LDA Possibilities_Attributes, Y
-    STA $2007
-    INY
-    INX
-    CPX #$04
-    BNE @AttriLoop
-    
-   @Done: 
-    RTS
-
 
 PlayerInput_Game:
     LDA cursor_dot
@@ -969,6 +851,124 @@ ViewCredits:
 BIT_LUT:
 .byte $80, $40, $20, $10, $08, $04, $02, $01
 
+TileOffset_LUT:
+.byte $40, $60, $80, $A0, $C0, $E0
+
+Load_Possibilities:
+    LDA drawjob
+    AND #$7F
+    BEQ @Attributes
+
+    LDA #0
+    LDX #$06
+   @Clear:
+    STA possibilities, X
+    DEX
+    BPL @Clear      ; clear out the list of tiles
+
+    LDA cursor_y
+    TAX
+    LDA TileOffset_LUT, X
+    STA tmp
+
+    LDA cursor_y    ; get the tile position
+    ASL A
+    ASL A
+    ASL A           ; times 8
+    CLC
+    ADC cursor_x
+    TAX
+    LDA unsolved, X
+    STA total       ; and this is all possible tiles it can be
+
+    LDX #$06        ; unroll it into the possibilities list
+    LSR A
+   @Loop:
+    LSR A
+    BCC @NothingThere
+
+    PHA
+    TXA
+    ASL A           ; X * 2 + TileOffseT_LUT value =
+    ORA tmp         ; the tile graphic for this slot
+    STA possibilities, X
+    PLA
+
+   @NothingThere:
+    DEX
+    BPL @Loop
+
+    LDA #$01
+    STA tmp         ; tmp will be loop counter
+
+    LDA #>$20D2
+    LDX #<$20D2
+    STA $2006
+    STX $2006
+
+    LDX #$00
+   @GetTile:
+    LDA possibilities, X
+    BNE @Draw
+
+   @NoTile:
+    LDA #$67        ; $67 = blank tile
+    STA $2007
+    STA $2007
+    BNE @Next
+
+   @Draw:
+    TAY
+    ORA #$10        ; overwrite the old value with the bottom half of the tile
+    STA possibilities, X
+
+    STY $2007
+    INY
+    STY $2007
+
+   @Next:
+    INX
+    CPX #$07
+    BNE @GetTile
+
+    LDA #>$20F2     ; on the second row of tiles
+    LDX #<$20F2     ; change the write address
+    STA $2006
+    STX $2006
+
+    DEC tmp         ; decrement the loop counter
+    LDX tmp         ; so it will = 0, then put in X
+    BEQ @GetTile    ; for the next loop!
+
+    LDA drawjob     ; remove low bit from drawjob
+    EOR #$01
+    STA drawjob
+
+   @Attributes:
+    LDA update_attr
+    BEQ @Done
+    
+    DEC update_attr
+    LDA cursor_y
+    ASL A
+    ASL A
+    TAY
+    LDA #$23
+    LDX #$CC
+    JSR SetPPUAddress
+    
+    LDX #$00
+   @AttriLoop:
+    LDA Possibilities_Attributes, Y
+    STA $2007
+    INY
+    INX
+    CPX #$04
+    BNE @AttriLoop
+    
+   @Done: 
+    RTS
+
 
 
 
@@ -1106,7 +1106,8 @@ Choose_Possibility:
     STA selected, Y     ; and save it to the tile in the player selected puzzle RAM
     STA unsolved, Y     ; and the unsolved version, removing other tile images from the possibilities
 
-    LDA tmp
+    LDA tmp             ; location of tile to undraw
+    AND #$07            ; get x coordinate
     STA position
     LDA #$81
     STA drawjob         ; mark "draw tile" and "update possibilities" jobs as "to do"

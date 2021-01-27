@@ -788,7 +788,7 @@ PlayerInput_Game:
         BPL :+
             LDA #$00
             STA cursor
-            BNE @Done
+            BEQ @Done
 
       : LDA clues
         EOR #$01
@@ -966,25 +966,7 @@ BIT_LUT:
 
 
 
-
-
-ScanRow_Solved:
-    LDA #0
-    STA total
-
-    LDX #$06
-    LDY row
-   @Loop:
-    ;LDA
-
-
-
-
-
 Swap_Possibility:
-    LDA #$00
-    STA newtile
-
     LDA cursor_y
     ASL A
     ASL A
@@ -995,81 +977,53 @@ Swap_Possibility:
     STA position
 
     LDX cursor2_x
-    LDA newtile         ; now get the tile's ID bit
-    SEC
-   @GetBitLoop:         ; by shifting the carry into the right spot
-    ROR A
-    DEX
-    BPL @GetBitLoop
+    LDA BIT_LUT, X      ; now get the tile's ID bit
     STA newtile
 
-    LDY row
-    LDX #$06
-    ORA #$01
-   @CheckLoop:          ; see if this tile is already marked as "solved" in another spot
-    CMP unsolved, Y
-    BEQ @Done           ; if it is, do nothing
-    INY
-    DEX
-    BPL @CheckLoop
-
-   @Swap:               ; else, swap the bits
     LDY position
+    LDA unsolved, Y
+    AND newtile
+    BEQ @RemoveFromRemoved
+    
+   @AddToRemoved:
     LDA removed, Y
-    EOR newtile
+    ORA newtile
+    BNE @Done
+    
+   @RemoveFromRemoved: 
+    LDA removed, Y
+    AND newtile
+    EOR removed, Y
+    
+   @Done:    
     STA removed, Y
     LDA unsolved, Y
     EOR newtile
-    AND #$FE            ; remove the "solved" bit
     STA unsolved, Y
     INC drawjob         ; and mark possibilities to be updated on screen
-
-   @Done:
     RTS
 
 
-RemoveSelected:
-    ;; the tile selected from possibilities has been set as "selected" by the player
-    ;; and now they're choosing to remove it
-    ;; so its bit ID needs to be put back into all unsolved bytes that have not been selected
-    ;; A = the tile bit ID
-    ;; X = position in possibilities
-    ;; Y = position in game area
-
-    ;; first, fill this possibilities position byte in "unsolved" with all possible bytes
-    ;; so scan "selected" and skip them...
-
-    LDA #$00
-    STA newtile
-
+Refill_Possibility:
     LDY row
     LDX #$06
-   @Scan:
+    LDA #$00
+    STA tmp+2
+   @Loop:
     LDA selected, Y
-    BEQ @Skip           ; this tile bit was not selected previously
-
-    ORA newtile         ; add selected bit to previous bits
-    STA newtile         ; and save
-
-   @Skip:
+    ORA tmp+2
+    STA tmp+2
+    INY
     DEX
-    BPL @Scan
-
-    ;; newtile now has all the selected tile bits
-    LDA newtile
-    EOR #$FE            ; so flip them all
-    LDY position
-    STA unsolved, Y     ; and save to the unsolved one
+    BNE @Loop
     RTS
-
-
-
-
-
 
 
 
 Choose_Possibility:
+    LDA #$00
+    STA oldtile
+
     LDA cursor_y
     ASL A
     ASL A
@@ -1080,15 +1034,7 @@ Choose_Possibility:
     TAY
     STY position        ; save position
 
-  ;  LDA selected, Y     ; see if game tile was set by player
-  ;  BEQ @ChooseNew      ; if not, choose the selected tile!
-  ;
-  ;  LDX cursor_2        ; get position for selected image
-  ;  CMP BIT_LUT, X      ; else, see if this tile matches the one that was previously selected
-  ;  BEQ RemoveSelected  ; if it has, we need to reset the possibilities list with all unset tiles
-
-   @ChooseNew:
-Choose_Possibility_New:
+    LDX cursor2_x
     LDA possibilities, X; so get the tile image ID from the possibilities list
     BEQ @Done           ; but if its 0, then do nothing!
 
@@ -1097,34 +1043,65 @@ Choose_Possibility_New:
 
     LDA BIT_LUT, X      ; now get the tile's ID bit
     STA newtile
+    LDA selected, Y
+    BEQ @NothingToReplace
+    
+    STA oldtile
 
-    ORA #$01            ; set lowest bit to say "this tile was set"
-    STA selected, Y     ; and save it to the tile in the palyer selected puzzle RAM
-    STA unsolved, Y     ; and the unsolved version, removing other tile images from the possibilities
-
-   @Resume:
+   @NothingToReplace:
     LDY row             ; Y = start of the row
     LDX #$06
 
-   @ClearLoop:          ; then clear the bit from other position's lists
-    LDA selected, Y
-    BNE @NextClear      ; if it was set, don't change this byte
+   @BitLoop:           
+    LDA selected, Y     ; if the chosen tile was already set, it needs to be unset first
+    CMP newtile
+    BNE @NoMatch        ; if they don't match, continue on...
 
-    LDA removed, Y      ; if it was removed by the player previously
-    AND newtile
-    BNE @NextClear      ; then also skip it (else this would add it back...?)
-
-    LDA unsolved, Y
-    EOR newtile         ; finally, remove the chosen bit from the possibilities
+    INC drawtile        ; tells the tile drawing routine to remove the old tile!
+    STY tmp
+    STX tmp+1
+    JSR Refill_Possibility
+    LDY tmp
+    LDX tmp+1
+    EOR #$FF
+    EOR removed, Y
     STA unsolved, Y
+    JMP @Next
+    
+   @NoMatch: 
+    CMP #$00            ;     
+    BNE @Next           ; if it was set, don't change this byte
+    
+    LDA removed, Y      ; see if the player removed the old tile from this position's list
+    CMP oldtile
+    BEQ @SetNew         ; if they did, don't want to add it back
+    
+    LDA unsolved, Y     ; else, add it back! 
+    ORA oldtile
+    STA unsolved, Y
+    
+   @SetNew:
+    LDA unsolved, Y
+    AND newtile
+    EOR unsolved, Y     ; finally, remove the chosen bit from the possibilities
+    STA unsolved, Y     ; this should ONLY remove the bit, never add it back in
 
-   @NextClear:
+   @Next:
     INY
     DEX
-    BPL @ClearLoop
+    BPL @BitLoop
 
+    LDY position
+    LDA newtile
+    STA selected, Y     ; and save it to the tile in the player selected puzzle RAM
+    STA unsolved, Y     ; and the unsolved version, removing other tile images from the possibilities
+
+    LDA tmp
+    STA position
     LDA #$81
     STA drawjob         ; mark "draw tile" and "update possibilities" jobs as "to do"
+    LDA #$00
+    STA cursor    
 
    @Done:
     RTS
@@ -1875,20 +1852,24 @@ BoxList:
     .byte $A8, $21, 30, 4   ; 8 horz. clues
     .byte $A8, $E1, 30, 4   ; 9
 
+
+NewTile_LUT:
+.byte $04, $08, $0C, $10, $14, $18
+
 Draw_NewTile:
     LDA drawjob
-    BPL @Done
+    BPL @Done            ; do nothing if the high bit isn't set
 
     AND #$7F
-    STA drawjob
+    STA drawjob          ; remove high bit and save, marking the job as done
 
-    LDA #0
-    STA tmp
+    LDA #$02             ; highest byte will always be $2x
+    STA tmp              
 
     LDY cursor_y
-    LDA NewTile_LUT, Y
+    LDA NewTile_LUT, Y   ; use cursor Y position to get this value
 
-    ASL A
+    ASL A                ; this turns $04 into $2040, and $18 into $2180
     ROL tmp
     ASL A
     ROL tmp
@@ -1897,50 +1878,54 @@ Draw_NewTile:
     ASL A
     ROL tmp
 
-    STA tmp+1
-    LDA tmp
-    ORA #$20
-    STA $2006
+    STA tmp+2            ; save for later calculations
 
-    LDA cursor_x
+    LDA cursor_x         ; but the low bit still needs an offset!
+   @RemoveOldTile_EntryPoint:    
     ASL A
-    ADC #$02
-    ORA tmp+1
-    STA tmp+1
-    STA $2006
+    ADC #$02             ; double the cursor X position and add +2, then combine with tmp+2
+    ORA tmp+2
+    STA tmp+1            ; tmp and tmp+1 are now $2x, $xx, a PPU address for the tile to draw to
 
-    LDA drawtile
-    TAY
-    CMP #$67
-    BEQ :+
-    INY
-  : STA $2007
-    STY $2007
-
-    LDA tmp
-    CLC
-    ADC #$20
-    STA $2006
-    LDA tmp+1
-    CLC
-    ADC #$20
+    LDY tmp
+    STY $2006
     STA $2006
 
     LDA drawtile
+    AND #$FE             ; tile IDs will never have a low bit set, as they always use the upper left corner
     TAY
-    CMP #$67
-    BEQ :+
-    ORA #$10
+    INY                  ; add 1 to the tile ID to draw the upper right corner
+    STA $2007
+    STY $2007
+
+    LDA tmp              ; re-write high byte of address
+    STA $2006
+    LDA tmp+1            ; but add $20 to low byte to draw one row lower
+    CLC
+    ADC #$20
+    STA $2006
+
+    LDA drawtile         ; same as before but...
+    AND #$FE
+    ORA #$10             ; ORA $10 to get the bottom two tiles!
     TAY
     INY
-  : STA $2007
+    STA $2007
     STY $2007
+
+    LDA drawtile         ; now see if the drawtile value had the low bit set
+    AND #$01
+    BEQ @Done
+    
+    ; if so, need to remove the tile that was just drawn from another spot
+    LDA position         ; instead of using cursor_x, use the value saved here when the dupe was found
+    LDY #$2E             ; empty "+" tile ID
+    STY drawtile         ; also removes the trigger for doing this!
+    BNE @RemoveOldTile_EntryPoint
 
    @Done:
     RTS
 
-NewTile_LUT:
-.byte $04, $08, $0C, $10, $14, $18
 
 Print:
     ASL A

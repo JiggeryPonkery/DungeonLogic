@@ -6,139 +6,168 @@
 CHR:
 .incbin "Puzzle.chr"
 
+TITLE_CHR:
+.incbin "Title.chr"
+
+TITLE_DOOR:
+	.byte $41,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4a,$4b,$F4
+	.byte $50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$5a,$5b,$F4
+	.byte $60,$61,$62,$63,$64,$65,$66,$65,$68,$69,$6a,$6b,$F4
+	.byte $70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$7a,$7b,$F4
+	.byte $80,$81,$72,$73,$74,$75,$76,$77,$78,$79,$8a,$8b,$F4
+	.byte $90,$91,$72,$73,$74,$75,$76,$77,$78,$79,$9a,$9b,$F4
+	.byte $a0,$81,$40,$94,$94,$95,$96,$97,$98,$99,$81,$ab,$F4
+	.byte $90,$91,$92,$93,$81,$81,$81,$81,$81,$81,$9a,$9b,$F4
+	.byte $a0,$a1,$a2,$a3,$a4,$a5,$a6,$a7,$a8,$a9,$aa,$ab,$F4
+	.byte $b0,$b1,$b2,$b3,$b4,$b5,$b6,$b7,$b8,$b9,$ba,$bb,$F4
+	.byte $c0,$c1,$c2,$c3,$c4,$c5,$c6,$c7,$c8,$c9,$ca,$cb,$F4
+	.byte $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9,$da,$db,$F4
+	.byte $70,$71,$55,$55,$55,$55,$55,$55,$55,$55,$7a,$7b,$F4
+	.byte $80,$81,$55,$55,$55,$55,$55,$55,$55,$55,$8a,$8b,$00
+
 RNG_DATA:
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          TEXT STRINGS
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TextStrings:
-.word START         ; #0
-.word GAME          ; #1
-.word PAUSED        ; #2
-.word P_NO          ; #3
-.word POSSIBILITIES ; #4
-.word OPTIONS       ; #5
-.word PUZZLE_NO     ; #6
-.word ON            ; #7
-.word OFF           ; #8
-.word OFF           ; #9
-.word GIVEUP        ; #10
-.word GAMEOVER      ; #11
-.word WINNER        ; #12
-.word STORY         ; #13
+.word PAUSED        ; 0
+.word P_NO          ; 1
+.word POSSIBILITIES ; 2
+.word OPTIONS       ; 3
+.word ON            ; 4
+.word OFF           ; 5 - SFX
+.word OFF           ; 6 - Music
+.word GIVEUP        ; 7
+.word STARTMENU     ; 8
+.word HELP          ; 9
+.word CREDITS       ; 10
+.word GAMEOVER      ; 11
+.word WINNER        ; 12
+.word STORY         ; 13
 
 TextPositions:
-.word $0000 ; 0
-.word $2AEF ; 1
-.word $2B0E ; 2
-.word $2052 ; 3
-.word $20B2 ; 4
-.word $2111 ; 5
-.word $0000 ; 6
-.word $213C ; 7 - SFX ON
-.word $213C ; 8 - SFX OFF
-.word $215C ; 9 - Music OFF
-.word $2132 ; 10
+.word $2AEF ; 0
+.word $2052 ; 1
+.word $20B2 ; 2
+.word $2111 ; 3
+.word $213C ; 4 - SFX ON
+.word $213C ; 5 - SFX OFF
+.word $215C ; 6 - Music OFF
+.word $2132 ; 7
+.word $20D3 ; 8
+.word $0000 ; 9
+.word $0000 ; 10
 .word $0000 ; 11
 .word $0000 ; 12
 .word $0000 ; 13
 
-
-START:
-.byte $22,$23,$10,$21,$23,$67 ;; flows into GAME to print "START GAME"
-
-GAME:
-.byte $16,$10,$1C,$14,$FF
-
 PAUSED:
-.byte $1F,$10,$24,$22,$14,$13,$FF
+.byte $67,$16,$10,$1C,$14,$FF
+.byte $1F,$10,$24,$22,$14,$13,$00
 
 P_NO:
-.byte $1F,$0D,$FF
+.byte $1F,$0D,$00
 
 POSSIBILITIES:
-.byte $1F,$1E,$22,$22,$18,$11,$18,$1B,$18,$23,$18,$14,$22,$0C,$FE
-.byte $FE
-.byte $8E,$0A,$FF
+.byte $1F,$1E,$22,$22,$18,$11,$18,$1B,$18,$23,$18,$14,$22,$0C,$FF
+.byte $FF
+.byte $8E,$0A,$00
 
 OPTIONS:
-.byte $09,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$FE
-.byte $04,$67,$22,$1E,$24,$1D,$13,$67,$15,$27,$67,$FE
-.byte $04,$67,$1C,$24,$22,$18,$12,$84,$FE
-.byte $04,$67,$11,$1E,$21,$13,$14,$21,$84,$FE
-.byte $04,$89,$FE
-.byte $04,$67,$10,$11,$10,$1D,$13,$1E,$1D,$67,$16,$10,$1C,$14,$FF
-
-PUZZLE_NO:
-.byte $1F,$24,$29,$29,$1B,$14,$67,$0D,$0C,$FF
+.byte $09,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$FF
+.byte $04,$67,$22,$1E,$24,$1D,$13,$67,$15,$27,$67,$FF
+.byte $04,$67,$1C,$24,$22,$18,$12,$84,$FF
+.byte $04,$67,$11,$1E,$21,$13,$14,$21,$84,$FF
+.byte $04,$89,$FF
+.byte $04,$67,$10,$11,$10,$1D,$13,$1E,$1D,$67,$16,$10,$1C,$14,$00
 
 ON:
-.byte $67,$1E,$1D,$67,$FF
+.byte $67,$1E,$1D,$67,$00
 
 OFF:
-.byte $1E,$15,$15,$67,$FF
+.byte $1E,$15,$15,$67,$00
 
 GIVEUP:
-.byte $16,$18,$25,$14,$67,$24,$1F,$67,$22,$10,$25,$18,$1D,$16,$FE
-.byte $67,$23,$17,$14,$67,$10,$13,$1E,$21,$10,$11,$1B,$14,$FE
-.byte $1B,$18,$0B,$1B,$67,$12,$21,$18,$23,$23,$14,$21,$22,$0E,$FE
-.byte $86,$28,$14,$22,$FE
-.byte $86,$1D,$1E,$EF,$85,$FF
+.byte $16,$18,$25,$14,$67,$24,$1F,$67,$22,$10,$25,$18,$1D,$16,$FF
+.byte $67,$23,$17,$14,$67,$10,$13,$1E,$21,$10,$11,$1B,$14,$FF
+.byte $1B,$18,$0B,$1B,$67,$12,$21,$18,$23,$23,$14,$21,$22,$0E,$FF
+.byte $86,$28,$14,$22,$FF
+.byte $86,$1D,$1E,$EF,$85,$00
+
+STARTMENU:
+.byte $67,$1F,$1B,$10,$28,$67,$16,$10,$1C,$14,$FF,$FF
+.byte $67,$12,$1B,$24,$14,$67,$17,$14,$1B,$1F,$FF,$FF
+.byte $67,$14,$27,$18,$23,$67,$16,$10,$1C,$14,$FF,$FF
+.byte $67,$67,$12,$21,$14,$13,$18,$23,$22,$FF,$FF
+.byte $67,$67,$67,$22,$23,$1E,$21,$28,$FF,$FF
+.byte $1F,$24,$29,$29,$1B,$14,$0D,$67,$30,$30,$31,$00
+
+HELP:
+CREDITS:
 
 GAMEOVER:
-.byte $13,$14,$22,$1F,$18,$23,$14,$67,$23,$10,$1A,$18,$1D,$16,$82,$0C,$82,$0C,$FE
-.byte $67,$28,$1E,$24,$67,$15,$10,$18,$1B,$14,$13,$67,$23,$1E,$67,$21,$14,$22,$12,$24,$14,$FE
-.byte $67,$23,$17,$14,$67,$10,$1D,$18,$1C,$10,$1B,$22,$67,$15,$21,$1E,$1C,$67,$23,$17,$14,$FE
-.byte $25,$18,$1B,$14,$67,$13,$24,$1D,$16,$14,$1E,$1D,$22,$67,$1E,$15,$67,$1B,$1E,$16,$18,$12,$0F,$FE
-.byte $67,$23,$17,$18,$22,$67,$22,$17,$10,$1C,$14,$67,$1C,$10,$28,$67,$17,$10,$24,$1D,$23,$FE
-.byte $82,$28,$1E,$24,$21,$67,$22,$1E,$24,$1B,$67,$15,$1E,$21,$67,$23,$17,$14,$FE
-.byte $82,$21,$14,$22,$23,$67,$1E,$15,$67,$28,$1E,$24,$21,$67,$13,$10,$28,$22,$0F,$FE
-.byte $86,$1E,$21,$67,$1D,$1E,$23,$0F,$FE
-.byte $84,$14,$18,$23,$17,$14,$21,$67,$26,$10,$28,$0F,$0F,$0F,$FE
-.byte $67,$23,$17,$14,$67,$20,$24,$14,$14,$1D,$67,$26,$18,$1B,$1B,$67,$15,$14,$10,$22,$23,$0F,$FF
+.byte $13,$14,$22,$1F,$18,$23,$14,$67,$23,$10,$1A,$18,$1D,$16,$82,$0C,$82,$0C,$FF
+.byte $67,$28,$1E,$24,$67,$15,$10,$18,$1B,$14,$13,$67,$23,$1E,$67,$21,$14,$22,$12,$24,$14,$FF
+.byte $67,$23,$17,$14,$67,$10,$1D,$18,$1C,$10,$1B,$22,$67,$15,$21,$1E,$1C,$67,$23,$17,$14,$FF
+.byte $25,$18,$1B,$14,$67,$13,$24,$1D,$16,$14,$1E,$1D,$22,$67,$1E,$15,$67,$1B,$1E,$16,$18,$12,$0F,$FF
+.byte $67,$23,$17,$18,$22,$67,$22,$17,$10,$1C,$14,$67,$1C,$10,$28,$67,$17,$10,$24,$1D,$23,$FF
+.byte $82,$28,$1E,$24,$21,$67,$22,$1E,$24,$1B,$67,$15,$1E,$21,$67,$23,$17,$14,$FF
+.byte $82,$21,$14,$22,$23,$67,$1E,$15,$67,$28,$1E,$24,$21,$67,$13,$10,$28,$22,$0F,$FF
+.byte $86,$1E,$21,$67,$1D,$1E,$23,$0F,$FF
+.byte $84,$14,$18,$23,$17,$14,$21,$67,$26,$10,$28,$0F,$0F,$0F,$FF
+.byte $67,$23,$17,$14,$67,$20,$24,$14,$14,$1D,$67,$26,$18,$1B,$1B,$67,$15,$14,$10,$22,$23,$0F,$00
 
 WINNER:
-.byte $67,$26,$18,$23,$17,$67,$28,$1E,$24,$21,$67,$1C,$18,$16,$17,$23,$28,$67,$11,$21,$10,$18,$1D,$FE
-.byte $1F,$1E,$26,$14,$21,$22,$67,$28,$1E,$24,$67,$26,$14,$21,$14,$67,$10,$11,$1B,$14,$67,$23,$1E,$FE
-.byte $82,$21,$14,$1B,$14,$10,$22,$14,$67,$23,$17,$14,$67,$12,$10,$1F,$23,$24,$21,$14,$13,$FE
-.byte $83,$12,$21,$18,$23,$23,$14,$21,$22,$67,$11,$10,$12,$1A,$67,$18,$1D,$23,$1E,$FE
-.byte $87,$23,$17,$14,$67,$26,$18,$1B,$13,$EF,$FE
-.byte $FE
-.byte $67,$23,$17,$14,$28,$67,$26,$14,$21,$14,$67,$25,$14,$21,$28,$67,$17,$10,$1F,$1F,$28,$EF,$FE
-.byte $82,$1E,$1D,$14,$67,$1E,$15,$67,$23,$17,$14,$1C,$67,$11,$18,$23,$67,$28,$1E,$24,$FE
-.byte $85,$11,$24,$23,$67,$18,$23,$22,$67,$1E,$1A,$10,$28,$0F,$FE
-.byte $FE
-.byte $84,$24,$1D,$15,$1E,$21,$23,$24,$1D,$10,$23,$14,$1B,$28,$0F,$0F,$0F,$FE
-.byte $23,$17,$14,$28,$67,$26,$14,$21,$14,$67,$12,$10,$1F,$23,$24,$21,$14,$13,$67,$10,$16,$10,$18,$1D,$0F,$FE
-.byte $FE
-.byte $85,$1D,$14,$27,$23,$67,$1F,$24,$29,$29,$1B,$14,$0E,$FF
+.byte $67,$26,$18,$23,$17,$67,$28,$1E,$24,$21,$67,$1C,$18,$16,$17,$23,$28,$67,$11,$21,$10,$18,$1D,$FF
+.byte $1F,$1E,$26,$14,$21,$22,$67,$28,$1E,$24,$67,$26,$14,$21,$14,$67,$10,$11,$1B,$14,$67,$23,$1E,$FF
+.byte $82,$21,$14,$1B,$14,$10,$22,$14,$67,$23,$17,$14,$67,$12,$10,$1F,$23,$24,$21,$14,$13,$FF
+.byte $83,$12,$21,$18,$23,$23,$14,$21,$22,$67,$11,$10,$12,$1A,$67,$18,$1D,$23,$1E,$FF
+.byte $87,$23,$17,$14,$67,$26,$18,$1B,$13,$EF,$FF
+.byte $FF
+.byte $67,$23,$17,$14,$28,$67,$26,$14,$21,$14,$67,$25,$14,$21,$28,$67,$17,$10,$1F,$1F,$28,$EF,$FF
+.byte $82,$1E,$1D,$14,$67,$1E,$15,$67,$23,$17,$14,$1C,$67,$11,$18,$23,$67,$28,$1E,$24,$FF
+.byte $85,$11,$24,$23,$67,$18,$23,$22,$67,$1E,$1A,$10,$28,$0F,$FF
+.byte $FF
+.byte $84,$24,$1D,$15,$1E,$21,$23,$24,$1D,$10,$23,$14,$1B,$28,$0F,$0F,$0F,$FF
+.byte $23,$17,$14,$28,$67,$26,$14,$21,$14,$67,$12,$10,$1F,$23,$24,$21,$14,$13,$67,$10,$16,$10,$18,$1D,$0F,$FF
+.byte $FF
+.byte $85,$1D,$14,$27,$23,$67,$1F,$24,$29,$29,$1B,$14,$0E,$00
 
 STORY:
-.byte $14,$25,$18,$1B,$67,$20,$24,$14,$14,$1D,$67,$1C,$14,$12,$17,$10,$1D,$18,$12,$10,$67,$17,$10,$22,$FE
-.byte $67,$22,$23,$1E,$1B,$14,$1D,$67,$10,$26,$10,$28,$67,$23,$17,$14,$67,$22,$1C,$10,$1B,$1B,$FE
-.byte $67,$10,$1D,$18,$1C,$10,$1B,$22,$67,$1E,$15,$67,$23,$17,$14,$67,$26,$1E,$1E,$13,$22,$0F,$FE
-.byte $23,$17,$14,$28,$67,$22,$24,$15,$15,$14,$21,$67,$18,$1D,$67,$12,$10,$16,$14,$22,$FE
-.byte $1B,$1E,$12,$1A,$14,$13,$67,$11,$28,$67,$1B,$1E,$16,$18,$12,$67,$1F,$24,$29,$29,$1B,$14,$22,$0F,$FE
-.byte $23,$17,$14,$67,$22,$14,$25,$14,$1D,$67,$17,$14,$21,$1E,$14,$22,$67,$22,$14,$14,$1A,$FE
-.byte $1E,$1D,$14,$67,$1E,$15,$67,$22,$1C,$10,$21,$23,$14,$22,$23,$67,$11,$21,$10,$18,$1D,$FE
-.byte $1F,$1E,$26,$14,$21,$22,$67,$23,$1E,$67,$16,$24,$18,$13,$14,$67,$23,$17,$14,$1C,$FE
-.byte $23,$17,$21,$1E,$24,$16,$17,$67,$17,$14,$21,$67,$13,$24,$1D,$16,$14,$1E,$1D,$22,$67,$10,$1D,$13,$FE
-.byte $15,$21,$14,$14,$67,$23,$17,$14,$67,$1F,$1E,$1E,$21,$67,$12,$21,$18,$23,$23,$14,$21,$22,$FE
-.byte $11,$14,$15,$1E,$21,$14,$67,$23,$17,$14,$67,$20,$24,$14,$14,$1D,$67,$13,$14,$25,$1E,$24,$21,$22,$FE
-.byte $23,$17,$14,$1C,$67,$10,$23,$67,$17,$14,$21,$67,$26,$18,$1B,$13,$67,$15,$14,$10,$22,$23,$EF
-.byte $FE
-.byte $FE
-.byte $86,$10,$21,$14,$1D,$23,$67,$28,$1E,$24,$0E,$FF
+.byte $14,$25,$18,$1B,$67,$20,$24,$14,$14,$1D,$67,$1C,$14,$12,$17,$10,$1D,$18,$12,$10,$67,$17,$10,$22,$FF
+.byte $67,$22,$23,$1E,$1B,$14,$1D,$67,$10,$26,$10,$28,$67,$23,$17,$14,$67,$22,$1C,$10,$1B,$1B,$FF
+.byte $67,$10,$1D,$18,$1C,$10,$1B,$22,$67,$1E,$15,$67,$23,$17,$14,$67,$26,$1E,$1E,$13,$22,$0F,$FF
+.byte $23,$17,$14,$28,$67,$22,$24,$15,$15,$14,$21,$67,$18,$1D,$67,$12,$10,$16,$14,$22,$FF
+.byte $1B,$1E,$12,$1A,$14,$13,$67,$11,$28,$67,$1B,$1E,$16,$18,$12,$67,$1F,$24,$29,$29,$1B,$14,$22,$0F,$FF
+.byte $23,$17,$14,$67,$22,$14,$25,$14,$1D,$67,$17,$14,$21,$1E,$14,$22,$67,$22,$14,$14,$1A,$FF
+.byte $1E,$1D,$14,$67,$1E,$15,$67,$22,$1C,$10,$21,$23,$14,$22,$23,$67,$11,$21,$10,$18,$1D,$FF
+.byte $1F,$1E,$26,$14,$21,$22,$67,$23,$1E,$67,$16,$24,$18,$13,$14,$67,$23,$17,$14,$1C,$FF
+.byte $23,$17,$21,$1E,$24,$16,$17,$67,$17,$14,$21,$67,$13,$24,$1D,$16,$14,$1E,$1D,$22,$67,$10,$1D,$13,$FF
+.byte $15,$21,$14,$14,$67,$23,$17,$14,$67,$1F,$1E,$1E,$21,$67,$12,$21,$18,$23,$23,$14,$21,$22,$FF
+.byte $11,$14,$15,$1E,$21,$14,$67,$23,$17,$14,$67,$20,$24,$14,$14,$1D,$67,$13,$14,$25,$1E,$24,$21,$22,$FF
+.byte $23,$17,$14,$1C,$67,$10,$23,$67,$17,$14,$21,$67,$26,$18,$1B,$13,$67,$15,$14,$10,$22,$23,$FF
+.byte $FF
+.byte $FF
+.byte $86,$10,$21,$14,$1D,$23,$67,$28,$1E,$24,$0E,$00
 
 
-;; This uses some RLE:
-;; High bit set = remove high bit, that's your tile ID
-;; then do it by the NEXT tile's amount!
-;; No high bit = just print that one tile.
-
-;; Title screen will go here.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          PALETTES
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 GamePalette:
-.byte $3F,$2D,$10,$30
+.byte $3F,$01,$21,$30
 .byte $3F,$17,$28,$30
 .byte $3F,$06,$0A,$36
 .byte $3F,$04,$15,$30
@@ -163,32 +192,41 @@ MenuPalette:
 .byte $3F,$06,$16,$26
 
 BorderPalettes:
-.byte $2D,$10 ; 00
-.byte $00,$3D ; 01
-.byte $01,$21 ; 02
-.byte $02,$22 ; 03
-.byte $03,$23 ; 04
-.byte $04,$24 ; 05
-.byte $05,$25 ; 06
-.byte $06,$26 ; 07
-.byte $07,$27 ; 08
-.byte $08,$28 ; 09
-.byte $09,$29 ; 0A
-.byte $0A,$2A ; 0B
-.byte $0B,$2B ; 0C
-.byte $0C,$2C ; 0D
-.byte $01,$11 ; 0E
-.byte $02,$12 ; 0F
-.byte $03,$13 ; 10
-.byte $04,$14 ; 11
-.byte $05,$15 ; 12
-.byte $06,$16 ; 13
-.byte $07,$17 ; 14
-.byte $08,$18 ; 15
-.byte $09,$19 ; 16
-.byte $0A,$1A ; 17
-.byte $0B,$1B ; 18
-.byte $0C,$1C ; 19
+.byte $01,$21 ; 
+.byte $02,$22 ; 
+.byte $03,$23 ; 
+.byte $04,$24 ; 
+.byte $05,$25 ; 
+.byte $06,$26 ; 
+.byte $07,$27 ; 
+.byte $08,$28 ; 
+.byte $09,$29 ; 
+.byte $0A,$2A ; 
+.byte $0B,$2B ; 
+.byte $0C,$2C ; 
+.byte $00,$3D ; 
+.byte $2D,$10 ; 
+.byte $01,$11 ; 
+.byte $02,$12 ; 
+.byte $03,$13 ; 
+.byte $04,$14 ; 
+.byte $05,$15 ; 
+.byte $06,$16 ; 
+.byte $07,$17 ; 
+.byte $08,$18 ; 
+.byte $09,$19 ; 
+.byte $0A,$1A ; 
+.byte $0B,$1B ; 
+.byte $0C,$1C ; 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          RESET / GAME START / INIT CODE
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 OnReset:
     SEI            ; Set Interrupt flag (prevent IRQs from occuring)
@@ -223,9 +261,6 @@ OnReset:
     INX
     BNE @ClearRAM
 
-    TAX
-    TXS            ; transfer $FF to X and set stack pointer
-
     ;; Mapper 28 stuff
 
     LDX #$81
@@ -242,16 +277,122 @@ OnReset:
     LDY #$00       ; swap to bank 0
     JSR Swap
 
-MainMenu:
-    LDA #$01
-    STA options
-    STA puzzle
 
-LoadGame:
-    LDA #$00
-    STA soft2001
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          DRAW TITLE SCREEN
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MainMenu:
+    LDX #$FF      ; set stack pointer! 
+    TXS           
+    
+    JSR ClearOAM  ; clear OAM for when the menu is returned to after gameplay
+    STX soft2001
     JSR WaitForVBlank
     ;; turn off screen and wait for VBlank for drawing palettes
+    LDA #>oam
+    STA $4014     
+
+    ; load palettes
+    LDA #<MenuPalette-$E0 ; slight trickery here...
+    STA tmp_pointer
+    LDA #>MenuPalette-$01
+    STA tmp_pointer+1
+    LDY #$E0          ; start with Y = 0 - $20
+
+    LDA #$3F
+    LDX #$00
+    JSR SetPPUAddress
+    
+    INX               ; X = #01 to make sure the loop exits
+    JSR Load_CHR_Loop
+
+    ; load title
+    LDA #<TITLE_CHR
+    STA tmp_pointer
+    LDA #>TITLE_CHR
+    STA tmp_pointer+1
+
+    LDA #$00
+    TAX
+    JSR SetPPUAddress
+
+    TAY
+    LDX #$10
+    JSR Load_CHR_Loop
+
+    ; load sprites
+    LDA #<CHR
+    STA tmp_pointer
+    LDA #>CHR
+    STA tmp_pointer+1
+
+    LDX #$10
+    JSR Load_CHR_Loop
+
+    ;; Clear nametables and attributes
+    JSR ClearNametable
+    
+    LDA #<TITLE_DOOR
+    STA tmp_pointer
+    LDA #>TITLE_DOOR
+    STA tmp_pointer+1  
+
+    LDA #$20
+    LDX #$84
+    JSR SetPPUAddress
+    
+    JSR Decompress_Loop
+
+    LDA #1
+    STA puzzle
+    STA game_over    ; mark as "in menu"
+    STA update_attr
+    STA cursor_dot
+
+    JSR ClearButtons ; clear cursor variables
+    STA cursor_dot_y
+    STA music_track    
+    
+    LDA #8
+    JSR Print
+    
+    LDA #$1E        ; turn on screen/clear emphasis
+    STA soft2001    
+    
+    JMP MenuFrame
+
+MenuList:
+    .word LoadGame
+    .word ViewHelp
+    .word QuitGame
+    .word ViewCredits
+    .word ViewStory    
+
+QuitGame:
+    ;; return to Action 52 menu somehow
+
+ViewStory:
+    ;; draw the story screen
+
+ViewCredits:
+    ;; draw the credits screen
+
+ViewHelp:
+    ;; draw the help screen
+    
+    
+LoadGame:
+    JSR ClearOAM
+    STX soft2001
+    JSR WaitForVBlank
+    ;; turn off screen and wait for VBlank for drawing palettes
+    LDA #>oam
+    STA $4014   
 
     ; load palettes
     LDA #<GamePalette-$E0 ; slight trickery here...
@@ -281,16 +422,6 @@ LoadGame:
     LDX #$10
     JSR Load_CHR_Loop
 
-    ; load sprites
-    LDA #<CHR
-    STA tmp_pointer
-    LDA #>CHR
-    STA tmp_pointer+1
-
-    LDX #$10
-    JSR Load_CHR_Loop
-
-    ;; Clear nametables and attributes
     JSR ClearNametable
 
     LDA #9
@@ -324,20 +455,28 @@ LoadGame:
     BNE @ClearPuzzleLoop
 
     ;; draw game area text
-    LDA #$01
+    LDA #3
     STA tmp
    @PrintLoop:
-    JSR Print
-    INC tmp
     LDA tmp
-    CMP #$06
-    BNE @PrintLoop
+    JSR Print
+    DEC tmp
+    BPL @PrintLoop
 
    @PrintPuzzleNumber:
     LDA #>$2054
     LDX #<$2054
     JSR PrintPuzzleNumber
     ;; ^ this also sets the scroll
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          BEGIN PUZZLE FORMING
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     LDA #$06
@@ -416,9 +555,12 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
 GameStart:
     LDA #1
     STA drawjob      ; immediately update possibilities
-    STA update_attr
+    STA update_attr  ; and their attributes
+    STA music_track
+    STA options      ; mark as needing values updated on screen
 
-    LDA #$00         ; clear cursor variables
+    JSR ClearButtons ; then clear cursor variables
+    STA game_over    ; mark as "in game"
     STA cursor
     STA cursor_x
     STA cursor_y
@@ -426,8 +568,6 @@ GameStart:
     STA cursor2_y
     STA cursor_dot
     STA cursor_dot_y
-    
-    STA music_track
 
     LDA options
     ORA #$20
@@ -443,6 +583,15 @@ GameStart:
 
     LDA #$1E        ; turn on screen/clear emphasis
     STA soft2001
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          FRAME LOGIC
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GameFrame:
     JSR WaitForVBlank
@@ -478,11 +627,12 @@ MenuFrame:
     STA $4014
     LDA drawjob
     BEQ :+
-        LDA #>$2022
-        LDX #<$2022
+        LDA #>$221B
+        LDX #<$221B
         JSR PrintPuzzleNumber
 
-  : JSR ClearOAM
+  : JSR SetScroll
+    JSR ClearOAM
     JSR DrawMenuCursor
     JSR UpdateJoy
     JSR MoveMenuCursor
@@ -523,6 +673,211 @@ PauseGame:
     LDA #$1E       ; turn on screen/clear emphasis
     STA soft2001
     RTS
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          CONTROLLER INPUT
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+ClearButtons:
+    LDA #$00
+    STA joy_select
+    STA joy_start
+    STA joy_a
+    STA joy_b
+    RTS
+
+UpdateJoy:
+    LDA #$01
+    STA $4016       ; strobe joypad (refreshes the latch with up to date joy data)
+    LDA #$0
+    STA $4016
+    LDX #$08        ; loop 8 times (have to read each of the 8 buttons 1 at a time)
+   @Loop:
+    LDA $4016       ; get button state
+    AND #$03        ; get both bits
+    CMP #$01        ; set carry if either bit is set
+    ROL joy         ; rotate carry into total value
+    DEX
+    BNE @Loop
+
+    LDA joy         ; get total joypad values
+    AND #$03        ; check left/right
+    BEQ :+
+      LDX #$03      ; if either is pressed, then X = 3
+  : STX joy_dir     ; will be 0 or 3 now
+
+    LDA joy
+    AND #$0C        ; check up/down
+    BEQ :+
+      TXA
+      ORA #$0C      ; combine with previous value
+      STA joy_dir
+
+  : LDA joy
+    EOR joy_ignore  ; invert it with all the buttons to ignore
+    AND joy_dir     ; mask out the directional buttons to keep
+    EOR joy_ignore  ; and re-invert, restoring ALL buttons *except* the directions to keep
+    STA joy_ignore  ; write back to ignore for next time
+    EOR joy         ; EOR again with current joy data
+    TAY             ; back it up in Y
+
+    LDX #$03
+   @CheckButtons:
+    LDA JoyData, X  ; get button value from mini table
+    STA joy_tmp     ; save it for doing stuff with
+    TYA             ; restore transition byte
+    AND joy_tmp     ; see if button has transitioned (if so, some people would say this is a lucky button)
+    BEQ @Nope       ; if not, skip it
+    LDA joy
+    AND joy_tmp     ; see if it is being pressed (else, its being released)
+    BEQ :+
+      INC joy_a, X  ; if it is, increment the button's RAM value
+  : LDA joy_ignore  ; then toggle the ignore value
+    EOR joy_tmp
+    STA joy_ignore
+
+   @Nope:
+    DEX
+    BPL @CheckButtons
+    RTS
+
+JoyData:
+    .byte $80, $40, $20, $10 ; A, B, Select, Start
+    
+
+PlayerInput_Game:
+    LDA cursor_dot
+    BNE PlayerInput_Options
+
+    LDA joy_b
+    BEQ @Check_A
+        LDA cursor
+        BPL :+
+            LDA #$00
+            STA cursor
+            BEQ @Done
+
+      : LDA clues
+        EOR #$01
+        STA clues
+        JMP @Done
+
+   @Check_A:
+    LDA joy_a
+    BEQ @Check_Select
+        LDA cursor
+        BPL :+
+           JSR Choose_Possibility
+           JMP @Done
+
+      : LDA #$81
+        STA cursor
+        BNE @Done
+
+   @Check_Select:
+    LDA joy_select
+    BEQ @Check_Start
+        INC cursor_dot
+        BNE @Done
+
+   @Check_Start:
+    LDA joy_start
+    BEQ @Done
+        JSR PauseGame
+
+   @Done:
+    JMP ClearButtons
+
+
+PlayerInput_Options:
+    LDA joy_b
+    ORA joy_select
+    BEQ @Check_A
+        LDA abandon
+        BEQ :+
+       
+       @RestoreOptions:
+        LDA #$80
+        STA abandon
+        BNE @Done
+        
+      : DEC cursor_dot
+        BEQ @Done
+
+   @Check_A:
+    LDA joy_a
+    BEQ @Check_Start
+        LDA abandon
+        BEQ :+
+            LDA cursor_dot_y
+            BNE @RestoreOptions
+            LDA #$00
+            STA abandon
+            JMP MainMenu
+        
+      : LDA #$01
+        JSR ChangeOptions
+        JMP ClearButtons
+   
+   @Check_Start:
+    LDA joy_start
+    BEQ @Done
+        JSR PauseGame
+
+   @Done:
+    JMP ClearButtons
+    
+    
+
+PlayerInput_Menu:
+    LDA joy_b
+    BEQ @Check_A
+        INC puzzle
+        INC drawjob
+        BNE @Done
+
+   @Check_A:
+    LDA joy_a
+    ORA joy_start
+    ORA joy_select
+    BEQ @Done
+        LDA cursor_dot_y
+        ASL A           ; else, in main menu, jump to chosen option
+        TAX
+        LDA MenuList, X
+        STA tmp_pointer
+        LDA MenuList+1, X
+        STA tmp_pointer+1
+        PLA
+        PLA
+        JMP (tmp_pointer)
+
+   @Done:
+    JMP ClearButtons
+
+
+
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          OPTIONS
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 ChangeOptions_LeftRight:
     LDX cursor_dot_y
@@ -615,7 +970,7 @@ UpdateOptionText:
    
    @ShowQuitText:
     INC abandon       ; set to 2, so it skips updating text every frame
-    LDA #10
+    LDA #7
     JMP Print
 
    @RestoreOptions:    
@@ -623,7 +978,7 @@ UpdateOptionText:
     STA abandon
     STA cursor_dot_y
     STA cursor_dot
-    LDA #5
+    LDA #3
     JSR Print
     INC options
 
@@ -663,7 +1018,7 @@ UpdateOptionText:
     BNE @SFX    
 
    @MusicOff:
-    LDA #$09
+    LDA #6
     JSR Print
    
    @SFX:
@@ -672,12 +1027,12 @@ UpdateOptionText:
     BNE @SFXOff
 
    @SFXOn:
-    LDA #$07
+    LDA #4
     JSR Print
     BEQ @Border
 
    @SFXOff:
-    LDA #$08
+    LDA #5
     JSR Print
 
    @Border:
@@ -700,152 +1055,13 @@ UpdateOptionText:
 
 
 
-
-
-PlayerInput_Game:
-    LDA cursor_dot
-    BNE PlayerInput_Options
-
-    LDA joy_b
-    BEQ @Check_A
-        LDA cursor
-        BPL :+
-            LDA #$00
-            STA cursor
-            BEQ @Done
-
-      : LDA clues
-        EOR #$01
-        STA clues
-        JMP @Done
-
-   @Check_A:
-    LDA joy_a
-    BEQ @Check_Select
-        LDA cursor
-        BPL :+
-           JSR Choose_Possibility
-           JMP @Done
-
-      : LDA #$81
-        STA cursor
-        BNE @Done
-
-   @Check_Select:
-    LDA joy_select
-    BEQ @Check_Start
-        INC cursor_dot
-        BNE @Done
-
-   @Check_Start:
-    LDA joy_start
-    BEQ @Done
-        JSR PauseGame
-
-   @Done:
-    JMP ClearButtons
-
-PlayerInput_Options:
-    LDA joy_b
-    ORA joy_select
-    BEQ @Check_A
-        LDA abandon
-        BEQ :+
-       
-       @RestoreOptions:
-        LDA #$80
-        STA abandon
-        BNE @Done
-        
-      : DEC cursor_dot
-        BEQ @Done
-
-   @Check_A:
-    LDA joy_a
-    BEQ @Check_Start
-        LDA abandon
-        BEQ :+
-            LDA cursor_dot_y
-            BNE @RestoreOptions
-            LDA #$00
-            STA abandon
-            JMP MainMenu
-        
-      : LDA #$01
-        JSR ChangeOptions
-        JMP ClearButtons
-   
-   @Check_Start:
-    LDA joy_start
-    BEQ @Done
-        JSR PauseGame
-
-   @Done:
-    JMP ClearButtons
-
-PlayerInput_Menu:
-    LDA joy_b
-    BEQ @Check_A
-        JMP MainMenu
-
-   @Check_A:
-    LDA joy_a
-    BEQ @Check_Select
-        LDA game_over
-        BMI @NextPuzzle ; puzzle won, load next puzzle
-        BEQ @ReloadMenu ; puzzle lost, return to menu
-
-        LDA cursor_dot_y
-        ASL A           ; else, in main menu, jump to chosen option
-        TAX
-        LDA MenuList, X
-        STA tmp_pointer
-        LDA MenuList+1, X
-        STA tmp_pointer+1
-        PLA
-        PLA
-        JMP tmp_pointer
-
-   @Check_Select:
-    LDA joy_select
-    BEQ @Check_Start
-        INC puzzle
-        INC drawjob
-        BNE @Done
-
-   @Check_Start:
-    LDA joy_start
-    BEQ @Done
-        JMP PauseGame
-
-   @Done:
-    JMP ClearButtons
-
-   @ReloadMenu:
-    PLA
-    PLA
-    JMP MainMenu
-
-   @NextPuzzle:
-    INC puzzle
-    PLA
-    PLA
-    JMP LoadGame
-
-MenuList:
-    .word LoadGame
-    .word ViewStory
-    .word ViewCredits
-    .word QuitGame
-
-QuitGame:
-ViewStory:
-ViewCredits:
-
-
-
-
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          TILE SELECTION
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 BIT_LUT:
@@ -971,10 +1187,6 @@ Load_Possibilities:
 
 
 
-
-
-
-
 Swap_Possibility:
     LDA cursor_y
     ASL A
@@ -1012,26 +1224,7 @@ Swap_Possibility:
     RTS
 
 
-Refill_Possibility:
-    LDY row
-    LDX #$06
-    LDA #$00
-    STA tmp+2
-   @Loop:
-    LDA selected, Y
-    ORA tmp+2
-    STA tmp+2
-    INY
-    DEX
-    BPL @Loop
-    RTS
-
-
-
 Choose_Possibility:
-    LDA #$00
-    STA oldtile
-
     LDA cursor_y
     ASL A
     ASL A
@@ -1050,72 +1243,151 @@ Choose_Possibility:
 
     LDA BIT_LUT, X      ; now get the tile's ID bit
     STA newtile
+    
     LDA selected, Y
-    BEQ @NothingToReplace
-    
-    STA oldtile
+    BEQ @SetTileNormal
 
-   @NothingToReplace:
-    LDY row             ; Y = start of the row
-    LDX #$06
+   @ReplaceTile:        ; a tile must be replaced first!
+    STA oldtile         ; save the tile ID to replace
+    CMP newtile         ; and see if its the same as the new tile
+    BEQ @RemoveTile     ; in which case, it needs to be removed
 
-   @BitLoop:           
-    LDA selected, Y     ; if the chosen tile was already set, it needs to be unset first
-    CMP newtile
-    BNE @NoMatch        ; if they don't match, continue on...
+    JSR SetOldTile      ; add the old tile to all positions
 
-    INC drawtile        ; tells the tile drawing routine to remove the old tile!
-    STY tmp
-    STX tmp+1
-    JSR Refill_Possibility
-    LDY tmp
-    LDX tmp+1
-    EOR #$FE            ; swap the values 
-    EOR removed, Y      ; then swap out the removed bits
-    ORA oldtile         ; and swap in the old tile
-    STA unsolved, Y     ; hopefully...
-    JMP @Next
-    
-   @NoMatch: 
-    CMP #$00            ;     
-    BNE @Next           ; if it was set, don't change this byte
-    
-    LDA removed, Y      ; see if the player removed the old tile from this position's list
-    CMP oldtile
-    BEQ @SetNew         ; if they did, don't want to add it back
-    
-    LDA unsolved, Y     ; else, add it back! 
-    ORA oldtile
-    STA unsolved, Y
-    
-   @SetNew:
-    LDA unsolved, Y
-    AND newtile
-    EOR unsolved, Y     ; finally, remove the chosen bit from the possibilities
-    STA unsolved, Y     ; this should ONLY remove the bit, never add it back in
-
-   @Next:
-    INY
-    DEX
-    BPL @BitLoop
-
+   @SetTileNormal:     
     LDY position
-    LDA newtile
-    STA selected, Y     ; and save it to the tile in the player selected puzzle RAM
-    STA unsolved, Y     ; and the unsolved version, removing other tile images from the possibilities
-
-    LDA tmp             ; location of tile to undraw
-    AND #$07            ; get x coordinate
-    STA oldtile
+    LDA newtile         ; nothing to replace here, so just set the new tile in its position
+    STA selected, Y    
+    STA unsolved, Y
+    JSR PreviouslySet   ; then see if this tile was set elsewhere    
+    JSR UnsetNewTile    ; and clear it from the other bytes 
+    BMI @TileSet        ; always branches
+    
+   @RemoveTile:
+    LDA #$00
+    STA selected, Y
+    STA unsolved, Y
+    JSR SetOldTile      ; so add the removed tile back into possibilities for all bytes (except when removed by player)
+    JSR Refill_Possibility
+    LDY position
+    STY old_position
+    EOR #$FE
+    EOR removed, Y
+    STA unsolved, Y     ; and refill this byte's possibilities
+    LDA cursor_x
+    STA oldtile         ; save the X position for the tile-drawing routine
+    INC drawtile        ; tells the tile drawing routine to remove the old tile!
+   
+   @TileSet: 
     LDA #$81
     STA drawjob         ; mark "draw tile" and "update possibilities" jobs as "to do"
     LDA #$00
-    STA cursor    
+    STA cursor        
+   @Done:
+    RTS 
 
+
+
+
+
+PreviouslySet:    
+    LDY row
+    LDX #6
+   @Loop:
+    LDA selected, Y
+    CMP newtile
+    BEQ @Found
+   @Next: 
+    INY
+    DEX
+    BPL @Loop
+    RTS
+
+   @Found: 
+    CPY position    ; new tile was found as set, but its because we JUST SET IT
+    BEQ @Next       ; so keep looking!
+   
+    LDA #$00
+    STA selected, Y
+    STA unsolved, Y  ; remove the data from this byte
+    STY old_position ; backup Y
+    JSR Refill_Possibility
+    LDY old_position
+    EOR #$FE
+    EOR removed, Y
+    ORA oldtile
+    STA unsolved, Y ; put the new possibilities back
+    TYA
+    AND #$07
+    STA oldtile     ; save the X position for the tile-drawing routine
+    INC drawtile    ; mark this to be undrawn
+    RTS
+    
+    
+SetOldTile:         ; adds the previous tile into all unsolved positions
+    LDY row
+    LDX #6
+    
+  @Loop:
+    LDA removed, Y
+    AND oldtile
+    BNE @Next
+    
+    LDA unsolved, Y
+    ORA oldtile
+    STA unsolved, Y
+
+   @Next: 
+    INY
+    DEX
+    BPL @Loop
+    
    @Done:
     RTS
 
+UnsetNewTile:        ; removes the selected tile from all unsolved positions
+    LDY row
+    LDX #6
+   @Loop:
+    CPY position
+    BEQ @Next
+    LDA unsolved, Y
+    AND newtile
+    EOR unsolved, Y
+    STA unsolved, Y
+   @Next: 
+    INY
+    DEX
+    BPL @Loop    
+    RTS
+    
+Refill_Possibility:  ; refreshes a byte with all possible tiles that haven't been selected yet
+    LDY row
+    LDX #6
+    LDA #$00
+    STA tmp+2
+   @Loop:
+    LDA selected, Y
+    ORA tmp+2
+    STA tmp+2
+    INY
+    DEX
+    BPL @Loop
+    RTS    
+    
+    
+    
+    
+    
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;         TILE ATTRIBUTES
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -1213,52 +1485,30 @@ UpdateTileAttribute:
     STY $2007 
     
     LDA old_position
-    STA position
+    STA position    
     RTS
     
     
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          CURSOR MOVEMENT
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 MoveMenuCursor:
-; Start Game
-; Help
-; Story
-; Quit Game
+    LDA #$05 
+    BNE :+
 
 MoveOptionCursor:
     LDA abandon
-    BEQ :+
-    
-    LDY #$02 
-    BNE @SaveMax
+    BNE :+
 
-  : LDA #$04
-   @SaveMax:
-    STA cursor_y_max
+    LDA #$04
+  : STA cursor_y_max
 
     LDA joy
     AND #$0F
@@ -1275,7 +1525,7 @@ MoveOptionCursor:
     BEQ @Up
     
     LDX game_over
-    BNE @Done
+    BNE @ChangePuzzle
     
     JMP ChangeOptions_LeftRight
 
@@ -1297,6 +1547,20 @@ MoveOptionCursor:
     LDA #0
     STA cursor_dot_y
     RTS
+    
+   @ChangePuzzle:
+    LSR A 
+    BCC @Decrease
+    
+   @Increase:
+    INC puzzle
+    INC puzzle
+    
+   @Decrease:
+    DEC puzzle
+    INC drawjob
+    RTS
+    
 
 
 MoveGameCursor:
@@ -1405,6 +1669,13 @@ CursorMaxX:
     .byte $07 ; 04 Possibilities
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          CURSOR DRAWING
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -1486,8 +1757,11 @@ DrawCursor_SetCoords: ; get Y coordinate and write to all 4 subtiles
 
 DrawMenuCursor:
     LDY cursor_dot_y
-    LDA Cursor_MainMenu_Y
-    LDY #$88
+    LDA Cursor_MainMenu_Y, Y
+    PHA
+    LDA Cursor_MainMenu_X, Y
+    TAY
+    PLA    
     BNE :+
 
 DrawOptionsDot:
@@ -1508,9 +1782,7 @@ DrawOptionsDot:
     LDY #$88
 
   : LDX #$FC
-
     STA oam, X    ; Y position
-
     LDA #$00
     STA oam+1, X  ; tile ID
     STA oam+2, X  ; attributes
@@ -1529,12 +1801,39 @@ Cursor_Possibilities_X:
     .byte $88, $98, $A8, $B8, $C8, $D8, $E8
 
 Cursor_Options_Abandon_Y:
-    .byte $5F, $67
+    .byte $5E, $66
 Cursor_Options_Y:
-    .byte $47, $4F, $57, $67
+    .byte $46, $4E, $56, $66
+    
 Cursor_MainMenu_Y:
-    .byte $50, $60, $70, $80
+    .byte $2E, $3E, $4E, $5E, $6E
+Cursor_MainMenu_X:
+    .byte $90, $90, $90, $98, $A0
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          SPRITE DRAWING
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+ClearOAM:
+    LDX #$80
+    LDA #$FF
+   @Loop:
+    STA $0200-1, X
+    STA $0280-1, X
+    DEX
+    BNE @Loop
+
+    ;; sprite index starts at $25 since the curors are hard-coded
+    LDA #$25
+    STA sprite
+    RTS
+    
+    
 DrawSprite0:
     LDA #$F4  ; x pos
     STA oam+3
@@ -1544,6 +1843,16 @@ DrawSprite0:
     LDA #$20  ; attributes - behind background
     STA oam+2 
     RTS
+    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          TIMER STUFF
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
+    
 
 Update_Gametime:
     INC gametime   ; frames
@@ -1655,19 +1964,13 @@ Convert_Number: ; up to 99
     PLA
     RTS
 
-ClearOAM:
-    LDX #$80
-    LDA #$FF
-   @Loop:
-    STA $0200-1, X
-    STA $0280-1, X
-    DEX
-    BNE @Loop
-
-    ;; sprite index starts at $25 since the curors are hard-coded
-    LDA #$25
-    STA sprite
-    RTS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          SCREEN DRAWING ROUTINES
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
 
 ClearNametable:
     LDA #$20
@@ -1677,7 +1980,6 @@ ClearNametable:
     JSR @Clear
 
     LDA #$28
-    ;LDX #$00
     JSR SetPPUAddress
 
    @Clear:
@@ -1702,94 +2004,6 @@ ClearNametable:
     RTS
 
 
-
-
-
-
-
-
-
-
-
-
-ClearButtons:
-    LDA #$00
-    STA joy_select
-    STA joy_start
-    STA joy_a
-    STA joy_b
-    RTS
-
-UpdateJoy:
-    LDA #$01
-    STA $4016       ; strobe joypad (refreshes the latch with up to date joy data)
-    LDA #$0
-    STA $4016
-    LDX #$08        ; loop 8 times (have to read each of the 8 buttons 1 at a time)
-   @Loop:
-    LDA $4016       ; get button state
-    AND #$03        ; get both bits
-    CMP #$01        ; set carry if either bit is set
-    ROL joy         ; rotate carry into total value
-    DEX
-    BNE @Loop
-
-    LDA joy         ; get total joypad values
-    AND #$03        ; check left/right
-    BEQ :+
-      LDX #$03      ; if either is pressed, then X = 3
-  : STX joy_dir     ; will be 0 or 3 now
-
-    LDA joy
-    AND #$0C        ; check up/down
-    BEQ :+
-      TXA
-      ORA #$0C      ; combine with previous value
-      STA joy_dir
-
-  : LDA joy
-    EOR joy_ignore  ; invert it with all the buttons to ignore
-    AND joy_dir     ; mask out the directional buttons to keep
-    EOR joy_ignore  ; and re-invert, restoring ALL buttons *except* the directions to keep
-    STA joy_ignore  ; write back to ignore for next time
-    EOR joy         ; EOR again with current joy data
-    TAY             ; back it up in Y
-
-    LDX #$03
-   @CheckButtons:
-    LDA JoyData, X  ; get button value from mini table
-    STA joy_tmp     ; save it for doing stuff with
-    TYA             ; restore transition byte
-    AND joy_tmp     ; see if button has transitioned (if so, some people would say this is a lucky button)
-    BEQ @Nope       ; if not, skip it
-    LDA joy
-    AND joy_tmp     ; see if it is being pressed (else, its being released)
-    BEQ :+
-      INC joy_a, X  ; if it is, increment the button's RAM value
-  : LDA joy_ignore  ; then toggle the ignore value
-    EOR joy_tmp
-    STA joy_ignore
-
-   @Nope:
-    DEX
-    BPL @CheckButtons
-    RTS
-
-JoyData:
-    .byte $80, $40, $20, $10 ; A, B, Select, Start
-
-
-
-
-
-SetScroll:
-    LDA #$08   ; shifted by 1 tile
-    STA $2005
-    LDA #$00
-    STA $2005
-    RTS
-
-
 Load_CHR_Loop:
     LDA (tmp_pointer), Y
     STA $2007
@@ -1802,20 +2016,21 @@ Load_CHR_Loop:
 
 Decompress_Loop:
     LDA (tmp_pointer), Y
-    BPL @Write
-
-    ;; else, the high bit is set
-    CMP #$FF
     BEQ @Done
-
-    AND #$7F      ; remove high bit
-    PHA
-    INY
-    BNE :+
-     INC tmp_pointer+1
-  : LDA (tmp_pointer), Y
+    BPL @Write
+    
+    CMP #$F0
+    BCC @Write
+    
+    AND #$1F      ; remove high bit
+    ;PHA
+ ;   INY
+ ;   BNE :+
+ ;    INC tmp_pointer+1
+ ; : ;LDA (tmp_pointer), Y
     TAX
-    PLA
+    ;PLA
+    LDA #$67
     DEX
 
    @WriteLoop:
@@ -1832,6 +2047,8 @@ Decompress_Loop:
 
    @Done:
     RTS
+
+
 
 DrawBox:
     ASL A
@@ -2037,17 +2254,16 @@ Print:
     INC text+1
   : LDA (text), Y
     BMI @ControlCode
+    BEQ @Done
    @Draw:
     STA $2007
     JMP @Loop
 
    @ControlCode:
     CMP #$FF
-    BEQ @Done
-    CMP #$FE
     BEQ @NextLine
-    CMP #$EF
-    BEQ @Draw
+    CMP #$E0
+    BCS @Draw
 
     AND #$1F
     TAX
@@ -2063,7 +2279,12 @@ Print:
     CLC
     ADC #$20
     STA dest+1
-    LDA soft2001
+    BCC :+
+        LDA dest
+        ADC #$00
+        STA dest
+    
+  : LDA soft2001
     BEQ @Newline
         INC row
         LDA row
@@ -2082,6 +2303,15 @@ Print:
 
    @Done:
     RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          MISC NES STUFF
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 MultiplyXA:
 ;; Using Tepples' first method from - https://wiki.nesdev.com/w/index.php/8-bit_Multiply
@@ -2207,6 +2437,15 @@ OnNMI:
     PLA            ; pull the RTI return info off the stack
     RTS            ; return to the game
 
+
+SetScroll:
+    LDA #$08   ; shifted by 1 tile
+    STA $2005
+    LDA #$00
+    STA $2005
+    RTS
+
+
 Banks:              ; Write to this table to switch banks.
    .byte $00, $01, $02, $03, $04, $05, $06
 
@@ -2218,7 +2457,6 @@ Swap_NoSave:
     STA Banks, Y      ; and write it back, switching banks
     RTS
 
-.byte "END OF BANK 0F"
 
 .segment "VECTORS"
 

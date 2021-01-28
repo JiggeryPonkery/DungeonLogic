@@ -1,16 +1,12 @@
-RIGHT             = $01
-LEFT              = $02
-DOWN              = $04
-UP                = $08
+RIGHT      = $01
+LEFT       = $02
+DOWN       = $04
+UP         = $08
 
-HIGH_LEFT         = $06
-LOW_LEFT          = $04
-HIGH_RIGHT        = $02
-LOW_RIGHT         = $00
-
-PAUSE_WAIT        = $03 ; frames
-
-
+LR         = $06
+LL         = $04
+UR         = $02
+UL         = $00
 
 
 

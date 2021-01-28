@@ -294,11 +294,11 @@ LoadGame:
     JSR ClearNametable
 
     LDA #9
-    STA tmp
+    STA box_counter
    @BoxLoop:
-    LDA tmp
+    LDA box_counter
     JSR DrawBox
-    DEC tmp
+    DEC box_counter
     BPL @BoxLoop
 
     LDA #$2E
@@ -981,7 +981,6 @@ Swap_Possibility:
     ASL A
     ASL A
     STA row             ; save start of row
-    CLC
     ADC cursor_x
     STA position
 
@@ -1038,7 +1037,6 @@ Choose_Possibility:
     ASL A
     ASL A
     STA row             ; save start of row
-    CLC
     ADC cursor_x
     TAY
     STY position        ; save position
@@ -1108,7 +1106,7 @@ Choose_Possibility:
 
     LDA tmp             ; location of tile to undraw
     AND #$07            ; get x coordinate
-    STA position
+    STA oldtile
     LDA #$81
     STA drawjob         ; mark "draw tile" and "update possibilities" jobs as "to do"
     LDA #$00
@@ -1121,45 +1119,104 @@ Choose_Possibility:
 
 
 
-Possibilities_Attributes: ;; drawn to 23C8
-;.byte %10 00 00 00, %01 11 00 00, %00 10 00 00, %11 10 00 00
+Possibilities_Attributes: ;; drawn to 23CC
 .byte $80,$70,$60,$E0 ; heroes
 .byte $40,$70,$70,$E0 ; weapons
 .byte $40,$90,$20,$40 ; dungeon
-.byte $80,$40,$90,$40 ; town
-.byte $80,$50,$90,$40 ; travel
+.byte $80,$40,$90,$80 ; town
+.byte $80,$50,$90,$80 ; travel
 .byte $40,$90,$50,$60 ; critters
 
 
 ;; what palette each tile in each row uses
-Attribute_LUT:
+TileAttribute_LUT:
 ; tile  1,   2,   3,   4,   5,   6,   7,  xx
 .byte $02, $03, $01, $02, $01, $02, $03, $00 ; heroes   : scoundrel, bard, healer, spy, barbarian, dragon, priestess 
 .byte $01, $03, $01, $03, $01, $02, $03, $00 ; weapons  : bow, sword, staff, knife, hammer, shield, rod
 .byte $01, $01, $02, $02, $00, $00, $01, $00 ; dungeon  : chest, opened chest, torch, ladder, skull, key, door
-.byte $02, $00, $01, $01, $02, $00, $01, $00 ; town     : tree, fence, weeds, grave, sign, fountain, inn
+.byte $02, $00, $01, $01, $02, $00, $02, $00 ; town     : tree, fence, weeds, grave, sign, fountain, inn
 .byte $02, $01, $01, $01, $02, $00, $02, $00 ; travel   : boat, airship, carriage, caravan, canoe, sub, boots 
 .byte $01, $01, $02, $01, $01, $02, $01, $00 ; critters : squirrel, bun, weasel, rat, bird, frog, snake
 
-
-
 Attribute_Position_LUT:
-.byte $C0, HIGH_LEFT,  $C1, LOW_LEFT, $C1, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C3, LOW_LEFT, $00, $00
-.byte $C8, HIGH_RIGHT, $C1, LOW_LEFT, $C1, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C3, LOW_LEFT, $00, $00
-.byte $C8, HIGH_LEFT,  $C1, LOW_LEFT, $C1, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C3, LOW_LEFT, $00, $00
-.byte $D0, HIGH_RIGHT, $C1, LOW_LEFT, $C1, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C3, LOW_LEFT, $00, $00
-.byte $D0, HIGH_LEFT,  $C1, LOW_LEFT, $C1, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C3, LOW_LEFT, $00, $00
-.byte $D8, HIGH_RIGHT, $C1, LOW_LEFT, $C1, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C2, LOW_LEFT, $C3, LOW_LEFT, $00, $00
+.byte $C0, LR, $C1, LL, $C1, LR, $C2, LL, $C2, LR, $C3, LL, $C3, LR, $00, $00
+.byte $C8, UR, $C9, UL, $C9, UR, $CA, UL, $CA, UR, $CB, UL, $CB, UR, $00, $00
+.byte $C8, LR, $C9, LL, $C9, LR, $CA, LL, $CA, LR, $CB, LL, $CB, LR, $00, $00
+.byte $D0, UR, $D1, UL, $D1, UR, $D2, UL, $D2, UR, $D3, UL, $D3, UR, $00, $00
+.byte $D0, LR, $D1, LL, $D1, LR, $D2, LL, $D2, LR, $D3, LL, $D3, LR, $00, $00
+.byte $D8, UR, $D9, UL, $D9, UR, $DA, UL, $DA, UR, $DB, UL, $DB, UR, $00, $00
 
+;; 11 00 00 00 ; lower right
+;; 00 11 00 00 ; lower left
+;; 00 00 11 00 ; upper right
+;; 00 00 00 11 ; upper left
 
-UpdateAttributes:
+MaskLUT:
+;       0    1    2    3    4    5    6
+.byte $FC, $00, $F3, $00, $CF, $00, $3F
+;     $03       $0C       $30       $C0
+; AND with this byte will delete the 2 bits in the 3s and Cs
 
-
-
-
-
-
-
+UpdateTileAttribute:
+    LDA drawtile
+    AND #$FE
+    CMP #$2E
+    BNE :+
+      LDA #$00
+      BEQ @SaveAttr
+    
+  : LSR A        
+    STA tile_attr
+    AND #$07     
+    ADC tile_attr
+    LSR A
+    ADC #$F0
+    ;; with thanks to tepples for this awesome math!
+    
+    TAY
+    LDA TileAttribute_LUT, Y
+    
+   @SaveAttr: 
+    STA tile_attr
+    
+    LDA position
+    ASL A
+    TAY
+    
+    LDX Attribute_Position_LUT, Y
+    LDA #$23
+    STA dest
+    STX dest+1
+    JSR SetPPUAddress
+    
+    LDA tile_attr
+    LDX Attribute_Position_LUT+1, Y    
+    BEQ @NoShift
+   
+   @Loop:
+    ASL A
+    DEX
+    BNE @Loop
+    
+   @NoShift: 
+    STA tile_attr
+    LDX Attribute_Position_LUT+1, Y    
+    
+    LDA $2007
+    LDA $2007
+    AND MaskLUT, X
+    ORA tile_attr
+    TAY
+    LDA dest
+    LDX dest+1
+    JSR SetPPUAddress
+    STY $2007 
+    
+    LDA old_position
+    STA position
+    RTS
+    
+    
 
 
 
@@ -1861,9 +1918,8 @@ BoxTiles:
     .byte $06, $07, $08
 
 BoxList:
-    ;; starting address
-    ;; width
-    ;; height
+    ;; start address, width, height
+    ;; high bit set in first byte of start address if the box crosses the nametable edge
     .byte $20, $21, 14, 12  ; 0 game area
     .byte $20, $31, 5,  1   ; 1 puzzle #
     .byte $A0, $38, 7,  1   ; 2 timer
@@ -1936,19 +1992,20 @@ Draw_NewTile:
     STA $2007
     STY $2007
 
+    JSR UpdateTileAttribute
+
     LDA drawtile         ; now see if the drawtile value had the low bit set
     AND #$01
     BEQ @Done
     
     ; if so, need to remove the tile that was just drawn from another spot
-    LDA position         ; instead of using cursor_x, use the value saved here when the dupe was found
+    LDA oldtile          ; instead of using cursor_x, use the value saved here when the dupe was found
     LDY #$2E             ; empty "+" tile ID
     STY drawtile         ; also removes the trigger for doing this!
     BNE @RemoveOldTile_EntryPoint
 
    @Done:
     RTS
-
 
 Print:
     ASL A

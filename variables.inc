@@ -29,25 +29,25 @@ cursor_y_max  = $16
 cursor_dot    = $17
 cursor_dot_y  = $18
 
-box_overdraw  = $18
-box_width     = $19
-box_height    = $1A
-
-mult_A        = $19
-mult_X        = $1A
+position      = $19
+old_position  = $1A
 
 dest          = $1B ; + 1C
+
+mult_A        = $1B
+mult_X        = $1C
+
 game_over     = $1D ; $8x = game won, $x1 = game over/menu, $00 = game in progress
 
-update_attr   = $1E ; $8x = update attributes
-drawjob       = $1F ; $8x = update tile with "chosen", $x1 = update possibilities
+update_attr   = $1E ; $8x = update tile attribute, $x1 = update possibilities attributes
+drawjob       = $1F ; $8x = update tile with drawtile, $x1 = update possibilities
 
 puzzle        = $20 ; puzzle #
 clues         = $21 ; $8x = game paused, $x1 = vertical clues, $x0 horizontal clues
 row           = $22
 newtile       = $23
 oldtile       = $24
-position      = $25
+;             = $25
 drawtile      = $26
 options       = $27 ; $8x = music muted, $4x = sfx muted, $x1 = update text
 border        = $28
@@ -68,9 +68,13 @@ text          = $3E ; + $3F
 
 music_track   = $40
 
+box_overdraw  = tmp
+box_width     = tmp+1
+box_height    = tmp+2
+box_counter   = tmp+3
 
-
-attributes    = $A0
+shift_amount  = tmp
+tile_attr     = tmp+1
 
 tmp           = $F0 ; $10 bytes
 
@@ -105,3 +109,5 @@ row3_removed  = $3A0
 row4_removed  = $3A8
 row5_removed  = $3B0
 row6_removed  = $3B8
+
+attributes    = $3C0

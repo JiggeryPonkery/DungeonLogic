@@ -14,8 +14,8 @@ joy_tmp       = $08
 return_bank   = $09
 current_bank  = $0A
 sprite        = $0B ; sprite index
-sprite_y      = $0C
-sprite_x      = $0D
+sprite_anim   = $0C
+
 soft2000      = $0E
 soft2001      = $0F
 
@@ -53,6 +53,7 @@ border        = $27
 abandon       = $28
 
 ;             = $29
+
 moves         = $2A ; moves taken
 ;             = $2B
 gametime      = $2C ; frames
@@ -76,6 +77,12 @@ box_counter   = tmp+3
 
 shift_amount  = tmp
 tile_attr     = tmp+1
+
+sprite_loop   = tmp
+sprite_y      = tmp+1
+sprite_x      = tmp+2
+sprite_attr   = tmp+3
+sprite_shape  = tmp+4
 
 tmp           = $F0 ; $10 bytes
 
@@ -111,4 +118,4 @@ row4_removed  = $3A8
 row5_removed  = $3B0
 row6_removed  = $3B8
 
-attributes    = $3C0
+spritebuffer  = $3C0

@@ -3,11 +3,28 @@
 .feature force_range
 .segment "BANK_0F"
 
+
+
+
+
+
+
+;; TO DO
+;; game over confirmation process - flickering problems
+;; win state + screen
+;; lose state + screen
+;; clues
+;; music
+
+
 CHR:
 .incbin "Puzzle.chr"
 
 TITLE_CHR:
 .incbin "Title.chr"
+
+QUEEN_CHR:
+.incbin "Queen.chr"
 
 TITLE_DOOR:
 	.byte $41,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4a,$4b,$F4
@@ -27,7 +44,8 @@ TITLE_DOOR:
     .byte $80,$81,$55,$55,$55,$55,$55,$55,$55,$55,$8a,$8b,$F4
     .byte $80,$81,$55,$55,$55,$55,$55,$55,$55,$55,$8a,$8b,$F4
     .byte $80,$81,$55,$55,$55,$55,$55,$55,$55,$55,$8a,$8b,$00
-
+    
+    
 RNG_DATA:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -54,9 +72,17 @@ TextStrings:
 .word WINNER        ; 12
 .word STORY         ; 13
 .word PUZZLE_NO     ; 14
+.word CLICK         ; 15
+.word CLICK1        ; 16
+.word CLICK2        ; 17
+.word CLICK1        ; 18
+.word CLICK2        ; 19
+.word CLICK1        ; 20
+.word CLICK2        ; 21
+.word CLICK3        ; 22
 
 TextPositions:
-.word $2AEF ; 0
+.word $2A0E ; 0
 .word $2052 ; 1
 .word $20B2 ; 2
 .word $2111 ; 3
@@ -67,10 +93,18 @@ TextPositions:
 .word $2113 ; 8
 .word $2044 ; 9
 .word $2326 ; 10
-.word $2064 ; 11
+.word $2062 ; 11
 .word $2064 ; 12
 .word $2064 ; 13
 .word $2253 ; 14
+.word $2A02 ; 15
+.word $2A42 ; 16
+.word $2A4F ; 17
+.word $2A84 ; 18
+.word $2A91 ; 19
+.word $2AC6 ; 20
+.word $2AD3 ; 21
+.word $2B02 ; 22
 
 PAUSED:
 .byte $67,$16,$10,$1C,$14,$FF
@@ -112,7 +146,7 @@ STARTMENU:
 .byte $67,$67,$67,$22,$23,$1E,$21,$28,$00
 
 PUZZLE_NO:
-.byte $1F,$24,$29,$29,$1B,$14,$0D,$67,$30,$30,$31,$00
+.byte $1F,$24,$29,$29,$1B,$14,$0D,$67,$00
 
 HELP:
 .byte $C6,$C7,$8C,$8D,$C6,$C7,$67,$23,$17,$14,$67,$12,$10,$21,$10,$25,$10,$1D,$67,$1C,$24,$22,$23,$67,$11,$14,$FF
@@ -146,16 +180,20 @@ COPYRIGHT:
 .byte $DF,$67,$32,$30,$32,$31,$67,$19,$18,$16,$16,$14,$21,$28,$DE,$1F,$1E,$1D,$1A,$14,$21,$28,$00
 
 GAMEOVER:
-.byte $13,$14,$22,$1F,$18,$23,$14,$67,$23,$10,$1A,$18,$1D,$16,$67,$67,$0C,$67,$67,$0C,$FF
-.byte $67,$28,$1E,$24,$67,$15,$10,$18,$1B,$14,$13,$67,$23,$1E,$67,$21,$14,$22,$12,$24,$14,$FF
-.byte $67,$23,$17,$14,$67,$10,$1D,$18,$1C,$10,$1B,$22,$67,$15,$21,$1E,$1C,$67,$23,$17,$14,$FF
-.byte $25,$18,$1B,$14,$67,$13,$24,$1D,$16,$14,$1E,$1D,$22,$67,$1E,$15,$67,$1B,$1E,$16,$18,$12,$0F,$FF
-.byte $67,$23,$17,$18,$22,$67,$22,$17,$10,$1C,$14,$67,$1C,$10,$28,$67,$17,$10,$24,$1D,$23,$FF
-.byte $67,$67,$28,$1E,$24,$21,$67,$22,$1E,$24,$1B,$67,$15,$1E,$21,$67,$23,$17,$14,$FF
-.byte $67,$67,$21,$14,$22,$23,$67,$1E,$15,$67,$28,$1E,$24,$21,$67,$13,$10,$28,$22,$0F,$FF
-.byte $01,$06,$1E,$21,$67,$1D,$1E,$23,$0F,$FF
-.byte $01,$04,$14,$18,$23,$17,$14,$21,$67,$26,$10,$28,$0F,$0F,$0F,$FF
-.byte $67,$23,$17,$14,$67,$20,$24,$14,$14,$1D,$67,$26,$18,$1B,$1B,$67,$15,$14,$10,$22,$23,$0F,$00
+.byte $67,$23,$17,$14,$67,$13,$24,$1D,$16,$14,$1E,$1D,$67,$15,$18,$1B,$1B,$22,$67,$26,$18,$23,$17,$67,$16,$10,$22,$0F,$FF,$FF
+.byte $67,$1E,$1D,$1B,$28,$67,$28,$1E,$24,$67,$1C,$10,$1A,$14,$67,$18,$23,$67,$1E,$24,$23,$67,$10,$1B,$18,$25,$14,$0F,$FF,$FF
+.byte $01,$03,$13,$14,$22,$1F,$18,$23,$14,$67,$23,$10,$1A,$18,$1D,$16,$67,$67,$0C,$67,$67,$0C,$67,$67,$FF,$FF
+.byte $01,$03,$28,$1E,$24,$21,$67,$1B,$1E,$16,$18,$12,$67,$15,$10,$18,$1B,$14,$13,$67,$28,$1E,$24,$0F,$FF,$FF
+.byte $01,$04,$23,$17,$18,$22,$67,$22,$17,$10,$1C,$14,$67,$1C,$10,$28,$67,$17,$10,$24,$1D,$23,$FF,$FF
+.byte $28,$1E,$24,$21,$67,$22,$1E,$24,$1B,$67,$15,$1E,$21,$14,$25,$14,$21,$0F,$0F,$0F,$67,$1E,$21,$67,$1D,$1E,$23,$0F,$FF,$FF
+.byte $01,$08,$14,$18,$23,$17,$14,$21,$67,$26,$10,$28,$0F,$0F,$0F,$FF,$FF
+.byte $01,$04,$23,$17,$14,$67,$20,$24,$14,$14,$1D,$67,$26,$18,$1B,$1B,$67,$15,$14,$10,$22,$23,$0F,$FF,$FF
+.byte $01,$0B,$70,$71,$72,$73,$98,$75,$67,$FF
+.byte $01,$0A,$76,$67,$78,$79,$7A,$7B,$67,$7C,$FF
+.byte $01,$0A,$7D,$7E,$7F,$80,$81,$82,$83,$84,$FF
+.byte $01,$0A,$85,$86,$87,$88,$89,$8A,$8B,$8C,$FF
+.byte $01,$0B,$8D,$8E,$8F,$90,$91,$92,$FF,$FF,$FF
+.byte $01,$04,$23,$24,$21,$1D,$22,$67,$23,$10,$1A,$14,$1D,$0C,$00
 
 WINNER:
 .byte $67,$26,$18,$23,$17,$67,$28,$1E,$24,$21,$67,$1C,$18,$16,$17,$23,$28,$67,$11,$21,$10,$18,$1D,$FF
@@ -187,21 +225,16 @@ STORY:
 .byte $20,$24,$14,$14,$1D,$0B,$22,$67,$26,$18,$1B,$13,$67,$15,$14,$10,$22,$23,$67,$11,$14,$16,$18,$1D,$22,$0F,$FF,$FF,$FF
 .byte $01,$F08,$10,$21,$14,$1D,$0B,$23,$67,$28,$1E,$24,$0E,$00
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+CLICK:
+.byte $23,$17,$14,$67,$23,$24,$1C,$11,$1B,$14,$21,$22,$67,$12,$1B,$18,$12,$1A,$67,$1E,$1D,$14,$67,$11,$28,$67,$1E,$1D,$14,$0F,$FF
+.byte $01,$14,$00
+CLICK1:
+.byte $12,$1B,$18,$12,$1A,$0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F,$00
+CLICK2:
+.byte $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F,$12,$1B,$18,$12,$1A,$00
+CLICK3:
+.byte $01,$0C,$12,$1B,$18,$12,$1A,$FE,$FF,$FF
+.byte $67,$67,$23,$17,$14,$67,$1B,$1E,$12,$1A,$67,$11,$14,$16,$18,$1D,$22,$67,$23,$1E,$67,$1C,$1E,$25,$14,$0F,$0F,$0F,$00
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -224,7 +257,20 @@ GamePalette:
 .byte $3F,$0A,$1A,$2A
 .byte $3F,$01,$11,$21
 .byte $3F,$0C,$1C,$2C
-.byte $3F,$06,$16,$26
+.byte $3F,$06,$3F,$26
+
+
+GameOverPalette:
+.byte $3F,$06,$10,$30
+.byte $3F,$2D,$10,$16
+.byte $3F,$2D,$10,$30
+.byte $3F,$04,$15,$30
+
+;; sprites
+.byte $3F,$06,$16,$16
+.byte $3F,$0F,$0F,$0F
+.byte $3F,$0F,$0F,$0F
+.byte $3F,$0F,$0F,$0F
 
 
 MenuPalette:
@@ -237,7 +283,8 @@ MenuPalette:
 .byte $3F,$0A,$1A,$2A
 .byte $3F,$17,$28,$30
 .byte $3F,$06,$0A,$36
-.byte $3F,$04,$15,$30
+.byte $3F,$04,$3F,$30
+
 
 BorderPalettes:
 .byte $01,$21 ; 
@@ -339,22 +386,8 @@ OnReset:
 MainMenu:
     LDX #$FF      ; set stack pointer! 
     TXS           
-    
-    JSR TurnOffScreen
-
-    ; load palettes
-    LDA #<MenuPalette-$E0 ; slight trickery here...
-    STA tmp_pointer
-    LDA #>MenuPalette-$01
-    STA tmp_pointer+1
-    LDY #$E0          ; start with Y = 0 - $20
-
-    LDA #$3F
-    LDX #$00
-    JSR SetPPUAddress
-    
-    INX               ; X = #01 to make sure the loop exits
-    JSR Load_CHR_Loop
+    JSR TurnOffScreen_ClearOAM
+    JSR LoadMenuPalette
 
     ; load title
     LDA #<TITLE_CHR
@@ -398,10 +431,12 @@ MainMenu:
     STA game_over    ; mark as "in menu"
     STA update_attr
     STA cursor_dot
+    STA drawjob      ; draw puzzle number
 
     JSR ClearButtons ; clear cursor variables
     STA cursor_dot_y
     STA music_track    
+    STA clues
     
     LDA #10 
     JSR DrawBox
@@ -414,7 +449,6 @@ MainMenu:
     
     LDA #$1E        ; turn on screen/clear emphasis
     STA soft2001    
-    
     JMP MenuFrame
 
 MenuList:
@@ -425,7 +459,7 @@ MenuList:
 
 QuitGame:
     ;; return to Action 52 menu somehow
-    JSR TurnOffScreen        
+    JSR TurnOffScreen_ClearOAM    
     STX $2000
     STX soft2000
     STX $2001
@@ -435,36 +469,16 @@ QuitGame:
 ViewHelp:
     JSR StaticScreen_Setup
     JSR LoadGamePalette    
+
+    LDA #<StaticScreen_HELP_Attributes    
+    STA tmp_pointer
+    LDA #>StaticScreen_HELP_Attributes
+    STA tmp_pointer+1
     LDA #$23
     LDX #$C1
-    JSR SetPPUAddress
+    JSR Decompress_Attributes
+
     DEC game_over      ; do not animate sprites
-    
-    ;; this only-used-once code decompresses a string to the attributes
-    ;; I think it takes 27 bytes
-    ;; the compressed version is 16
-    ;; the full table would be 56 bytes
-    ;; and the simplest loop would be 11
-    ;; sometimes only-used-once code is good!
-    
-    LDX #$00
-   @AttriLoop: 
-    LDA StaticScreen_HELP_Attributes, X
-    CMP #$0F
-    BCS @Normal
-    
-    TAY
-    LDA #$00
-   @Blanks:
-    DEY 
-    STA $2007
-    BNE @Blanks
-    
-   @Normal: 
-    STA $2007
-    INX
-    CPX #16
-    BNE @AttriLoop
 
     LDX #$13
    @Sprites:
@@ -492,7 +506,7 @@ StaticScreen_Start:
     JMP StaticFrame
     
 StaticScreen_Setup:
-    JSR TurnOffScreen            
+    JSR TurnOffScreen_ClearOAM     
     JSR ClearNametable
     JSR LoadPuzzleTiles    
     JMP ClearButtons    
@@ -520,18 +534,11 @@ StaticScreen_HELP_Sprites:
 
 StaticScreen_HELP_Attributes:
 .byte $55,$10,$05,$80,$06,$11,$06,$DD
-.byte $11,$05,$55,$11,$0D,$12,$04,$12
+.byte $11,$05,$55,$11,$0D,$12,$04,$12,$00
 
 
-GameOver:
-    JSR TurnOffScreen     
-
-GameWon:   
-    JSR TurnOffScreen     
-    
-    
 LoadGame:
-    JSR TurnOffScreen
+    JSR TurnOffScreen_ClearOAM
     JSR LoadGamePalette
     JSR LoadPuzzleTiles
     JSR ClearNametable
@@ -579,7 +586,6 @@ LoadGame:
     LDA #>$2054
     LDX #<$2054
     JSR PrintPuzzleNumber
-    ;; ^ this also sets the scroll
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -655,8 +661,9 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     STA solved-1, Y
     DEY
     BNE @Convert
-   
-    STY row1_solved+7 ;; clear these out to 0
+    
+    INY
+    STY row1_solved+7 ;; clear these out to 1
     STY row2_solved+7
     STY row3_solved+7
     STY row4_solved+7
@@ -670,6 +677,12 @@ GameStart:
     STA update_attr  ; and their attributes
     STA music_track
     STA options      ; mark as needing values updated on screen
+    STA row1_player+7
+    STA row2_player+7
+    STA row3_player+7
+    STA row4_player+7
+    STA row5_player+7
+    STA row6_player+7
 
     JSR ClearButtons ; then clear cursor variables
     STA game_over    ; mark as "in game"
@@ -684,6 +697,9 @@ GameStart:
     STA gametime+1
     STA gametime+2
     STA gametime+3
+    STA moves
+    STA moves+1
+    STA moves+2
 
     LDA options
     ORA #$20
@@ -715,6 +731,7 @@ GameFrame:
     STA $4014
     JSR Update_Gametime
     JSR Draw_NewTile
+    JSR CheckGameOver
     JSR Load_Possibilities
     JSR UpdateOptionText
     JSR Print_Gametime_Play
@@ -722,19 +739,43 @@ GameFrame:
     JSR ClearOAM
     JSR DrawSprite0
     JSR DrawCursor
+    JSR DrawAllSprites
     JSR UpdateJoy
     JSR MoveGameCursor
     JSR PlayerInput_Game
     JMP GameFrame
 
-GameFrame_Printing:
-    JSR Update_Gametime
-    JSR Print_Gametime_Play 
+GameFrame_Over:
+    LDA #>oam
+    STA $4014
     JSR SetScroll
     JSR ClearOAM
     JSR DrawSprite0
+    JSR DrawAllSprites
+    JSR ClearButtons    
+    JSR UpdateJoy
+    JSR WaitForVBlank
+    LDA noise_sfx
+    BEQ :+
+        RTS
+  : JSR PlayerInput_GameOver
+    JMP GameFrame_Over
+
+GameFrame_Printing:
+    LDA #>oam
+    STA $4014    
+    LDA game_over
+    BNE :+
+    JSR Update_Gametime
+    JSR Print_Gametime_Play 
+  : JSR SetScroll
+    JSR ClearOAM
+    JSR DrawSprite0
+    JSR DrawAllSprites
+    LDA game_over
+    BNE :+
     JSR DrawCursor
-    JMP WaitForVBlank
+  : JMP WaitForVBlank
 
 StaticFrame:
     JSR WaitForVBlank
@@ -755,11 +796,12 @@ MenuFrame:
     STA $4014
     LDA drawjob
     BEQ :+
-        LDA #>$225C
-        LDX #<$225C
+        LDA #>$225B
+        LDX #<$225B
         JSR PrintPuzzleNumber
+        DEC drawjob
 
-  : JSR SetScroll
+  : JSR SetScroll_Game
     JSR ClearOAM
     JSR DrawMenuCursor
     JSR UpdateJoy
@@ -801,6 +843,179 @@ PauseGame:
     LDA #$1E       ; turn on screen/clear emphasis
     STA soft2001
     RTS
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;         WIN / LOSE CALCULATION
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckGameOver:
+    LDY #$30
+    LDX #$30
+   @Check:
+    LDA selected, X
+    BNE @CompareSolved
+
+    RTS ; a tile is not set; game is not over
+    
+   @CompareSolved: 
+    CMP solved, X
+    BNE @Next
+    
+   @Match:
+    DEY
+    
+   @Next:
+    DEX
+    BPL @Check
+    
+    ;; all tiles checked, but how did they match up?
+    ;; Y should be 0 if everything was equal.
+    
+    CPY #$00
+    BEQ @GameWon
+
+    ;; game lost, so...
+    
+   @Lost:
+    INC game_over
+    BNE @ClickText
+    
+   @GameWon:
+    LDA #$80
+    STA game_over
+    
+   @ClickText:
+    JSR GameFrame_Printing   
+    JSR ClearSpriteBuffer
+    JSR GameFrame_Printing   
+    LDA #15
+    STA row
+
+   @ClickLoop: 
+    LDA row
+    JSR Print
+    LDA clues
+    ORA #$80
+    STA clues   
+    JSR GameFrame_Over
+    INC row
+    LDA row
+    CMP #22
+    BCC @ClickLoop
+        CMP #23
+        BEQ :+
+        JSR LockClick
+        JMP @ClickLoop
+
+  : LDA game_over
+    BPL GameOver
+    JMP GameWon
+
+GameOver:
+    JSR SetScroll
+    JSR TurnOffScreen_ClearOAM
+    JSR ClearNametable    
+    STX clues
+    
+    LDA #<QUEEN_CHR
+    STA tmp_pointer
+    LDA #>QUEEN_CHR
+    STA tmp_pointer+1
+
+    LDA #$07
+    LDX #$00
+    JSR SetPPUAddress
+    
+    LDX #$03
+    LDY #$00
+    STY scroll
+    STY scroll+1    
+    JSR Load_CHR_Loop    
+
+    JSR LoadGameOverPalette
+
+    LDA #<Queen_Attributes
+    STA tmp_pointer
+    LDA #>Queen_Attributes
+    STA tmp_pointer+1
+    LDA #$23
+    LDX #$E3
+    JSR Decompress_Attributes
+
+    LDA #11
+    JSR Print
+    LDA #$1E        ; turn on screen/clear emphasis
+    STA soft2001    
+
+    JSR Print_Gametime_GameOver
+    JSR PrintMoves
+    
+    JSR WaitForVBlank
+    JSR GameFrame_Over
+    
+    LDX #$27
+   @LoadSprites:
+    LDA Queen_Sprites, X
+    STA spritebuffer, X
+    DEX
+    BPL @LoadSprites
+
+    LDA #$10
+    STA row
+    
+   @FlashLoop:
+    LDA #$08
+    STA position
+    LDA #$3F
+    LDX #$00
+    JSR SetPPUAddress
+    
+    LDX #$30
+    LDA row
+    AND #$01
+    BEQ :+
+    LDX #$0F
+  : STX $2007  
+    LDA #$00
+    TAX
+    JSR SetPPUAddress    
+    
+   @FlashLoop_Inner: 
+    JSR GameFrame_Printing
+    DEC position
+    BNE @FlashLoop_Inner
+    DEC row
+    BNE @FlashLoop
+    
+    JSR GameFrame_Over     
+    JMP MainMenu
+
+
+Queen_Attributes:
+    .byte $50,$50,$05,$22,$84,$00
+
+Queen_Sprites:
+;Sprite ID, X,  Y, 
+.byte $12,$69,$97,$00
+.byte $13,$75,$A4,$00
+.byte $13,$84,$A4,$00
+
+.byte $04,$20,$97,$00
+.byte $06,$40,$A4,$00
+
+.byte $08,$B3,$95,$00
+.byte $0A,$D0,$B0,$00
+.byte $0C,$A4,$B2,$00
+
+.byte $0E,$78,$BF,$00
+.byte $10,$29,$B7,$00
+
+GameWon:   
+    JMP MainMenu
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1020,7 +1235,19 @@ PlayerInput_Other:
    @Done:
     JMP ClearButtons 
 
-
+PlayerInput_GameOver:
+    LDA joy_b
+    ORA joy_a
+    ORA joy_start
+    ORA joy_select
+    BEQ @Done
+        JSR ClearButtons
+        PLA
+        PLA ; return from player_input_gameover
+        RTS ; return from GameOver frames
+    
+   @Done:
+    JMP ClearButtons 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1737,6 +1964,7 @@ MoveGameCursor:
     CMP #$00
     BEQ @Done
 
+    JSR IncMove
     ;; see what cursor type it is
     LDX cursor
     BMI @Cursor2
@@ -2040,27 +2268,34 @@ DrawSprite:
     LDA SpriteTable+1, Y
     STA sprite_attr    ; sprite attributes
     
-    JSR @QuickSprite    ; draw upper left
+    JSR @QuickSprite   ; draw upper left
     JSR SpriteXInc  
-    JSR @QuickSprite    ; draw upper right
+    JSR @QuickSprite   ; draw upper right
 
-    LDA sprite_shape   ; see if drawing 2 arrows or a square tile
-    BMI @Done
-    
-   @Square: 
     LDA sprite_x
     SEC
     SBC #$08
     STA sprite_x
-    LDA sprite_y
-    CLC
-    ADC #$08
-    STA sprite_y
 
-    JSR @QuickSprite    ; draw lower left
-    JSR SpriteXInc    
+    LDA sprite_shape   ; see if drawing 2 arrows or a square tile
+    BMI @Done
+    CMP #$01           ; or 4 tiles downwards
+    BEQ @Downwards
+    
+   @Square: 
+    JSR SpriteYInc
+    JSR @QuickSprite    ; 3rd tile
+    JSR SpriteXInc
+    BNE @QuickSprite
+
+   @Downwards:
+    JSR SpriteYInc
+    JSR @QuickSprite    ; 2nd tile
+    JSR SpriteYInc
+    JSR @QuickSprite    ; 3rd tile
+    JSR SpriteYInc
  
-   @QuickSprite:           ; then draw lower right, or third arrow
+   @QuickSprite:      ; then draw lower right for square, or bottom of line for blood drips
     INY
     LDA SpriteTable+1, Y
     STA oam+1, X      ; tile ID
@@ -2085,6 +2320,13 @@ SpriteXInc:
     ADC #$08
     STA sprite_x
     RTS
+    
+SpriteYInc:
+    LDA sprite_y
+    CLC
+    ADC #$08
+    STA sprite_y
+    RTS    
 
 SpriteTable:
 ;     tile shape
@@ -2116,6 +2358,10 @@ SpriteTable:
 .byte $00,$01,$EC,$ED,$FC,$FD,$00,$00 ; 15: snake
 .byte $00,$01,$EC,$ED,$9E,$9F,$00,$00 ; 16: snake twitch
 
+.byte $01,$00,$93,$67,$94,$95,$96,$00 ; 17: blood
+.byte $80,$00,$77,$67,$00,$00,$00,$00 ; 18: eye
+
+
     
 DrawSprite0:
     LDA #$F4  ; x pos
@@ -2123,7 +2369,7 @@ DrawSprite0:
     LDA #$74  
     STA oam   ; y pos
     STA oam+1 ; tile ID - same! :D
-    LDA #$20  ; attributes - behind background
+    LDA #$23  ; attributes - behind background
     STA oam+2 
     RTS
     
@@ -2197,8 +2443,8 @@ Print_Gametime_Play:
     BNE Print_Gametime
 
 Print_Gametime_GameOver:
-    LDA #>$2059        ; for the game over screen
-    LDX #<$2059        ; these coordinates will need to be updated!
+    LDA #>$20F4        ; for the game over screen
+    LDX #<$20F4        ; these coordinates will need to be updated!
     JSR SetPPUAddress
     BNE Print_Gametime
 
@@ -2239,7 +2485,48 @@ PrintPuzzleNumber:
     PLA
     STY $2007
     STA $2007
-    JMP SetScroll
+    RTS
+
+PrintMoves:
+    LDA #$23
+    LDX #$54
+    JSR SetPPUAddress
+    LDA moves+2
+    JSR Convert_Number
+    STY $2007
+    STA $2007
+    LDA moves+1
+    JSR Convert_Number
+    STY $2007
+    STA $2007
+    LDA moves
+    JSR Convert_Number
+    STY $2007
+    STA $2007
+    RTS    
+    
+    
+IncMove:
+    LDX moves
+    CPX #99
+    BEQ @IncMid
+    INC moves
+    RTS
+    
+   @IncMid: 
+    LDX #0
+    STX moves
+    LDX moves+1
+    CPX #99
+    BEQ @IncHigh
+    INC moves+1
+    RTS
+    
+   @IncHigh:
+    LDX #0
+    STX moves+1
+    INC moves+2
+    RTS
 
 Convert_LargeNumber: ; up to 255
     CMP #100
@@ -2308,6 +2595,43 @@ ClearNametable:
     BNE @NameTable
     RTS
 
+Decompress_Attributes:
+    JSR SetPPUAddress
+
+    LDY #$00
+   @AttriLoop: 
+    LDA (tmp_pointer), Y
+    BEQ @Done
+    CMP #$0F
+    BCS @Normal
+    
+    TAX
+    LDA #$00
+   @Blanks:
+    DEX 
+    STA $2007
+    BNE @Blanks
+    
+   @Normal: 
+    STA $2007
+    INY
+    BNE @AttriLoop    
+   @Done:
+    RTS   
+
+LoadGameOverPalette:
+    LDA #<GameOverPalette-$E0 ; slight trickery here...
+    STA tmp_pointer
+    LDA #>GameOverPalette-$01
+    STA tmp_pointer+1
+    BNE LoadPalette
+
+LoadMenuPalette:
+    LDA #<MenuPalette-$E0 ; slight trickery here...
+    STA tmp_pointer
+    LDA #>MenuPalette-$01
+    STA tmp_pointer+1
+    BNE LoadPalette
 
 LoadGamePalette:
    ; load palettes
@@ -2316,8 +2640,9 @@ LoadGamePalette:
     STA tmp_pointer
     LDA #>GamePalette-$01
     STA tmp_pointer+1
-    LDY #$E0          ; start with Y = 0 - $20
 
+LoadPalette:
+    LDY #$E0          ; start with Y = 0 - $20
     LDA #$3F
     LDX #$00
     JSR SetPPUAddress
@@ -2579,8 +2904,6 @@ Print:
     DEC text+1
     ;; this will be incremented before drawing
 
-    LDA #1
-    STA row
     LDY #$FF
 
    @Newline:
@@ -2628,22 +2951,52 @@ Print:
     
   : LDA soft2001
     BEQ @Newline
-        INC row
-        LDA row
-        AND #$04
-        BEQ @Newline
         TYA
         PHA
         JSR GameFrame_Printing
-        LDA #>oam
-        STA $4014        
-        LDA #01
-        STA row
         PLA
         TAY
     JMP @Newline
 
    @Done:
+    RTS
+    
+    
+    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          SOUND EFFECTS
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+    
+LockClick:    
+    LDA #$08
+    STA $4015
+    ;; turn on noise channel
+
+    LDA #%00000011             ; first clunk
+    STA $400C
+    LDA #%00001011
+    STA $400E
+    LDA #$0
+    STA $400F         
+    
+    LDA #10
+    STA noise_sfx              ; play noise for 10 frames
+  : JSR GameFrame_Over
+    DEC noise_sfx 
+    BNE :-
+    
+    LDA #%00000011             ; second clunk
+    STA $400C
+    LDA #%00001000
+    STA $400E
+    LDA #0
+    STA $400F             
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2654,9 +3007,10 @@ Print:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+TurnOffScreen_ClearOAM:
+    JSR ClearOAM  ; clear OAM for when the menu is returned to after gameplay
 
 TurnOffScreen:
-    JSR ClearOAM  ; clear OAM for when the menu is returned to after gameplay
     STX soft2001
     JSR WaitForVBlank
     ;; turn off screen and wait for VBlank for drawing palettes
@@ -2753,8 +3107,8 @@ WaitForVBlank:
     LDA $2002
     BEQ @Paused
 
-    LDY #$0A
-    LDA #$C1
+    LDY #$09
+    LDA #$E1
     LDX #$2C       ; waits a few scanlines for H-blank so as not to draw weird dots on the screen
   : DEX
     BNE :-
@@ -2765,13 +3119,16 @@ WaitForVBlank:
     LDA #$1E
     STA $2001      ; turn on screen
     
-    LDY #$03
-   @NoScreen:
-    DEX
-    BNE @NoScreen
-    DEY
-    BNE @NoScreen
-    STX $2001
+ ;   LDA game_over
+ ;   BNE OnIRQ
+ ;   
+ ;   LDY #$03
+ ;  @NoScreen:
+ ;   DEX
+ ;   BNE @NoScreen
+ ;   DEY
+ ;   BNE @NoScreen
+ ;   STX $2001
     
 
 OnIRQ:
@@ -2788,11 +3145,18 @@ OnNMI:
     PLA            ; pull the RTI return info off the stack
     RTS            ; return to the game
 
+SetScroll_Game:
+    LDA #$08
+    STA scroll
+    LDA #$00
+    STA scroll+1
 
 SetScroll:
-    LDA #$08   ; shifted by 1 tile
+    LDA soft2000
+    STA $2000
+    LDA scroll      ; shifted by 1 tile
     STA $2005
-    LDA #$00
+    LDA scroll+1
     STA $2005
     RTS
 

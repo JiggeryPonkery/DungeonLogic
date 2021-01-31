@@ -14,7 +14,7 @@ joy_tmp       = $08
 return_bank   = $09
 current_bank  = $0A
 sprite        = $0B ; sprite index
-sprite_anim   = $0C
+scroll        = $0C ; + D
 
 soft2000      = $0E
 soft2001      = $0F
@@ -51,11 +51,7 @@ drawtile      = $25
 options       = $26 ; $8x = music muted, $4x = sfx muted, $x1 = update text
 border        = $27
 abandon       = $28
-
-;             = $29
-
-moves         = $2A ; moves taken
-;             = $2B
+moves         = $29 ; moves taken + A + B 
 gametime      = $2C ; frames
 ;             = $2D ; seconds
 ;             = $2E ; minutes
@@ -63,12 +59,13 @@ gametime      = $2C ; frames
 
 possibilities = $30 ; 7 bytes
 total         = $37
-tmp_pointer   = $38 ; + $39
-;             = $3A ; + $3B
-;             = $3C ; + $3D
+
+sprite_anim   = $3B
+tmp_pointer   = $3C ; + $3D
 text          = $3E ; + $3F
 
 music_track   = $40
+noise_sfx     = $10
 
 box_overdraw  = tmp
 box_width     = tmp+1

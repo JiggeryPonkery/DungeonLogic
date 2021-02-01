@@ -74,12 +74,15 @@ box_counter   = tmp+3
 
 shift_amount  = tmp
 tile_attr     = tmp+1
+attr_dest     = tmp+2
+tile_address  = tmp+3
 
 sprite_loop   = tmp
 sprite_y      = tmp+1
 sprite_x      = tmp+2
 sprite_attr   = tmp+3
 sprite_shape  = tmp+4
+sprite_over   = tmp+5
 
 tmp           = $F0 ; $10 bytes
 

@@ -1,4 +1,5 @@
 *.lnk
+*.exe
 old_*
 *.nss
 Jiggers.dbg

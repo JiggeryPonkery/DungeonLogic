@@ -11,8 +11,7 @@ joy_prev      = $06
 joy_ignore    = $07
 joy_tmp       = $08
 
-return_bank   = $09
-current_bank  = $0A
+RNG           = $09 ; + A 
 sprite        = $0B ; sprite index
 scroll        = $0C ; + D
 
@@ -43,11 +42,19 @@ update_attr   = $1E ; $8x = update tile attribute, $x1 = update possibilities at
 drawjob       = $1F ; $8x = update tile with drawtile, $x1 = update possibilities
 
 puzzle        = $20 ; puzzle #
-clues         = $21 ; $8x = game paused, $x1 = vertical clues, $x0 horizontal clues
-row           = $22
-newtile       = $23
-oldtile       = $24
-drawtile      = $25
+row           = $21
+newtile       = $22
+oldtile       = $23
+drawtile      = $24
+clues         = $25 ; $8x = game paused, $x1 = vertical clues, $x0 horizontal clues
+horz_clues    = $26 ; for generation
+vert_clues    = $27 ; for generation
+clue_x        = $28 ; for generation
+clue_y        = $29 ; for generation
+vert_clues_x  = $2A ; for generation
+vert_offset   = $2B ; for generation
+sprite_v      = $2C ; for generation
+
 options       = $26 ; $8x = music muted, $4x = sfx muted, $x1 = update text
 border        = $27
 abandon       = $28
@@ -84,6 +91,10 @@ sprite_attr   = tmp+3
 sprite_shape  = tmp+4
 sprite_over   = tmp+5
 
+cluetile1     = tmp+7
+cluetile2     = tmp+6
+cluetile3     = tmp+5
+
 tmp           = $F0 ; $10 bytes
 
 solved        = $300
@@ -118,4 +129,7 @@ row4_removed  = $3A8
 row5_removed  = $3B0
 row6_removed  = $3B8
 
-spritebuffer  = $3C0
+clue_list     = $3C0
+
+spritebuffer  = $400
+spritebuffer2 = $460

@@ -4,6 +4,53 @@
 .segment "BANK_0F"
 
 
+; The Sword               ; 00
+; The Shield              ; 00
+; The Staff               ; 01
+; The Bow                 ; 01
+; The Dagger              ; 00
+; The Rod                 ; 03
+; The Hammer              ; 00
+
+; The Hope                ; 01
+; The Disappointment      ; 01
+; The Torch               ; 02
+; The Descent             ; 02
+; Glumskull               ; 00
+; The Key                 ; 00
+; The Door                ; 00
+
+; The Tree                ; 02
+; The Fence               ; 00
+; The Rhubarb             ; 01
+; The Grave               ; 01
+; The Signpost            ; 01
+; The Fountain            ; 00
+; The Inn on the Hill     ; 01
+
+; S.S. Snakey             ; 02
+; The Airship             ; 01
+; The Carriage            ; 01
+; The Caravan             ; 01
+; The Ferryman            ; 02
+; The Submarine           ; 00
+; The Boots               ; 02
+
+; Albino Sunspark Banana  ; 01
+; Fatbirb                 ; 01
+; Ozzy                    ; 02
+; Dangerous Beans         ; 01
+; Pickles                 ; 02
+; Trailmix                ; 01
+; Mr. Bunnsy              ; 02
+
+; The Scoundrel           ; 02
+; The Bardess             ; 03
+; The Healer              ; 01
+; The Spy                 ; 02
+; The Barbarian           ; 00
+; The Dragon              ; 02
+; The Priestess           ; 03
 
 ;; TO DO
 ;; game over confirmation process - flickering problems
@@ -39,8 +86,6 @@ TITLE_DOOR:
     .byte $80,$81,$55,$55,$55,$55,$55,$55,$55,$55,$8a,$8b,$F4
     .byte $80,$81,$55,$55,$55,$55,$55,$55,$55,$55,$8a,$8b,$00
 
-
-RNG_DATA:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -147,7 +192,7 @@ HELP:
 .byte $D6,$D7,$9C,$9D,$D6,$D7,$67,$1D,$14,$27,$23,$67,$23,$1E,$67,$23,$17,$14,$67,$13,$1E,$1E,$21,$67,$1E,$1D,$FF
 .byte $01,$07,$14,$18,$23,$17,$14,$21,$67,$22,$18,$13,$14,$0F,$FF,$FF
 
-.byte $88,$89,$86,$87,$88,$89,$67,$23,$17,$14,$67,$22,$1A,$24,$1B,$1B,$67,$12,$10,$1D,$1D,$1E,$23,$67,$11,$14,$FF
+.byte $88,$89,$86,$87,$88,$89,$67,$16,$1B,$24,$1C,$22,$1A,$24,$1B,$1B,$67,$12,$10,$1D,$1D,$1E,$23,$67,$11,$14,$FF
 .byte $98,$99,$96,$97,$98,$99,$67,$1D,$14,$27,$23,$67,$23,$1E,$67,$23,$17,$14,$67,$1B,$10,$13,$13,$14,$21,$FE,$FF,$FF
 
 .byte $E8,$E9,$67,$67,$8A,$8B,$67,$23,$17,$14,$67,$11,$18,$21,$13,$67,$1C,$24,$22,$23,$67,$11,$14,$67,$23,$1E,$FF
@@ -348,7 +393,7 @@ MainMenu:
     STA music_track
     STA clues
 
-    LDA #10
+    LDA #12
     JSR DrawBox
     LDA #8
     JSR Print
@@ -356,6 +401,7 @@ MainMenu:
     JSR Print
     LDA #14
     JSR Print
+    JSR WaitForVBlank ; to fix bad timing with the first wait
 
     LDA #$1E        ; turn on screen/clear emphasis
     STA soft2001
@@ -411,13 +457,13 @@ ViewStory:
     LDA #13
     JSR Print
 
+    LDA #16
+    JSR DrawBox
+    LDA #15
+    JSR DrawBox
     LDA #14
     JSR DrawBox
     LDA #13
-    JSR DrawBox
-    LDA #12
-    JSR DrawBox
-    LDA #11
     JSR DrawBox
 
 StaticFrame_Start:
@@ -439,7 +485,7 @@ LoadGame:
     JSR LoadPuzzleTiles
     JSR ClearNametable
 
-    LDA #9
+    LDA #11
     STA box_counter
    @BoxLoop:
     LDA box_counter
@@ -498,11 +544,6 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     LDX #48-1
     STX tmp+8       ; loop counter
 
-    LDA #<RNG_DATA
-    STA tmp_pointer
-    LDA #>RNG_DATA
-    STA tmp_pointer+1
-
    @Clear_Used:     ; clear the temp space with $FF
     LDA #$FF
     STA tmp+1
@@ -513,24 +554,26 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     STA tmp+6
     STA tmp+7
 
-   @Loop:
-    LDY puzzle      ; use puzzle ID as starting point
-    LDA (tmp_pointer), Y
-    INC tmp_pointer
-    BNE :+
-      INC tmp_pointer+1
-  : AND #$07
-    BEQ @Loop       ; if it is 0, try again - need a value between 1 and 7
+    LDA puzzle
+    STA RNG
 
+   @GetTileBitLoop:
+    JSR Random
+    AND #$07
+    BEQ @GetTileBitLoop ; if it is 0, try again - need a value between 1 and 7
+
+    TAX
+    DEX
+    LDA BIT_LUT, X  ; convert 1-7 to 80, 40, 20, 10, 08, 04, 02
     STA tmp
-    DEC tmp         ; turn the tile's value to 0-based
+
     LDX #$07
    @Check_Used:
     LDA tmp, X      ; get the value in this slot
     CMP #$FF
     BEQ @Write      ; if the value is still $FF, then its not been written yet
     CMP tmp
-    BEQ @Loop       ; if it is equal, then this value has been written already; get a new value
+    BEQ @GetTileBitLoop ; if it is equal, then this value has been written already; get a new value
     DEX
     BNE @Check_Used
 
@@ -541,43 +584,684 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     STA solved-1, Y
     DEC tmp+8
     DEX             ; X = 0 when its the last tile in the row
-    BNE @Loop
+    BNE @GetTileBitLoop
     DEC tmp+8       ; skip the 8th byte
     DEC tmp+9       ; decrement row counter
     BNE @Clear_Used
 
-    ;; JIGS - and just realized I've been using 1 through 7 for the solved puzzle...
-    ;; while using single bits for the rest. Oops.
+    LDA #$FE         ; set each game area tile's possible tile list
+    LDX #48
+   @ClearPuzzle:
+    STA unsolved-1, X
+    DEX
+    BNE @ClearPuzzle
 
-    LDY #$30
-   @Convert:
-    LDA solved-1, Y
+    ;; now to generate some preset tiles...
+
+   @SetStartingTileAmount:
+    JSR Random
+    AND #$03              ; get between 1-3 tiles
+    BEQ @SetStartingTileAmount
+
+    STA clues  ; tiles to set
+
+   @SetStartingTiles:
+    JSR GetRandomPosition
+
+    PHA
+    LDA solved, X
+
+    INC drawjob
+    JSR Load_Possibilities
+    JSR Choose_Possibility
+    JSR Draw_NewTile
+
+    PLA
     TAX
-    LDA BIT_LUT, X
-    STA solved-1, Y
-    DEY
-    BNE @Convert
+    LDA solved, X
+    EOR #$FE
+    STA removed, X ; act as though the player removed all other tiles from possibilities
+    LDA #$FF
+    STA clue_list, X
+    TXA
+
+    DEC clues
+    BNE @SetStartingTiles
+
+    ;; and now to generate some clues:
+    ;Clue_Table:
+    ;   $00 - Is Next To
+    ;   $01 - Is NOT Next to
+    ;   $02 - Is Left Of
+    ;   $03 - Is in Row
+    ;   $04 - Is NOT in row
+    ;   $05 - Is in Column
+    ;   $06 - Is NOT in Column
+
+    LDA #0
+    STA sprite
+    STA sprite_v
+    
+    LDA #$FF
+    STA vert_clues
+    STA vert_clues_x
+    STA horz_clues
+    STA clues
+
+Generate_Clues:
+    INC clues
+    LDA clues
+    CMP #42
+    BNE :+
+        JMP PrepGame
+  : JSR Random
+    AND #$07
+
+    CMP #6
+    BCS :+          
+    
+    LDX horz_clues
+    CPX #23
+    BEQ :-          ; if horizontal clues are at max, then don't do any more  
+    BNE @Continue
+
+  : LDX vert_clues
+    CPX #29         ; if vertical clues are at max, that's way too many anyway, so keep looping until it breaks out of generation
+    BEQ Generate_Clues
+    
+   @Continue:
+    ASL A
+    TAY
+    LDA ClueType_Table, Y
+    STA tmp_pointer
+    LDA ClueType_Table+1, Y
+    STA tmp_pointer+1
+    JMP (tmp_pointer)
+
+ClueType_Table:
+.word IsNextTo       ; 0
+.word IsNextTo       ; 1
+.word IsNotNextTo    ; 2
+.word IsLeftOf       ; 3
+.word IsInRow        ; 4
+.word IsNotInRow     ; 5
+.word IsInColumn     ; 6
+.word IsNotInColumn  ; 7
+
+GetRandomPosition:
+    JSR Random
+    AND #$3F    ; cap at 48-1
+    CMP #$2F
+    BCS GetRandomPosition
+    STA position
+    AND #$0F    ; see if it = 7 or 15; these tiles do not exist in the puzzle
+    CMP #$07
+    BEQ GetRandomPosition
+    CMP #$0F
+    BEQ GetRandomPosition
+
+    LDY position
+    LDA solved, Y
+
+    LDX #$FF
+   @GetFakeCursor2X:
+    INX
+    CMP BIT_LUT, X
+    BNE @GetFakeCursor2X
+    STX cursor2_x
+
+    LDA position
+    AND #$38
+    LSR A
+    LSR A
+    LSR A
+    STA cursor_y
+
+    LDA position
+    AND #$07
+    STA cursor_x
+
+    TYA
+    TAX
+    RTS
+
+GetClueTile:
+    JSR GetRandomPosition
+    LDA clue_list, X
+    CMP #$04
+    BEQ GetClueTile
+
+    LDY cursor_y
+    LDA TileOffset_LUT, Y
+    STA drawtile
+
+    LDA cursor2_x
+    ASL A
+    ORA drawtile
+    RTS
+
+
+DrawClue:
+    ; A 0 = no sprite
+    ; A 1 = <?>
+    ; A 2 = ///
+    ; A 3 = <->
+    ; X 0 = horz: draw tile 1, tile 2, tile 1
+    ; X 1 = horz: draw tile 1, space, tile 2
+    ; X 2 = horz: draw tile 1, tile 2, tile 3
+    ; X 3 = vert: draw tile 1, tile 2
+    ; X 4 = vert: draw tile 1, tile 2 in sprite containment box
+    LDY #0
+    STY vert_offset
+    
+    STX clue_x
+    STA clue_y
+    CPX #$03
+    BCS @DrawVerticalClue
+
+    LDA horz_clues
+    ASL A
+    TAY
+
+    LDA clue_y
+    BEQ @NoHorzSprite
+
+    LDX sprite
+    STA spritebuffer, X
+    LDA HorzSpriteLocations, Y
+    STA spritebuffer+1, X
+    LDA HorzSpriteLocations+1, Y
+    STA spritebuffer+2, X
+
+    TXA
+    CLC
+    ADC #$04
+    STA sprite
+
+   @NoHorzSprite: 
+    LDA HorzClueLocations, Y
+    STA dest
+    LDA HorzClueLocations+1, Y
+    STA dest+1
+
+    LDA cluetile1
+    JSR DrawTile_Generation
+
+    INC dest+1
+    INC dest+1
+
+    LDA cluetile2
+    BEQ :+
+    JSR DrawTile_Generation
+
+  : INC dest+1
+    INC dest+1
+
+    LDA cluetile3
+    JSR DrawTile_Generation
+    
+    JSR UpdateClueAttribute_Horz
+    JMP Generate_Clues
+
+    ;;;;;; Vertical Clues ;;;;;; 
+
+   @DrawVerticalClue:
+    BEQ @WithoutSprite
+   
+    LDA vert_clues_x
+    CMP #$04
+    BCC :+
+        INC vert_offset
+        SBC #$04
+  : TAY
+    
+    LDX sprite_v
+    LDA clue_y
+    STA spritebuffer2, X
+    LDA #$8C          ; Y position is $8C for first row
+    LDX vert_offset
+    BEQ :+
+    CLC
+    ADC #$30          ; $BC for second row
+  : LDX sprite_v
+    STA spritebuffer2+2, X
+    LDA VertSpriteLocations_S, Y
+    STA spritebuffer2+1, X
+  
+    TXA
+    CLC
+    ADC #$04
+    STA sprite_v    
+    
+    LDA VertClueLocations_S, Y
+    BNE @VerticalTiles
+    
+   @WithoutSprite:
+    LDA vert_clues
+    CMP #$0A
+    BCC :+
+        INC vert_offset
+        SBC #$0A
+  : TAY
+
+    LDA VertClueLocations, Y
+    
+   @VerticalTiles: 
+    LDX #$28
+    STX dest
+    LDX vert_offset
+    BEQ :+
+    SEC
+    SBC #$40
+    INC dest
+  : STA dest+1
+
+    LDA cluetile1
+    JSR DrawTile_Generation
+
+    LDA dest+1
+    CLC
+    ADC #$40
+    STA dest+1
+
+    LDA cluetile2
+    JSR DrawTile_Generation
+
+    LDA clue_x
+    CMP #$03
+    BEQ :+
+   
+    JSR UpdateClueAttribute_VertSprite
+    JMP Generate_Clues
+    
+  : JSR UpdateClueAttribute_Vert 
+    JMP Generate_Clues
+
+
+IsNextTo:
+    JSR GetClueTile
+    STA cluetile1
+    STA cluetile3
+
+    LDA cursor_x
+    STA clue_x      ; backup X position of first tile
+
+   @SecondTile:
+    JSR GetClueTile
+    STA cluetile2
+
+    LDY cursor_x
+    CPY clue_x
+    BEQ @SecondTile ; they're in the same column, re-do
 
     INY
-    STY row1_solved+7 ;; clear these out to 1
-    STY row2_solved+7
-    STY row3_solved+7
-    STY row4_solved+7
-    STY row5_solved+7
-    STY row6_solved+7
+    CPY clue_x
+    BEQ @ClueGood   ; if this = then the second tile is to the left
+
+    DEY
+    DEY
+    CPY clue_x      ; and if this = then the second tile is to the right
+    BNE @SecondTile ; if not, try again
+
+   @ClueGood:
+    INC clue_list, X
+    INC horz_clues
+    LDA #0          ; no sprite
+    TAX             ; Tile 1, Tile 2, Tile 1
+    JMP DrawClue
+
+
+IsNotNextTo:
+    JSR GetClueTile
+    STA cluetile1
+    STA cluetile3
+
+    LDA cursor_x
+    STA clue_x
+
+   @SecondTile:
+    JSR GetClueTile
+    STA cluetile2
+
+    LDY cursor_x
+    CPY clue_x
+    BEQ @ClueGood   ; they're in the same column, so not next to each other!
+
+    INY
+    CPY clue_x
+    BEQ @SecondTile ; second tile is to the left; re-do!
+
+    DEY
+    DEY
+    CPY clue_x
+    BEQ @SecondTile ; second tile is to the right; re-do! otherwise its somewhere else entirely
+
+   @ClueGood:
+    INC clue_list, X
+    INC horz_clues
+    LDA #2          ; use /// sprite
+    LDX #0          ; Tile 1, Tile 2, Tile 1
+    JMP DrawClue
+
+
+IsLeftOf:
+    ;; cluetile 1 <?> cluetile 2
+    JSR GetClueTile
+    STA cluetile1
+
+    LDA cursor_x
+    CMP #$06          ; if the first tile is on the right, then...
+    BEQ IsLeftOf
+    STA clue_x
+
+    INC clue_list, X
+
+   @SecondTile:
+    JSR GetClueTile
+    STA cluetile3
+
+    LDY cursor_x
+    CPY clue_x        ; If X (column) is same or less than column of previous clue, then the tile cannot be used for this clue.
+    BEQ @SecondTile
+    BCC @SecondTile
+
+    INC clue_list, X
+
+    LDA #0
+    STA cluetile2
+
+    INC horz_clues
+    LDA #1            ; use <?> sprite
+    TAX               ; and tile 1, space, tile 2
+    JMP DrawClue
+
+
+IsInRow:
+    JSR GetClueTile
+    STA cluetile1
+
+    LDA cursor_x
+    STA clue_x
+
+    INC clue_list, X
+
+   @SecondTile:
+    JSR GetClueTile
+    STA cluetile2
+
+    LDY cursor_x
+    BEQ @SecondTile    ; middle tile cannot be in the first or last column
+    CPY #$06
+    BEQ @SecondTile
+
+    CPY clue_x
+    BEQ @SecondTile    ; they're in the same column, so not next to each other!
+
+    INY
+    CPY clue_x
+    BEQ @SecondTileGood
+
+    DEY
+    DEY
+    CPY clue_x
+    BNE @SecondTile
+
+   @SecondTileGood:
+    INC clue_list, X
+    LDA cursor_x
+    STA clue_y
+
+   @ThirdTile:
+    JSR GetClueTile
+    STA cluetile3
+
+    LDY cursor_x
+    CPY clue_x
+    BEQ @ThirdTile       ; third tile cannot be in first tile's column
+
+    CPY clue_y
+    BEQ @ThirdTile       ; or in second tile's column
+
+    DEY
+    CPY clue_y
+    BEQ @ClueGood        ; order is tile 3 < tile 2 < tile 1
+
+    INY
+    INY
+    CPY clue_y
+    BNE @ThirdTile       ; order is NOT tile 1 > tile 2 > tile 3... so it must be re-done
+
+   @ClueGood:
+    INC clue_list, X
+    INC horz_clues
+    LDA #3               ; use <-> sprite
+    LDX #2               ; and tile 1, tile 2, tile 3
+    JMP DrawClue
+
+
+IsNotInRow:
+    JSR GetClueTile
+    STA cluetile1
+
+    LDA cursor_x
+    STA clue_x
+
+    INC clue_list, X
+
+   @SecondTile:
+    JSR GetClueTile
+    STA cluetile2
+
+    LDY cursor_x
+    CPY clue_x
+    BEQ @SecondTileGood ; they're in the same column, so not next to each other!
+
+    DEY
+    CPY clue_x
+    BEQ @SecondTile     ; Its to the right, so get a different tile
+
+    INY
+    INY
+    CPY clue_x
+    BEQ @SecondTile     ; Its to the left, so get a different tile
+
+   @SecondTileGood:
+    INC clue_list, X
+
+   @ThirdTile:
+    JSR GetClueTile
+    STA cluetile3
+
+    LDY cursor_x
+    CPY clue_x
+    BEQ @ThirdTile      ; third tile is same column as first tile; no good!
+
+    DEY
+    CPY clue_x
+    BEQ @ThirdTile      ; also cannot be beside first tile!
+
+    DEY
+    CPY clue_x
+    BEQ @ClueGood       ; but if its 2 columns away, woo! Third tile is on the right.
+
+    INY
+    INY
+    INY
+    CPY clue_x          ; see if its to the left of first tile
+    BEQ @ThirdTile
+
+    INY
+    CPY clue_x
+    BNE @ThirdTile      ; now if its NOT here, then it must be tossed
+
+   @ClueGood:
+    INC clue_list, X
+    INC horz_clues
+    LDA #2               ; use /// sprite
+    TAX                  ; and tile 1, tile 2, tile 3
+    JMP DrawClue
+
+
+IsInColumn:
+    JSR GetClueTile
+    STA cluetile1
+
+    LDA cursor_y
+    CMP #$05
+    BEQ IsInColumn    ; first tile cannot be in the bottom row
+
+    INC clue_list, X
+
+    STA clue_y
+    LDA cursor_x
+    STA clue_x
+
+   @SecondTile:
+    JSR GetClueTile
+    STA cluetile2
+
+    LDY cursor_y
+    CPY clue_y
+    BEQ @SecondTile    ; cannot be in the same row
+    BCC @SecondTile    ; second tile should be below first tile's row
+
+    LDY cursor_x
+    CPY clue_x
+    BNE @SecondTile    ; must be in same column
+
+    INC vert_clues
+    LDA #0             ; no sprite
+    LDX #3             ; vertical tiles
+    JMP DrawClue
+    
+
+IsNotInColumn:
+    LDA vert_clues_x
+    CMP #7
+    BEQ IsInColumn     ; cannot draw any more sprites; no more of these clues
+
+    JSR GetClueTile
+    STA cluetile1
+
+    LDA cursor_y
+    CMP #$05
+    BEQ IsNotInColumn
+
+    INC clue_list, X
+
+    STA clue_y
+    LDA cursor_x
+    STA clue_x
+
+   @SecondTile:
+    JSR GetClueTile
+    STA cluetile2
+
+    LDY cursor_y
+    CPY clue_y
+    BEQ @SecondTile    ; cannot be in the same row
+    BCC @SecondTile    ; second tile should be below first tile's row
+
+    LDY cursor_x
+    CPY clue_x
+    BEQ @SecondTile    ; cannot be in same column
+
+    INC vert_clues_x   
+    LDA #2             ; use /// sprite
+    LDX #4             ; vertical tiles with sprite
+    JMP DrawClue
+
+
+HorzClueLocations:
+.byte $22,$02
+.byte $22,$42
+.byte $22,$82
+.byte $22,$C2
+.byte $23,$02
+.byte $23,$42
+
+.byte $22,$0A
+.byte $22,$4A
+.byte $22,$8A
+.byte $22,$CA
+.byte $23,$0A
+.byte $23,$4A
+
+.byte $22,$12
+.byte $22,$52
+.byte $22,$92
+.byte $22,$D2
+.byte $23,$12
+.byte $23,$52
+
+.byte $22,$1A
+.byte $22,$5A
+.byte $22,$9A
+.byte $22,$DA
+.byte $23,$1A
+.byte $23,$5A
+
+HorzSpriteLocations:
+.byte $18,$87
+.byte $18,$97
+.byte $18,$A7
+.byte $18,$B7
+.byte $18,$C7
+.byte $18,$D7
+
+.byte $58,$87
+.byte $58,$97
+.byte $58,$A7
+.byte $58,$B7
+.byte $58,$C7
+.byte $58,$D7
+
+.byte $98,$87
+.byte $98,$97
+.byte $98,$A7
+.byte $98,$B7
+.byte $98,$C7
+.byte $98,$D7
+
+.byte $D8,$87
+.byte $D8,$97
+.byte $D8,$A7
+.byte $D8,$B7
+.byte $D8,$C7
+.byte $D8,$D7
+
+VertClueLocations_S:
+.byte $42,$44,$46,$48
+
+VertClueLocations:
+.byte $4C,$4E,$50,$52,$54,$56,$58,$5A,$5C,$5E
+
+VertSpriteLocations_S:
+.byte $08,$18,$28,$38
+
+
+PrepGame:
+    LDX #1
+    STX row1_solved+7 ;; clear these out to 1
+    STX row2_solved+7
+    STX row3_solved+7
+    STX row4_solved+7
+    STX row5_solved+7
+    STX row6_solved+7
 
     ;; start prepping variables for gameplay
 
-    STY drawjob      ; immediately update possibilities
-    STY update_attr  ; and their attributes
-    STY music_track
-    STY options      ; mark as needing values updated on screen
-    STY row1_player+7
-    STY row2_player+7
-    STY row3_player+7
-    STY row4_player+7
-    STY row5_player+7
-    STY row6_player+7
+    STX drawjob      ; immediately update possibilities
+    STX update_attr  ; and their attributes
+    STX music_track
+    STX options      ; mark as needing values updated on screen
+    STX row1_player+7
+    STX row2_player+7
+    STX row3_player+7
+    STX row4_player+7
+    STX row5_player+7
+    STX row6_player+7
+    STX border
 
     JSR ClearButtons ; then clear cursor variables
     STA game_over    ; mark as "in game"
@@ -595,15 +1279,10 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     STA moves
     STA moves+1
     STA moves+2
+    STA clues
+    STA abandon
 
     JSR UpdateOptionText
-
-    LDA #$FE         ; set each game area tile's possible tile list
-    LDX #48
-   @ClearPuzzle:
-    STA unsolved-1, X
-    DEX
-    BNE @ClearPuzzle
 
     LDA #$1E        ; turn on screen/clear emphasis
     STA soft2001
@@ -644,13 +1323,15 @@ GameFrame_Over:
     JSR ClearOAM
     JSR DrawSprite0
     JSR DrawAllSprites
-    JSR ClearButtons
     JSR UpdateJoy
     JSR WaitForVBlank
+    LDA game_over
+    BMI :+
     LDA noise_sfx
-    BEQ :+
-        RTS
-  : JMP GameFrame_Over
+    BEQ :++
+  : RTS
+  : JSR PlayerInput_GameOver
+    JMP GameFrame_Over
 
 GameFrame_Printing:
     LDA #>oam
@@ -1086,7 +1767,8 @@ PlayerInput_Options:
 PlayerInput_Menu:
     LDA joy_b
     BEQ @Check_A
-        INC puzzle
+      : INC puzzle
+        BEQ :-
         INC drawjob
         BNE @Done
 
@@ -1120,7 +1802,8 @@ PlayerInput_GameWon:
     ORA joy_start
     ORA joy_select
     BEQ @Done
-    INC puzzle
+  : INC puzzle
+    BEQ :-
     JMP LoadGame
 
    @Done:
@@ -1144,10 +1827,8 @@ PlayerInput_GameOver:
     ORA joy_start
     ORA joy_select
     BEQ @Done
-        JSR ClearButtons
         PLA
         PLA ; return from player_input_gameover
-        RTS ; return from GameOver frames
 
    @Done:
     JMP ClearButtons
@@ -1246,10 +1927,10 @@ ChangeOptions_Border:
 
 UpdateOptionText:
     LDA abandon
-    BEQ :+
+    BEQ @SetBorderColor
     BMI @RestoreOptions
     CMP #$02
-    BEQ :+
+    BEQ @SetBorderColor
 
    @ShowQuitText:
     INC abandon       ; set to 2, so it skips updating text every frame
@@ -1265,7 +1946,8 @@ UpdateOptionText:
     JSR Print
     INC options
 
-  : LDA border
+   @SetBorderColor:
+    LDA border
     BPL :+
 
     AND #$7F
@@ -1281,9 +1963,13 @@ UpdateOptionText:
     STA $2007
 
   : LDA options
-    AND #$20
-    BNE @MusicOn
+    AND #$01
+    BNE @Music
     RTS
+
+   @Music:
+    LDA music_track
+    BEQ @MusicOff
 
    @MusicOn:
     LDA music_track
@@ -1364,8 +2050,7 @@ Load_Possibilities:
     DEX
     BPL @Clear      ; clear out the list of tiles
 
-    LDA cursor_y
-    TAX
+    LDX cursor_y
     LDA TileOffset_LUT, X
     STA tmp
 
@@ -1438,9 +2123,7 @@ Load_Possibilities:
     LDX tmp         ; so it will = 0, then put in X
     BEQ @GetTile    ; for the next loop!
 
-    LDA drawjob     ; remove low bit from drawjob
-    EOR #$01
-    STA drawjob
+    DEC drawjob     ; remove low bit from drawjob
 
    @Attributes:
     LDA update_attr
@@ -1679,7 +2362,7 @@ Possibilities_Attributes: ;; drawn to 23CC
 .byte $80,$70,$60,$E0 ; heroes
 .byte $40,$70,$70,$E0 ; weapons
 .byte $40,$90,$20,$40 ; dungeon
-.byte $80,$40,$90,$80 ; town
+.byte $80,$80,$90,$80 ; town
 .byte $80,$50,$90,$80 ; travel
 .byte $40,$90,$50,$60 ; critters
 
@@ -1690,7 +2373,7 @@ TileAttribute_LUT:
 .byte $02, $03, $01, $02, $01, $02, $03, $00 ; heroes   : scoundrel, bard, healer, spy, barbarian, dragon, priestess
 .byte $01, $03, $01, $03, $01, $02, $03, $00 ; weapons  : bow, sword, staff, knife, hammer, shield, rod
 .byte $01, $01, $02, $02, $00, $00, $01, $00 ; dungeon  : chest, opened chest, torch, ladder, skull, key, door
-.byte $02, $00, $01, $01, $02, $00, $02, $00 ; town     : tree, fence, weeds, grave, sign, fountain, inn
+.byte $02, $00, $02, $01, $02, $00, $02, $00 ; town     : tree, fence, flowers, grave, sign, fountain, inn
 .byte $02, $01, $01, $01, $02, $00, $02, $00 ; travel   : boat, airship, carriage, caravan, canoe, sub, boots
 .byte $01, $01, $02, $01, $01, $02, $01, $00 ; critters : squirrel, bun, weasel, rat, bird, frog, snake
 
@@ -1702,10 +2385,79 @@ Attribute_Position_LUT:
 .byte $D0, LR, $D1, LL, $D1, LR, $D2, LL, $D2, LR, $D3, LL, $D3, LR, $00, $00
 .byte $D8, UR, $D9, UL, $D9, UR, $DA, UL, $DA, UR, $DB, UL, $DB, UR, $00, $00
 
-;; 11 00 00 00 ; lower right
-;; 00 11 00 00 ; lower left
-;; 00 00 11 00 ; upper right
-;; 00 00 00 11 ; upper left
+Horz_ClueAttr_Position_LUT:
+.byte $E0, UR, $E1, UL, $E1, UR
+.byte $E0, LR, $E1, LL, $E1, LR
+.byte $E8, UR, $E9, UL, $E9, UR
+.byte $E8, LR, $E9, LL, $E9, LR
+.byte $F0, UR, $F1, UL, $F1, UR
+.byte $F0, LR, $F1, LL, $F1, LR
+
+.byte $E2, UR, $E3, UL, $E3, UR
+.byte $E2, LR, $E3, LL, $E3, LR
+.byte $EA, UR, $EB, UL, $EB, UR
+.byte $EA, LR, $EB, LL, $EB, LR
+.byte $F2, UR, $F3, UL, $F3, UR
+.byte $F2, LR, $F3, LL, $F3, LR
+
+.byte $E4, UR, $E5, UL, $E5, UR
+.byte $E4, LR, $E5, LL, $E5, LR
+.byte $EC, UR, $ED, UL, $ED, UR
+.byte $EC, LR, $ED, LL, $ED, LR
+.byte $F4, UR, $F5, UL, $F5, UR
+.byte $F4, LR, $F5, LL, $F5, LR
+
+.byte $E6, UR, $E7, UL, $E7, UR
+.byte $E6, LR, $E7, LL, $E7, LR
+.byte $EE, UR, $EF, UL, $EF, UR
+.byte $EE, LR, $EF, LL, $EF, LR
+.byte $F6, UR, $F7, UL, $F7, UR
+.byte $F6, LR, $F7, LL, $F7, LR
+
+;; 11 00 00 00 ; C0 = LR, lower right
+;; 00 11 00 00 ; 30 = LL, lower left
+;; 00 00 11 00 ; 0C = UR, upper right
+;; 00 00 00 11 ; 03 = UL, upper left
+
+Vert_ClueAttr_Position_LUT:
+;     top      bottom
+.byte $C3, LL, $CB, UL
+.byte $C3, LR, $CB, UR
+.byte $C4, LL, $CC, UL
+.byte $C4, LR, $CC, UR
+.byte $C5, LL, $CD, UL
+.byte $C5, LR, $CD, UR
+.byte $C6, LL, $CE, UL
+.byte $C6, LR, $CE, UR
+.byte $C7, LL, $CF, UL
+.byte $C7, LR, $CF, UR
+
+.byte $D3, UL, $D3, LL
+.byte $D3, UR, $D3, LR
+.byte $D4, UL, $D4, LL
+.byte $D4, UR, $D4, LR
+.byte $D5, UL, $D5, LL
+.byte $D5, UR, $D5, LR
+.byte $D6, UL, $D6, LL
+.byte $D6, UR, $D6, LR
+.byte $D7, UL, $D7, LL
+.byte $D7, UR, $D7, LR
+
+Vert_ClueAttr_Position_LUT_S:
+;     top      bottom
+.byte $C0, LR, $C8, UR
+.byte $C1, LL, $C9, UL
+.byte $C1, LR, $C9, UR
+.byte $C2, LL, $CA, UL
+
+.byte $D0, UR, $D0, LR
+.byte $D1, UL, $D1, LL
+.byte $D1, UR, $D1, LR
+.byte $D2, UL, $D2, LL
+
+ClueTableSize:
+;      0     1    2    3    4
+.byte $06, $06, $06, $04, $04
 
 MaskLUT:
 ;       0    1    2    3    4    5    6
@@ -1713,28 +2465,185 @@ MaskLUT:
 ;     $03       $0C       $30       $C0
 ; AND with this byte will delete the 2 bits in the 3s and Cs
 
+GetTileAttribute:
+    ;; with thanks to tepples for this awesome math!
+    LSR A
+    STA tile_attr
+    AND #$07
+    ADC tile_attr
+    LSR A
+    ADC #$F0
+    TAY
+    LDA TileAttribute_LUT, Y
+    STA tile_attr
+    RTS    
+    
+MaskTileAttribute:
+    LDA $2007
+    LDA $2007
+    AND MaskLUT, X
+    ORA tile_attr
+    TAY
+    RTS    
+
+UpdateClueAttribute_Horz:
+    LDA horz_clues
+    ASL A
+    CLC
+    ADC horz_clues
+    ASL A
+    STA tile_address
+    
+    LDA cluetile1
+    JSR GetTileAttribute
+    JSR @DoTile
+    
+    INC tile_address
+    INC tile_address
+    
+    LDA cluetile2
+    BEQ :+
+    JSR GetTileAttribute
+    JSR @DoTile    
+  
+  : INC tile_address
+    INC tile_address
+    
+    LDA cluetile3
+    JSR GetTileAttribute
+    
+   @DoTile: 
+    LDY tile_address
+    LDX Horz_ClueAttr_Position_LUT, Y
+    LDA #$23
+    STX attr_dest    
+    JSR SetPPUAddress
+    
+    LDA tile_attr    
+    LDX Horz_ClueAttr_Position_LUT+1, Y
+    BEQ @NoShift
+    
+   @Loop:
+    ASL A
+    DEX
+    BNE @Loop
+    
+   @NoShift:
+    STA tile_attr
+    LDX Horz_ClueAttr_Position_LUT+1, Y
+    JSR MaskTileAttribute
+    LDA #$23
+    LDX attr_dest
+    JSR SetPPUAddress
+    STY $2007
+    RTS
+   
+    
+UpdateClueAttribute_Vert:
+    LDA vert_clues
+    ASL A
+    ASL A
+    STA tile_address
+    
+    LDA cluetile1
+    JSR GetTileAttribute
+    JSR @DoTile
+    
+    INC tile_address
+    INC tile_address
+    
+    LDA cluetile2
+    BEQ :+
+    JSR GetTileAttribute
+    
+   @DoTile: 
+    LDY tile_address
+    LDX Vert_ClueAttr_Position_LUT, Y
+    LDA #$2B
+    STX attr_dest    
+    JSR SetPPUAddress
+
+    LDA tile_attr    
+    LDX Vert_ClueAttr_Position_LUT+1, Y
+    BEQ @NoShift
+    
+   @Loop:
+    ASL A
+    DEX
+    BNE @Loop
+    
+   @NoShift:
+    STA tile_attr
+    LDX Vert_ClueAttr_Position_LUT+1, Y
+    JSR MaskTileAttribute
+    LDA #$2B
+    LDX attr_dest
+    JSR SetPPUAddress
+    STY $2007
+    RTS
+
+UpdateClueAttribute_VertSprite:
+    LDA vert_clues_x
+    ASL A
+    ASL A
+    STA tile_address
+    
+    LDA cluetile1
+    JSR GetTileAttribute
+    JSR @DoTile
+    
+    INC tile_address
+    INC tile_address
+    
+    LDA cluetile2
+    BEQ :+
+    JSR GetTileAttribute
+    
+   @DoTile: 
+    LDY tile_address
+    LDX Vert_ClueAttr_Position_LUT_S, Y
+    LDA #$2B
+    STX attr_dest    
+    JSR SetPPUAddress
+    
+    LDA tile_attr    
+    LDX Vert_ClueAttr_Position_LUT_S+1, Y
+    BEQ @NoShift
+    
+   @Loop:
+    ASL A
+    DEX
+    BNE @Loop
+    
+   @NoShift:
+    STA tile_attr
+    LDX Vert_ClueAttr_Position_LUT_S+1, Y
+    JSR MaskTileAttribute
+    LDA #$2B
+    LDX attr_dest
+    JSR SetPPUAddress
+    STY $2007
+    RTS
+
+
+
+
+
+
+
+
 UpdateTileAttribute:
     LDA drawtile
     AND #$FE
     CMP #$2E
     BNE :+
       LDA #$00
-      BEQ @SaveAttr
+      STA tile_attr
+      BEQ @AttributeGot
 
-  : LSR A
-    STA tile_attr
-    AND #$07
-    ADC tile_attr
-    LSR A
-    ADC #$F0
-    ;; with thanks to tepples for this awesome math!
+  : JSR GetTileAttribute
 
-    TAY
-    LDA TileAttribute_LUT, Y
-
-   @SaveAttr:
-    STA tile_attr
-
+   @AttributeGot:
     LDA position
     ASL A
     TAY
@@ -1834,11 +2743,13 @@ MoveOptionCursor:
 
    @Increase:
     INC puzzle
-    INC puzzle
+    BEQ @Increase
+    BNE :+
 
    @Decrease:
     DEC puzzle
-    INC drawjob
+    BEQ @Decrease
+  : INC drawjob
     RTS
 
 
@@ -2124,8 +3035,12 @@ ClearSpriteBuffer:
     RTS
 
 DrawAllSprites:
-    LDX #$00
-    STX sprite_loop
+    LDA clues
+    AND #$01
+    BEQ :+
+    LDA #$60  ; read from $60 bytes in for secondary clues
+  : STA sprite_loop
+
    @Loop:
     LDX sprite_loop
     LDA spritebuffer, X
@@ -2163,7 +3078,7 @@ DrawSprite:
     STA sprite_shape
     ASL A
     CLC
-    ADC sprite_shape ; multiply by 6 
+    ADC sprite_shape ; multiply by 6
     TAY
 
     LDX sprite
@@ -2621,7 +3536,7 @@ Decompress_Attributes:
     BNE @AttriLoop
    @Done:
     RTS
-    
+
 StaticScreen_HELP_Attributes:
 .byte $55,$10,$05,$80,$06,$11,$06,$DD
 .byte $11,$05,$55,$11,$0D,$12,$04,$12,$00
@@ -2630,7 +3545,7 @@ Queen_Attributes:
 .byte $50,$50,$05,$22,$84,$00
 
 
-    
+
 
 LoadGameOverPalette:
     LDA #<GameOverPalette-$E0
@@ -2819,13 +3734,16 @@ BoxList:
     .byte $21, $E9, 6,  12  ; 5
     .byte $21, $F1, 6,  12  ; 6
     .byte $A1, $F9, 6,  12  ; 7
-    .byte $A8, $21, 30, 4   ; 8 horz. clues
-    .byte $A8, $E1, 30, 4   ; 9
-    .byte $22, $12, 11, 3   ; 10 title puzzle number
-    .byte $23, $03, 2, 2    ; 11
-    .byte $23, $07, 2, 2    ; 12
-    .byte $23, $18, 2, 2    ; 13
-    .byte $23, $1C, 2, 2    ; 14 cages
+    .byte $28, $21, 8, 4    ; 8 horz. clues
+    .byte $28, $E1, 8, 4    ; 9
+    .byte $A8, $2B, 20, 4   ; 10
+    .byte $A8, $EB, 20, 4   ; 11
+    
+    .byte $22, $12, 11, 3   ; 12 title puzzle number
+    .byte $23, $03, 2, 2    ; 13
+    .byte $23, $07, 2, 2    ; 14
+    .byte $23, $18, 2, 2    ; 15
+    .byte $23, $1C, 2, 2    ; 16 cages
 
 NewTile_LUT:
 .byte $04, $08, $0C, $10, $14, $18
@@ -2862,8 +3780,29 @@ RemoveOldTile_EntryPoint:
     ORA tile_address
     STA dest+1           ; dest and dest+1 are now $2x, $xx: a PPU address for the tile to draw to
 
-    LDY dest
-    STY $2006
+    JSR DrawTile
+    JSR UpdateTileAttribute
+
+    LDA drawtile         ; now see if the drawtile value had the low bit set
+    AND #$01
+    BEQ @Done
+
+    ; if so, need to remove the tile that was just drawn from another spot
+    LDA oldtile          ; instead of using cursor_x, use the value saved here when the dupe was found
+    LDY #$2E             ; empty "+" tile ID
+    STY drawtile         ; also removes the trigger for doing this!
+    BNE RemoveOldTile_EntryPoint
+
+   @Done:
+    RTS
+
+DrawTile_Generation:
+    STA drawtile
+
+DrawTile:
+    LDA dest
+    STA $2006
+    LDA dest+1
     STA $2006
 
     LDA drawtile
@@ -2887,21 +3826,9 @@ RemoveOldTile_EntryPoint:
     INY
     STA $2007
     STY $2007
-
-    JSR UpdateTileAttribute
-
-    LDA drawtile         ; now see if the drawtile value had the low bit set
-    AND #$01
-    BEQ @Done
-
-    ; if so, need to remove the tile that was just drawn from another spot
-    LDA oldtile          ; instead of using cursor_x, use the value saved here when the dupe was found
-    LDY #$2E             ; empty "+" tile ID
-    STY drawtile         ; also removes the trigger for doing this!
-    BNE RemoveOldTile_EntryPoint
-
-   @Done:
     RTS
+
+
 
 Print:
     ASL A
@@ -2983,6 +3910,8 @@ Print:
 ;;
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+.align $100
 
 GamePalette:
 .byte $3F,$01,$21,$30
@@ -3105,30 +4034,46 @@ TurnOffScreen:
     STA $4014
     RTS
 
-;MultiplyXA:
-;;; Using Tepples' first method from - https://wiki.nesdev.com/w/index.php/8-bit_Multiply
-;;; Because I would probably have figured it out on my own after a few days and written
-;;; something basically almost exactly the same... so just saving a few days.
-;    LSR A
-;    STA mult_A
-;    STX mult_X
-;    LDA #0
-;    LDX #8
-;
-;   @Loop:
-;    BCC @Next
-;    CLC
-;    ADC mult_X
-;
-;   @Next:
-;    ROR A
-;    ROR mult_A
-;    DEX
-;    BNE @Loop
-;
-;    TAX
-;    LDA mult_A
-;    RTS
+;; from https://wiki.nesdev.com/w/index.php/Random_number_generator
+
+Random:
+	LDY #8     ; iteration count (generates 8 bits)
+	LDA RNG
+  :	ASL A      ; shift the register
+	ROL RNG+1
+	BCC :+
+	EOR #$39   ; apply XOR feedback whenever a 1 bit is shifted out
+  :	DEY
+	BNE :--
+	STA RNG
+	CMP #0     ; reload flags
+	RTS
+
+
+MultiplyXA:
+;; Using Tepples' first method from - https://wiki.nesdev.com/w/index.php/8-bit_Multiply
+;; Because I would probably have figured it out on my own after a few days and written
+;; something basically almost exactly the same... so just saving a few days.
+    LSR A
+    STA mult_A
+    STX mult_X
+    LDA #0
+    LDX #8
+
+   @Loop:
+    BCC @Next
+    CLC
+    ADC mult_X
+
+   @Next:
+    ROR A
+    ROR mult_A
+    DEX
+    BNE @Loop
+
+    TAX
+    LDA mult_A
+    RTS
 
 .align $100
 
@@ -3174,13 +4119,19 @@ WaitForVBlank:
 
     LDY #$08
     LDA #$21
-    LDX #$2C       ; waits a few scanlines for H-blank so as not to draw weird dots on the screen
+    LDX #$16       ; waits a few scanlines for H-blank so as not to draw weird dots on the screen
   : DEX
     BNE :-
+    NOP
 
     STX $2001
     STY $2006
     STA $2006
+
+    LDX #$16       ; waits one more scanline before turning screen back on
+  : DEX
+    BNE :-        
+    
     LDA #$1E
     STA $2001      ; turn on screen
     BNE OnIRQ
@@ -3198,6 +4149,11 @@ WaitForVBlank:
     STX $2001
     STY $2006
     STA $2006
+    
+    LDX #$1E       ; waits one more scanline before turning screen back on
+  : DEX
+    BNE :-        
+    
     LDA #$1E
     STA $2001      ; turn on screen
 
@@ -3235,9 +4191,6 @@ Banks:              ; Write to this table to switch banks.
    .byte $00, $01, $02, $03, $04, $05, $06
 
 Swap:
-    STY current_bank      ; save the current bank in RAM so the NMI handler can restore it
-
-Swap_NoSave:
     LDA Banks, Y      ; read a byte from the banktable
     STA Banks, Y      ; and write it back, switching banks
     RTS

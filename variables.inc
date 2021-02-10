@@ -54,6 +54,9 @@ clue_y        = $29 ; for generation
 vert_clues_x  = $2A ; for generation
 vert_offset   = $2B ; for generation
 sprite_v      = $2C ; for generation
+vert_done     = $2D ; for generation
+horz_done     = $2E ; for generation
+clue_type     = $2F ; for generation 
 
 options       = $26 ; $8x = music muted, $4x = sfx muted, $x1 = update text
 border        = $27
@@ -72,7 +75,7 @@ tmp_pointer   = $3C ; + $3D
 text          = $3E ; + $3F
 
 music_track   = $40
-noise_sfx     = $10
+wait_input    = $10
 
 box_overdraw  = tmp
 box_width     = tmp+1
@@ -133,3 +136,6 @@ clue_list     = $3C0
 
 spritebuffer  = $400
 spritebuffer2 = $460
+
+vert_complete = $488
+horz_complete = $500

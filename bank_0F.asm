@@ -641,7 +641,9 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     LDA #0
     STA sprite
     STA sprite_v
-    
+    STA vert_done
+    STA horz_done
+
     LDA #$FF
     STA vert_clues
     STA vert_clues_x
@@ -649,27 +651,37 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     STA clues
 
 Generate_Clues:
-    INC clues
     LDA clues
-    CMP #42
+    CMP #51
     BNE :+
         JMP PrepGame
   : JSR Random
     AND #$07
 
     CMP #6
-    BCS :+          
-    
+    BCS :+
+
     LDX horz_clues
     CPX #23
-    BEQ :-          ; if horizontal clues are at max, then don't do any more  
+    BEQ :-          ; if horizontal clues are at max, then don't do any more
     BNE @Continue
 
-  : LDX vert_clues
-    CPX #29         ; if vertical clues are at max, that's way too many anyway, so keep looping until it breaks out of generation
+  : BEQ @HorzSprites
+  
+    LDX vert_clues
+    CPX #19         ; if vertical clues are at max, that's way too many anyway, so keep looping until it breaks out of generation
     BEQ Generate_Clues
+    BNE @Continue
     
+   @HorzSprites:
+    LDX vert_clues_x
+    CPX #7
+    BEQ Generate_Clues
+
    @Continue:
+    INC clues
+   
+    STA clue_type
     ASL A
     TAY
     LDA ClueType_Table, Y
@@ -728,7 +740,7 @@ GetRandomPosition:
 GetClueTile:
     JSR GetRandomPosition
     LDA clue_list, X
-    CMP #$04
+    CMP #$03
     BEQ GetClueTile
 
     LDY cursor_y
@@ -751,11 +763,12 @@ DrawClue:
     ; X 2 = horz: draw tile 1, tile 2, tile 3
     ; X 3 = vert: draw tile 1, tile 2
     ; X 4 = vert: draw tile 1, tile 2 in sprite containment box
-    LDY #0
-    STY vert_offset
-    
+
     STX clue_x
     STA clue_y
+    LDY #0
+    STY vert_offset
+
     CPX #$03
     BCS @DrawVerticalClue
 
@@ -778,7 +791,7 @@ DrawClue:
     ADC #$04
     STA sprite
 
-   @NoHorzSprite: 
+   @NoHorzSprite:
     LDA HorzClueLocations, Y
     STA dest
     LDA HorzClueLocations+1, Y
@@ -799,22 +812,36 @@ DrawClue:
 
     LDA cluetile3
     JSR DrawTile_Generation
-    
+
+    LDX horz_done
+    LDA cluetile1
+    STA horz_complete, X
+    LDA cluetile2
+    STA horz_complete+1, X
+    LDA cluetile2
+    STA horz_complete+2, X
+    LDA clue_type
+    STA horz_complete+3, X
+    TXA
+    CLC
+    ADC #$04
+    STA horz_done
+
     JSR UpdateClueAttribute_Horz
     JMP Generate_Clues
 
-    ;;;;;; Vertical Clues ;;;;;; 
+    ;;;;;; Vertical Clues ;;;;;;
 
    @DrawVerticalClue:
     BEQ @WithoutSprite
-   
+
     LDA vert_clues_x
     CMP #$04
     BCC :+
         INC vert_offset
         SBC #$04
   : TAY
-    
+
     LDX sprite_v
     LDA clue_y
     STA spritebuffer2, X
@@ -827,15 +854,15 @@ DrawClue:
     STA spritebuffer2+2, X
     LDA VertSpriteLocations_S, Y
     STA spritebuffer2+1, X
-  
+
     TXA
     CLC
     ADC #$04
-    STA sprite_v    
-    
+    STA sprite_v
+
     LDA VertClueLocations_S, Y
     BNE @VerticalTiles
-    
+
    @WithoutSprite:
     LDA vert_clues
     CMP #$0A
@@ -845,8 +872,8 @@ DrawClue:
   : TAY
 
     LDA VertClueLocations, Y
-    
-   @VerticalTiles: 
+
+   @VerticalTiles:
     LDX #$28
     STX dest
     LDX vert_offset
@@ -867,14 +894,26 @@ DrawClue:
     LDA cluetile2
     JSR DrawTile_Generation
 
+    LDX vert_done
+    LDA cluetile1
+    STA vert_complete, X
+    LDA cluetile2
+    STA vert_complete+1, X
+    LDA clue_type
+    STA vert_complete+3, X
+    TXA
+    CLC
+    ADC #$04
+    STA vert_done
+
     LDA clue_x
     CMP #$03
     BEQ :+
-   
+
     JSR UpdateClueAttribute_VertSprite
     JMP Generate_Clues
-    
-  : JSR UpdateClueAttribute_Vert 
+
+  : JSR UpdateClueAttribute_Vert
     JMP Generate_Clues
 
 
@@ -1050,6 +1089,8 @@ IsNotInRow:
 
    @SecondTile:
     JSR GetClueTile
+    CMP cluetile1
+    BEQ @SecondTile     ; do not repeat tiles!
     STA cluetile2
 
     LDY cursor_x
@@ -1070,6 +1111,8 @@ IsNotInRow:
 
    @ThirdTile:
     JSR GetClueTile
+    CMP cluetile2
+    BEQ @ThirdTile      ; do not repeat tiles!
     STA cluetile3
 
     LDY cursor_x
@@ -1133,7 +1176,7 @@ IsInColumn:
     LDA #0             ; no sprite
     LDX #3             ; vertical tiles
     JMP DrawClue
-    
+
 
 IsNotInColumn:
     LDA vert_clues_x
@@ -1166,7 +1209,7 @@ IsNotInColumn:
     CPY clue_x
     BEQ @SecondTile    ; cannot be in same column
 
-    INC vert_clues_x   
+    INC vert_clues_x
     LDA #2             ; use /// sprite
     LDX #4             ; vertical tiles with sprite
     JMP DrawClue
@@ -1302,7 +1345,6 @@ GameFrame:
     STA $4014
     JSR Update_Gametime
     JSR Draw_NewTile
-    JSR CheckGameOver
     JSR Load_Possibilities
     JSR UpdateOptionText
     JSR Print_Gametime_Play
@@ -1312,6 +1354,7 @@ GameFrame:
     JSR DrawCursor
     JSR DrawAllSprites
     JSR UpdateJoy
+    JSR CheckGameOver    
     JSR MoveGameCursor
     JSR PlayerInput_Game
     JMP GameFrame
@@ -1325,13 +1368,12 @@ GameFrame_Over:
     JSR DrawAllSprites
     JSR UpdateJoy
     JSR WaitForVBlank
-    LDA game_over
-    BMI :+
-    LDA noise_sfx
-    BEQ :++
-  : RTS
-  : JSR PlayerInput_GameOver
+    LDA wait_input
+    BNE :+
+    JSR PlayerInput_GameOver
     JMP GameFrame_Over
+    
+  : RTS
 
 GameFrame_Printing:
     LDA #>oam
@@ -1427,13 +1469,13 @@ CheckGameOver:
     LDY #$30
     LDX #$30
    @Check:
-    LDA selected, X
+    LDA selected-1, X
     BNE @CompareSolved
 
     RTS ; a tile is not set; game is not over
 
    @CompareSolved:
-    CMP solved, X
+    CMP solved-1, X
     BNE @Next
 
    @Match:
@@ -1584,7 +1626,7 @@ GameWon:
     LDA #$1E         ; turn on screen/clear emphasis
     STA soft2001
 
-    LDA #$08
+    LDA #$18
     STA position     ; x coordinate of weasel
     LDA #$00
     STA row          ; direction
@@ -1594,6 +1636,7 @@ GameWon:
     JSR PrintMoves
 
     JSR WaitForVBlank
+    INC wait_input
    @Loop:
     JSR GameFrame_Over
     JSR AnimateAnimals
@@ -2476,15 +2519,15 @@ GetTileAttribute:
     TAY
     LDA TileAttribute_LUT, Y
     STA tile_attr
-    RTS    
-    
+    RTS
+
 MaskTileAttribute:
     LDA $2007
     LDA $2007
     AND MaskLUT, X
     ORA tile_attr
     TAY
-    RTS    
+    RTS
 
 UpdateClueAttribute_Horz:
     LDA horz_clues
@@ -2493,41 +2536,41 @@ UpdateClueAttribute_Horz:
     ADC horz_clues
     ASL A
     STA tile_address
-    
+
     LDA cluetile1
     JSR GetTileAttribute
     JSR @DoTile
-    
+
     INC tile_address
     INC tile_address
-    
+
     LDA cluetile2
     BEQ :+
     JSR GetTileAttribute
-    JSR @DoTile    
-  
+    JSR @DoTile
+
   : INC tile_address
     INC tile_address
-    
+
     LDA cluetile3
     JSR GetTileAttribute
-    
-   @DoTile: 
+
+   @DoTile:
     LDY tile_address
     LDX Horz_ClueAttr_Position_LUT, Y
     LDA #$23
-    STX attr_dest    
+    STX attr_dest
     JSR SetPPUAddress
-    
-    LDA tile_attr    
+
+    LDA tile_attr
     LDX Horz_ClueAttr_Position_LUT+1, Y
     BEQ @NoShift
-    
+
    @Loop:
     ASL A
     DEX
     BNE @Loop
-    
+
    @NoShift:
     STA tile_attr
     LDX Horz_ClueAttr_Position_LUT+1, Y
@@ -2537,41 +2580,41 @@ UpdateClueAttribute_Horz:
     JSR SetPPUAddress
     STY $2007
     RTS
-   
-    
+
+
 UpdateClueAttribute_Vert:
     LDA vert_clues
     ASL A
     ASL A
     STA tile_address
-    
+
     LDA cluetile1
     JSR GetTileAttribute
     JSR @DoTile
-    
+
     INC tile_address
     INC tile_address
-    
+
     LDA cluetile2
     BEQ :+
     JSR GetTileAttribute
-    
-   @DoTile: 
+
+   @DoTile:
     LDY tile_address
     LDX Vert_ClueAttr_Position_LUT, Y
     LDA #$2B
-    STX attr_dest    
+    STX attr_dest
     JSR SetPPUAddress
 
-    LDA tile_attr    
+    LDA tile_attr
     LDX Vert_ClueAttr_Position_LUT+1, Y
     BEQ @NoShift
-    
+
    @Loop:
     ASL A
     DEX
     BNE @Loop
-    
+
    @NoShift:
     STA tile_attr
     LDX Vert_ClueAttr_Position_LUT+1, Y
@@ -2587,34 +2630,34 @@ UpdateClueAttribute_VertSprite:
     ASL A
     ASL A
     STA tile_address
-    
+
     LDA cluetile1
     JSR GetTileAttribute
     JSR @DoTile
-    
+
     INC tile_address
     INC tile_address
-    
+
     LDA cluetile2
     BEQ :+
     JSR GetTileAttribute
-    
-   @DoTile: 
+
+   @DoTile:
     LDY tile_address
     LDX Vert_ClueAttr_Position_LUT_S, Y
     LDA #$2B
-    STX attr_dest    
+    STX attr_dest
     JSR SetPPUAddress
-    
-    LDA tile_attr    
+
+    LDA tile_attr
     LDX Vert_ClueAttr_Position_LUT_S+1, Y
     BEQ @NoShift
-    
+
    @Loop:
     ASL A
     DEX
     BNE @Loop
-    
+
    @NoShift:
     STA tile_attr
     LDX Vert_ClueAttr_Position_LUT_S+1, Y
@@ -3086,7 +3129,7 @@ DrawSprite:
     STA sprite_attr    ; sprite attributes
     LDA SpriteTable, Y
     STA sprite_shape
-    CMP #$04           ; see if drawing straight downwards
+    CMP #$03           ; see if drawing straight downwards
     BEQ @Downwards
 
     JSR @QuickSprite   ; draw upper left
@@ -3176,7 +3219,7 @@ SpriteTable:
 .byte $00,$01,$EC,$ED,$FC,$FD ; 10: snake
 .byte $00,$01,$EC,$ED,$9E,$9F ; 11: snake twitch
 
-.byte $04,$00,$93,$94,$95,$96 ; 12: blood
+.byte $03,$00,$93,$94,$95,$96 ; 12: blood
 .byte $80,$00,$77,$67,$00,$00 ; 13: eye
 
 .byte $00,$02,$CE,$CF,$DE,$DF ; 14: weasel flip    crescent moon D
@@ -3196,13 +3239,13 @@ DrawSprite0:
 AnimateAnimals:
     INC gametime
     LDA gametime
-    CMP #60
+    CMP #64
     BNE :+
         LDA #0
         STA gametime
         BEQ @Frame1
 
-  : CMP #30
+  : CMP #32
     BCC @Frame1
 
    @Frame2:
@@ -3216,12 +3259,15 @@ AnimateAnimals:
 
    @WeaselDance:
     LDA gametime
-    BEQ @Flip
-    CMP #15
-    BEQ @Flip
-    CMP #30
-    BEQ @Flip
-    CMP #45
+  ; BEQ @Flip
+  ; CMP #15
+  ; BEQ @Flip
+  ; CMP #30
+  ; BEQ @Flip
+  ; CMP #45
+  ; BEQ @Flip
+  
+    AND #$07
     BEQ @Flip
     RTS
 
@@ -3269,7 +3315,8 @@ AnimateAnimals:
     RTS
 
 WeaselFlip_ID:
-.byte $08, $08, $14, $14
+;.byte $08, $08, $14, $14
+.byte $08, $14, $08, $14
 
 StaticScreen_STORY_Sprites:
 ;Sprite ID, X,  Y, override; this will take precedence over the default attribute in the SpriteTable
@@ -3292,7 +3339,7 @@ WinningSprites:
 .byte $10,$E8,$13,$00
 .byte $06,$E8,$62,$00
 .byte $0A,$E8,$CA,$00
-.byte $08,$08,$62,$00
+.byte $08,$18,$62,$00
 
 Queen_Sprites:
 ;Sprite ID, X,  Y,
@@ -3738,7 +3785,7 @@ BoxList:
     .byte $28, $E1, 8, 4    ; 9
     .byte $A8, $2B, 20, 4   ; 10
     .byte $A8, $EB, 20, 4   ; 11
-    
+
     .byte $22, $12, 11, 3   ; 12 title puzzle number
     .byte $23, $03, 2, 2    ; 13
     .byte $23, $07, 2, 2    ; 14
@@ -4003,9 +4050,9 @@ LockClick:
     STA $400F
 
     LDA #10
-    STA noise_sfx              ; play noise for 10 frames
+    STA wait_input            ; play noise for 10 frames
   : JSR GameFrame_Over
-    DEC noise_sfx
+    DEC wait_input
     BNE :-
 
     LDA #%00000011             ; second clunk
@@ -4130,8 +4177,8 @@ WaitForVBlank:
 
     LDX #$16       ; waits one more scanline before turning screen back on
   : DEX
-    BNE :-        
-    
+    BNE :-
+
     LDA #$1E
     STA $2001      ; turn on screen
     BNE OnIRQ
@@ -4149,11 +4196,11 @@ WaitForVBlank:
     STX $2001
     STY $2006
     STA $2006
-    
+
     LDX #$1E       ; waits one more scanline before turning screen back on
   : DEX
-    BNE :-        
-    
+    BNE :-
+
     LDA #$1E
     STA $2001      ; turn on screen
 

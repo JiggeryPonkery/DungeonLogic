@@ -310,15 +310,15 @@ MainMenu:
     TAX
     JSR SetPPUAddress
 
-    LDX #$10
+    LDX #$10-3
     JSR Load_CHR_0Y
 
-    LDA #>TITLE_CHR
-    STA pointer+1
-
-    LDX #$04
-    JSR Load_CHR_0Y
-    JSR LoadPuzzleSprites
+  ;  LDA #>TITLE_CHR
+  ;  STA pointer+1
+  ;
+  ;  LDX #$04
+  ;  JSR Load_CHR_0Y
+  ;  JSR LoadPuzzleSprites
 
     JSR ClearNametable
     JSR ClearSpriteBuffer
@@ -332,7 +332,7 @@ MainMenu:
     LDX #$84
     JSR SetPPUAddress
     JSR Decompress_Loop
-    
+
     LDA #$27
     LDX #$D1
     JSR SetPPUAddress
@@ -519,8 +519,7 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
 
     LDA puzzle
     STA RNG
-    ASL A
-    EOR #$27
+    LDA #0
     STA RNG+1
 
    @GetTileBitLoop:
@@ -611,7 +610,7 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     STA vert_sprites
     STA horz_done
     STA vert_done
-    
+
     LDA #$FF
     STA vert_clues
     STA vert_clues_s
@@ -635,12 +634,12 @@ Generate_Clues:
     BNE @Continue
 
   : BEQ @HorzSprites
-  
+
     LDX vert_clues
     CPX #19         ; if vertical clues are at max, that's way too many anyway, so keep looping until it breaks out of generation
     BEQ Generate_Clues
     BNE @Continue
-    
+
    @HorzSprites:
     LDX vert_clues_s
     CPX #7
@@ -649,8 +648,10 @@ Generate_Clues:
    @Continue:
     INC clues
     LDY #0
+    STY tile1_error
     STY tile2_error
-   
+    STY tile3_error
+
     STA clue_type
     ASL A
     TAY
@@ -706,8 +707,34 @@ GetRandomPosition:
     STA cursor_x
     RTS
 
+GetClueTile1:
+    LDA #0
+    BEQ GetClueTile
+
+GetClueTile2:
+    LDA #1
+    BNE GetClueTile
+
+GetClueTile3:
+    LDA #2
+
 GetClueTile:
-    JSR GetRandomPosition
+    PHA
+    STX clue_limit
+    LDA #0
+    STA clue_error
+
+  : INC clue_error
+    LDA clue_error
+    CMP #$08
+    BCC :+
+        PLA
+        PLA ; go back to clue type
+        PLA ; pull last push
+        DEC clues
+        JMP Generate_Clues
+
+  : JSR GetRandomPosition
 
     LDY cursor_y
     LDA TileOffset_LUT, Y
@@ -716,7 +743,45 @@ GetClueTile:
     LDA cursor2_x
     ASL A
     ORA drawtile
-    
+    TAY
+
+    LDA clue_list, X
+    CMP clue_limit
+    BCS :--
+
+    PLA
+    BEQ @Tile1
+    CMP #$01
+    BEQ @Tile2
+
+   @Tile3:
+    STY cluetile3
+    LDA cursor_y
+    STA tile3_row
+    LDA cursor_x
+    STA tile3_col
+    STX tile3_pos
+    TYA
+    RTS
+
+   @Tile2:
+    STY cluetile2
+    LDA cursor_y
+    STA tile2_row
+    LDA cursor_x
+    STA tile2_col
+    STX tile2_pos
+    TYA
+    RTS
+
+   @Tile1:
+    STY cluetile1
+    LDA cursor_y
+    STA tile1_row
+    LDA cursor_x
+    STA tile1_col
+    STX tile1_pos
+    TYA
     RTS
 
 
@@ -747,7 +812,7 @@ DrawClue:
     LDA clue_sprite
     BEQ @NoHorzSprite
 
-    LDX sprite
+    LDX horz_sprites
     STA spritebuffer, X
     LDA HorzSpriteLocations, Y
     STA spritebuffer+1, X
@@ -757,7 +822,7 @@ DrawClue:
     TXA
     CLC
     ADC #$04
-    STA sprite
+    STA horz_sprites
 
    @NoHorzSprite:
     LDA HorzClueLocations, Y
@@ -784,36 +849,24 @@ DrawClue:
     LDX horz_done
     LDA cluetile1
     STA horz_complete, X
-    LDA tile1_row
-    STA horz_complete+1, X
-    LDA tile1_col
-    STA horz_complete+2, X
     LDA tile1_pos
-    STA horz_complete+3, X
-    
+    STA horz_complete+1, X
+
     LDA cluetile2
-    STA horz_complete+4, X
-    LDA tile2_row
-    STA horz_complete+5, X
-    LDA tile2_col
-    STA horz_complete+6, X
+    STA horz_complete+2, X
     LDA tile2_pos
-    STA horz_complete+7, X
-    
+    STA horz_complete+3, X
+
     LDA cluetile3
-    STA horz_complete+8, X
-    LDA tile3_row
-    STA horz_complete+9, X
-    LDA tile3_col
-    STA horz_complete+10, X
+    STA horz_complete+4, X
     LDA tile3_pos
-    STA horz_complete+11, X
+    STA horz_complete+5, X
 
     LDA clue_type
-    STA horz_complete+12, X
+    STA horz_complete+6, X
     TXA
     CLC
-    ADC #$10
+    ADC #$08
     STA horz_done
 
     JSR UpdateClueAttribute_Horz
@@ -886,28 +939,20 @@ DrawClue:
     LDX vert_done
     LDA cluetile1
     STA vert_complete, X
-    LDA tile1_row
-    STA vert_complete+1, X
-    LDA tile1_col
-    STA vert_complete+2, X
     LDA tile1_pos
-    STA vert_complete+3, X
-    
+    STA vert_complete+1, X
+
     LDA cluetile2
-    STA vert_complete+4, X
-    LDA tile2_row
-    STA vert_complete+5, X
-    LDA tile2_col
-    STA vert_complete+6, X
+    STA vert_complete+2, X
     LDA tile2_pos
-    STA vert_complete+7, X
-    
+    STA vert_complete+3, X
+
     LDA clue_type
-    STA vert_complete+8, X    
-    
+    STA vert_complete+4, X
+
     TXA
     CLC
-    ADC #$10
+    ADC #$08
     STA vert_done
 
     LDA clue_shape
@@ -921,51 +966,21 @@ DrawClue:
     JMP Generate_Clues
 
 
-SetHorzPrevClue:
-    LDA #0
-    STA vert_offset
-    LDY #$C0            ; look to see if this tile was involved in another clue
-  : LDA horz_complete, Y
-    CMP cluetile1  
-    BEQ @WhatTileIsIt   ; if it was, check what row the second tile was in
-    LDA horz_complete+1, Y
-    CMP cluetile1  
-    BEQ @WhatTileIsIt   ; if it was, check what row the second tile was in    
-    TYA
-    SEC
-    SBC #$08
-    TAY 
-    CMP #$F8
-    BNE :-
-    RTS
-    
-   @WhatTileIsIt:      
-    LDA horz_complete+2, Y
-    STA vert_offset
-    RTS
-
-    ;; ^ this is because if you get a "tree is above the frog" clue and a
-    ;; "tree is not above the rat" clue, they're... they're the same clue! no good
-
-
 IsNextTo:
-    JSR GetClueTile
-    STA cluetile1
+    JSR Tile1_Error
+    LDX #03
+    JSR GetClueTile1
     STA cluetile3
-
-    LDA clue_list, X
-    CMP #$03
-    BEQ IsNextTo
-
-    LDA cursor_x
-    STA tile1_col   ; backup X position of first tile
-    INC clue_list, X    
+    STX tile3_pos
 
    @SecondTile:
-    JSR GetClueTile
-    STA cluetile2
+    JSR Tile2_Error
+    BCS IsNextTo
 
-    LDY cursor_x
+    LDX #03
+    JSR GetClueTile2
+
+    LDY tile2_col
     CPY tile1_col
     BEQ @SecondTile ; they're in the same column, re-do
 
@@ -980,6 +995,9 @@ IsNextTo:
 
    @ClueGood:
     INC clue_list, X
+    LDX tile1_pos
+    INC clue_list, X
+
     INC horz_clues
     LDA #0          ; no sprite
     TAX             ; Tile 1, Tile 2, Tile 1
@@ -987,23 +1005,20 @@ IsNextTo:
 
 
 IsNotNextTo:
-    JSR GetClueTile
-    STA cluetile1
+    JSR Tile1_Error
+    LDX #03
+    JSR GetClueTile1
     STA cluetile3
-    
-    LDA clue_list, X
-    CMP #$03
-    BEQ IsNotNextTo
-
-    LDA cursor_x
-    STA tile1_col
-    INC clue_list, X
+    STX tile3_pos
 
    @SecondTile:
-    JSR GetClueTile
-    STA cluetile2
+    JSR Tile2_Error
+    BCS IsNotNextTo
 
-    LDY cursor_x
+    LDX #03
+    JSR GetClueTile2
+
+    LDY tile2_col
     CPY tile1_col
     BEQ @ClueGood   ; they're in the same column, so not next to each other!
 
@@ -1018,6 +1033,8 @@ IsNotNextTo:
 
    @ClueGood:
     INC clue_list, X
+    LDX tile1_pos
+    INC clue_list, X
     INC horz_clues
     LDA #2          ; use /// sprite
     LDX #0          ; Tile 1, Tile 2, Tile 1
@@ -1025,34 +1042,33 @@ IsNotNextTo:
 
 
 IsLeftOf:
-    ;; cluetile 1 <?> cluetile 2
-    JSR GetClueTile
-    STA cluetile1
-    
-    LDA clue_list, X
-    CMP #$03
-    BEQ IsLeftOf
+    JSR Tile1_Error
+    LDX #03
+    JSR GetClueTile1
 
-    LDA cursor_x
+    LDA tile1_col
     CMP #$06          ; if the first tile is on the right, then...
     BEQ IsLeftOf
-    STA tile1_col
+
+   @ThirdTile:
+    JSR Tile3_Error
+    BCS IsLeftOf
+
+    LDX #04
+    JSR GetClueTile3
+
+    LDY tile3_col
+    CPY tile1_col     ; If X (column) is same or less than column of previous clue, then the tile cannot be used for this clue.
+    BEQ @ThirdTile
+    BCC @ThirdTile
 
     INC clue_list, X
-
-   @SecondTile:
-    JSR GetClueTile
-    STA cluetile3
-
-    LDY cursor_x
-    CPY tile1_col     ; If X (column) is same or less than column of previous clue, then the tile cannot be used for this clue.
-    BEQ @SecondTile
-    BCC @SecondTile
-
+    LDX tile1_pos
     INC clue_list, X
 
     LDA #0
     STA cluetile2
+    STA tile2_pos
 
     INC horz_clues
     LDA #1            ; use <?> sprite
@@ -1061,23 +1077,18 @@ IsLeftOf:
 
 
 IsInRow:
-    JSR GetClueTile
-    STA cluetile1
-    
-    LDA clue_list, X
-    CMP #$03
-    BEQ IsInRow
-
-    LDA cursor_x
-    STA tile1_col
-
-    INC clue_list, X
+    JSR Tile1_Error
+    LDX #03
+    JSR GetClueTile1
 
    @SecondTile:
-    JSR GetClueTile
-    STA cluetile2
+    JSR Tile2_Error
+    BCS IsInRow
 
-    LDY cursor_x
+    LDX #03
+    JSR GetClueTile2
+
+    LDY tile2_col
     BEQ @SecondTile    ; middle tile cannot be in the first or last column
     CPY #$06
     BEQ @SecondTile
@@ -1087,23 +1098,21 @@ IsInRow:
 
     INY
     CPY tile1_col
-    BEQ @SecondTileGood
+    BEQ @ThirdTile
 
     DEY
     DEY
     CPY tile1_col
     BNE @SecondTile
 
-   @SecondTileGood:
-    INC clue_list, X
-    LDA cursor_x
-    STA tile2_col
-
    @ThirdTile:
-    JSR GetClueTile
-    STA cluetile3
+    JSR Tile3_Error
+    BCS @SecondTile
+    
+    LDX #04
+    JSR GetClueTile3
 
-    LDY cursor_x
+    LDY tile3_col
     CPY tile1_col
     BEQ @ThirdTile       ; third tile cannot be in first tile's column
 
@@ -1121,6 +1130,11 @@ IsInRow:
 
    @ClueGood:
     INC clue_list, X
+    LDX tile2_pos
+    INC clue_list, X
+    LDX tile1_pos
+    INC clue_list, X
+
     INC horz_clues
     LDA #3               ; use <-> sprite
     LDX #2               ; and tile 1, tile 2, tile 3
@@ -1128,27 +1142,25 @@ IsInRow:
 
 
 IsNotInRow:
-    JSR GetClueTile
-    STA cluetile1
-    
-    LDA clue_list, X
-    CMP #$03
-    BEQ IsNotInRow    
+    JSR Tile1_Error
+    LDX #03
+    JSR GetClueTile1
 
     LDA cursor_x
     STA tile1_col
 
-    INC clue_list, X
-
    @SecondTile:
-    JSR GetClueTile
+    JSR Tile2_Error
+    BCS IsNotInRow
+    
+    LDX #03
+    JSR GetClueTile2
     CMP cluetile1
     BEQ @SecondTile     ; do not repeat tiles!
-    STA cluetile2
 
-    LDY cursor_x
+    LDY tile2_col
     CPY tile1_col
-    BEQ @SecondTileGood ; they're in the same column, so not next to each other!
+    BEQ @ThirdTile      ; they're in the same column, so not next to each other!
 
     DEY
     CPY tile1_col
@@ -1159,16 +1171,16 @@ IsNotInRow:
     CPY tile1_col
     BEQ @SecondTile     ; Its to the left, so get a different tile
 
-   @SecondTileGood:
-    INC clue_list, X
-
    @ThirdTile:
-    JSR GetClueTile
+    JSR Tile3_Error
+    BCS @SecondTile
+
+    LDX #03
+    JSR GetClueTile3
     CMP cluetile2
     BEQ @ThirdTile      ; do not repeat tiles!
-    STA cluetile3
 
-    LDY cursor_x
+    LDY tile3_col
     CPY tile1_col
     BEQ @ThirdTile      ; third tile is same column as first tile; no good!
 
@@ -1192,6 +1204,11 @@ IsNotInRow:
 
    @ClueGood:
     INC clue_list, X
+    LDX tile2_pos
+    INC clue_list, X
+    LDX tile1_pos
+    INC clue_list, X
+
     INC horz_clues
     LDA #2               ; use /// sprite
     TAX                  ; and tile 1, tile 2, tile 3
@@ -1199,49 +1216,33 @@ IsNotInRow:
 
 
 IsInColumn:
-    JSR GetClueTile
-    STA cluetile1
-    
-    LDA clue_list, X
-    CMP #$03
-    BEQ IsInColumn    
+    JSR Tile1_Error
+    LDX #03
+    JSR GetClueTile1
 
-    LDA cursor_y
+    LDA tile1_row
     CMP #$05
     BEQ IsInColumn    ; first tile cannot be in the bottom row
 
-    STA tile1_row
-    LDA cursor_x
-    STA tile1_col
+   @SecondTile:
+    JSR Tile2_Error
+    BCS IsInColumn
 
-    JSR SetVertRow
-    INC clue_list, X
+    LDX #03
+    JSR GetClueTile2
 
-   @SecondTile:        ; failsafe check--if the first tile is in row 5,
-    INC tile2_error     ; then the only possible row for clue tile 2 is in row 6
-    LDA tile2_error     ; and if that clue already exists, this would be an infinite loop
-    CMP #6
-    BCS IsInColumn 
-    
-    JSR GetClueTile
-    STA cluetile2
-
-    LDY cursor_x
+    LDY tile2_col
     CPY tile1_col
     BNE @SecondTile    ; must be in same column
 
-    LDY cursor_y
+    LDY tile2_row
     CPY tile1_row
     BEQ @SecondTile    ; cannot be in the same row
     BCC @SecondTile    ; second tile should be below first tile's row
 
-    CPY vert_offset    
-    BEQ @SecondTile    ; already have a clue for first tile + this row
-
     INC clue_list, X
-    LDX vert_done
-    TYA
-    STA vert_complete+2, X    
+    LDX tile1_pos
+    INC clue_list, X
 
     INC vert_clues
     LDA #0             ; no sprite
@@ -1254,49 +1255,34 @@ IsNotInColumn:
     CMP #7
     BEQ IsInColumn     ; cannot draw any more sprites; no more of these clues
 
-    JSR GetClueTile
-    STA cluetile1
+    JSR Tile1_Error
 
-    LDA clue_list, X
-    CMP #$03
-    BEQ IsNotInColumn
+    LDX #03
+    JSR GetClueTile1
 
-    LDA cursor_y
+    LDA tile1_row
     CMP #$05
     BEQ IsNotInColumn
 
-    STA tile1_row
-    LDA cursor_x
-    STA tile1_col
-    
-    JSR SetVertRow
-    INC clue_list, X
+   @SecondTile:
+    JSR Tile2_Error
+    BCS IsNotInColumn
 
-   @SecondTile:        ; failsafe check--if the first tile is in row 5,
-    INC tile2_error     ; then the only possible row for clue tile 2 is in row 6
-    LDA tile2_error     ; and if that clue already exists, this would be an infinite loop
-    CMP #6
-    BCS IsNotInColumn 
-    
-    JSR GetClueTile
-    STA cluetile2
+    LDX #03
+    JSR GetClueTile2
 
-    LDY cursor_x
+    LDY tile2_col
     CPY tile1_col
     BEQ @SecondTile    ; cannot be in same column
 
-    LDY cursor_y
+    LDY tile2_row
     CPY tile1_row
     BEQ @SecondTile    ; cannot be in the same row
     BCC @SecondTile    ; second tile should be below first tile's row
 
-    CPY vert_offset    ; see if the first tile has already been paired with
-    BEQ @SecondTile    ; a tile from this row
-
-    INC clue_list, X    
-    LDX vert_done
-    TYA
-    STA vert_complete+2, X
+    INC clue_list, X
+    LDX tile1_pos
+    INC clue_list, X
 
     INC vert_clues_s
     LDA #2             ; use /// sprite
@@ -1304,28 +1290,39 @@ IsNotInColumn:
     JMP DrawClue
 
 
-SetVertRow:
+Tile1_Error:
     LDA #0
-    STA vert_offset
     STA tile2_error
-    LDY #$70           ; look to see if this tile was involved in another clue
-  : LDA vert_complete, Y
-    CMP cluetile1  
-    BEQ @WhatRowIsIt   ; if it was, check what row the second tile was in
-    DEY
-    DEY
-    DEY
-    DEY    
-    BPL :-
-    RTS
-    
-   @WhatRowIsIt:      
-    LDA vert_complete+2, Y
-    STA vert_offset
+    STA tile3_error
+
+    INC tile1_error
+    LDA tile1_error
+    CMP #$08
+    BCC :+
+    PLA
+    PLA
+    DEC clues
+    JMP Generate_Clues
+  : RTS
+
+Tile2_Error:
+    LDA #0
+    STA tile1_error
+
+    INC tile2_error
+    LDA tile2_error
+    CMP #$08
     RTS
 
-    ;; ^ this is because if you get a "tree is above the frog" clue and a
-    ;; "tree is not above the rat" clue, they're... they're the same clue! no good
+Tile3_Error:
+    LDA #0
+    STA tile2_error
+
+    INC tile3_error
+    LDA tile3_error
+    CMP #$08
+    RTS
+
 
 
 HorzClueLocations:
@@ -1468,7 +1465,7 @@ GameFrame:
     JSR DrawCursor
     JSR DrawAllSprites
     JSR UpdateJoy
-    JSR CheckGameOver    
+    JSR CheckGameOver
     JSR MoveGameCursor
     JSR PlayerInput_Game
     JMP GameFrame
@@ -1486,7 +1483,7 @@ GameFrame_Over:
     BNE :+
     JSR PlayerInput_GameOver
     JMP GameFrame_Over
-    
+
   : RTS
 
 GameFrame_Printing:
@@ -1818,7 +1815,7 @@ UpdateJoy:
     LDA JoyData, X  ; get button value from mini table
     STA joy_tmp     ; save it for doing stuff with
     TYA             ; restore transition byte
-    AND joy_tmp     ; see if button has transitioned 
+    AND joy_tmp     ; see if button has transitioned
     BEQ @Nope       ; if not, skip it
     LDA joy
     AND joy_tmp     ; see if it is being pressed (else, its being released)
@@ -2239,7 +2236,7 @@ Load_Possibilities:
     BPL @Loop
 
     LDA #$01
-    STA loop      
+    STA loop
 
     LDA #>$20D2
     LDX #<$20D2
@@ -2326,18 +2323,18 @@ Swap_Possibility:
     LDX #$06
     CLC
     ADC #01
-   @GameSetCheck: 
+   @GameSetCheck:
     CMP solved, Y
     BEQ @Nothing        ; the tile trying to be swapped was set by the game
     INY                 ; and cannot be messed with
     DEX
     BPL @GameSetCheck
-    
+
     LDY position
     LDA solved, Y
     AND #$01
     BNE @Nothing
-    
+
     LDA unsolved, Y
     AND newtile
     BEQ @RemoveFromRemoved
@@ -2358,7 +2355,7 @@ Swap_Possibility:
     EOR newtile
     STA unsolved, Y
     INC drawjob         ; and mark possibilities to be updated on screen
-   @Nothing: 
+   @Nothing:
     RTS
 
 
@@ -2385,17 +2382,17 @@ Choose_Possibility:
 
     LDA BIT_LUT, X      ; now get the tile's ID bit
     STA newtile
-    
+
     LDY row
     LDX #$06
     CLC
-    ADC #01             
-   @GameSetCheck: 
+    ADC #01
+   @GameSetCheck:
     CMP solved, Y
     BEQ @Done           ; the tile trying to be swapped was set by the game
     INY                 ; and cannot be messed with
     DEX
-    BPL @GameSetCheck    
+    BPL @GameSetCheck
 
     LDY position
     LDA selected, Y
@@ -2524,7 +2521,7 @@ Refill_Possibility:  ; refreshes a byte with all possible tiles that haven't bee
     INY
     DEX
     BPL @Loop
-    EOR #$FE    
+    EOR #$FE
     RTS
 
 
@@ -3223,7 +3220,7 @@ DrawAllSprites:
     LDA clues
     AND #$01
     BEQ :+
-    LDA #$60  ; read from $60 bytes in for secondary clues
+    LDA #$80  ; read from $80 bytes in for secondary clues
   : STA sprite_loop
 
    @Loop:
@@ -3414,7 +3411,7 @@ AnimateAnimals:
   ; BEQ @Flip
   ; CMP #45
   ; BEQ @Flip
-  
+
     AND #$07
     BEQ @Flip
     RTS
@@ -4234,9 +4231,13 @@ TurnOffScreen:
 
 ;; from https://wiki.nesdev.com/w/index.php/Random_number_generator
 
+Random_7:
+	LDY #3     ; iteration count (generates 6 bits)
+    BNE :+
+
 Random:
-	LDY #8     ; iteration count (generates 8 bits)
-	LDA RNG
+	LDY #6     ; iteration count (generates 6 bits)
+  : LDA RNG
   :	ASL A      ; shift the register
 	ROL RNG+1
 	BCC :+
@@ -4246,6 +4247,10 @@ Random:
 	STA RNG
 	CMP #0     ; reload flags
 	RTS
+
+
+
+
 
 
 ;MultiplyXA:

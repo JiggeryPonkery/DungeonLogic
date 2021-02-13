@@ -102,6 +102,8 @@ horz_done     = $67
 clue_sprite   = $68
 clue_type     = $69
 clue_shape    = $6A
+clue_limit    = $6B
+clue_error    = $6C
 
 channels        = $B0
 score           = $B0 + 1

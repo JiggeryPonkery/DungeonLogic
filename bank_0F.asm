@@ -3,63 +3,11 @@
 .feature force_range
 .segment "BANK_0F"
 
-
-; The Sword               ; 00
-; The Shield              ; 00
-; The Staff               ; 01
-; The Bow                 ; 01
-; The Dagger              ; 00
-; The Rod                 ; 03
-; The Hammer              ; 00
-
-; The Hope                ; 01
-; The Disappointment      ; 01
-; The Torch               ; 02
-; The Descent             ; 02
-; Glumskull               ; 00
-; The Key                 ; 00
-; The Door                ; 00
-
-; The Tree                ; 02
-; The Fence               ; 00
-; The Rhubarb             ; 01
-; The Grave               ; 01
-; The Signpost            ; 01
-; The Fountain            ; 00
-; The Inn on the Hill     ; 01
-
-; S.S. Snakey             ; 02
-; The Airship             ; 01
-; The Carriage            ; 01
-; The Caravan             ; 01
-; The Ferryman            ; 02
-; The Submarine           ; 00
-; The Boots               ; 02
-
-; Albino Sunspark Banana  ; 01
-; Fatbirb                 ; 01
-; Ozzy                    ; 02
-; Dangerous Beans         ; 01
-; Pickles                 ; 02
-; Trailmix                ; 01
-; Mr. Bunnsy              ; 02
-
-; The Scoundrel           ; 02
-; The Bardess             ; 03
-; The Healer              ; 01
-; The Spy                 ; 02
-; The Barbarian           ; 00
-; The Dragon              ; 02
-; The Priestess           ; 03
-
-;; TO DO
-;; game over confirmation process - flickering problems
-;; clues
-;; music
+.import Music
+.import PUZZLE_CHR
 
 
-PUZZLE_CHR:
-.incbin "Puzzle.chr"
+
 
 TITLE_CHR:
 .incbin "Title.chr"
@@ -68,23 +16,26 @@ QUEEN_CHR:
 .incbin "Queen.chr"
 
 TITLE_DOOR:
-	.byte $41,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4a,$4b,$F4
-	.byte $50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$5a,$5b,$F4
-	.byte $60,$61,$62,$63,$64,$65,$66,$65,$68,$69,$6a,$6b,$F4
-	.byte $70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$7a,$7b,$F4
-	.byte $80,$81,$72,$73,$74,$75,$76,$77,$78,$79,$8a,$8b,$F4
-	.byte $90,$91,$72,$73,$74,$75,$76,$77,$78,$79,$9a,$9b,$F4
-	.byte $a0,$81,$40,$94,$94,$95,$96,$97,$98,$99,$81,$ab,$F4
-	.byte $90,$91,$92,$93,$81,$81,$81,$81,$81,$81,$9a,$9b,$F4
-	.byte $a0,$a1,$a2,$a3,$a4,$a5,$a6,$a7,$a8,$a9,$aa,$ab,$F4
-	.byte $b0,$b1,$b2,$b3,$b4,$b5,$b6,$b7,$b8,$b9,$ba,$bb,$F4
-	.byte $c0,$c1,$c2,$c3,$c4,$c5,$c6,$c7,$c8,$c9,$ca,$cb,$F4
-	.byte $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9,$da,$db,$F4
-	.byte $70,$71,$55,$55,$55,$55,$55,$55,$55,$55,$7a,$7b,$F4
-	.byte $80,$81,$55,$55,$55,$55,$55,$55,$55,$55,$8a,$8b,$F4
-    .byte $80,$81,$55,$55,$55,$55,$55,$55,$55,$55,$8a,$8b,$F4
-    .byte $80,$81,$55,$55,$55,$55,$55,$55,$55,$55,$8a,$8b,$F4
-    .byte $80,$81,$55,$55,$55,$55,$55,$55,$55,$55,$8a,$8b,$00
+.byte $3B,$3B,$40,$41,$42,$43,$44,$45,$46,$47,$3B,$3B,$F4
+.byte $3B,$48,$49,$4A,$4B,$4C,$4D,$4E,$4F,$50,$51,$3B,$F4
+.byte $52,$53,$54,$55,$56,$57,$58,$59,$5A,$54,$5B,$5C,$F4
+.byte $5D,$5E,$54,$54,$54,$5F,$60,$54,$54,$54,$54,$61,$F4
+.byte $62,$54,$63,$64,$65,$66,$64,$65,$66,$67,$54,$68,$F4
+.byte $69,$54,$6A,$6B,$3B,$6C,$6B,$3B,$6C,$6D,$54,$68,$F4
+.byte $6E,$54,$6F,$70,$71,$6C,$6B,$72,$6C,$73,$74,$68,$F4
+.byte $75,$76,$77,$78,$79,$7A,$7B,$7C,$7D,$7E,$7F,$68,$F4
+.byte $80,$81,$82,$82,$83,$82,$82,$82,$82,$82,$54,$68,$F4
+.byte $84,$85,$86,$87,$88,$89,$8A,$8B,$8C,$54,$54,$68,$F4
+.byte $8D,$8E,$8F,$90,$91,$92,$93,$94,$95,$96,$97,$68,$F4
+.byte $8D,$98,$99,$9A,$9B,$9C,$9D,$9E,$9F,$A0,$A1,$68,$F4
+.byte $A2,$A3,$A4,$A5,$A6,$A7,$A8,$A9,$AA,$AB,$AC,$AD,$F4
+.byte $AE,$AF,$B0,$B1,$B2,$B3,$B4,$B5,$B6,$B7,$B8,$B9,$F4
+.byte $8D,$BA,$BB,$BC,$BD,$BE,$BF,$C0,$C1,$C2,$C3,$C4,$F4
+.byte $8D,$54,$54,$54,$54,$54,$54,$54,$54,$54,$C5,$C6,$F4
+.byte $8D,$54,$54,$54,$54,$54,$54,$54,$54,$54,$54,$C7,$F4
+.byte $C8,$C9,$C9,$C9,$C9,$C9,$C9,$C9,$C9,$C9,$C9,$CA,$00
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -146,7 +97,7 @@ TextPositions:
 .word $2B02 ; 22
 
 PAUSED:
-.byte $67,$16,$10,$1C,$14,$FF
+.byte BLANK,$16,$10,$1C,$14,$FF
 .byte $1F,$10,$24,$22,$14,$13,$00
 
 P_NO:
@@ -159,118 +110,118 @@ POSSIBILITIES:
 
 OPTIONS:
 .byte $09,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$FF
-.byte $04,$67,$22,$1E,$24,$1D,$13,$67,$15,$27,$67,$FF
-.byte $04,$67,$1C,$24,$22,$18,$12,$01,$04,$FF
-.byte $04,$67,$11,$1E,$21,$13,$14,$21,$01,$04,$FF
+.byte $04,BLANK,$22,$1E,$24,$1D,$13,BLANK,$15,$27,BLANK,$FF
+.byte $04,BLANK,$1C,$24,$22,$18,$12,$01,$04,$FF
+.byte $04,BLANK,$11,$1E,$21,$13,$14,$21,$01,$04,$FF
 .byte $04,$01,$09,$FF
-.byte $04,$67,$10,$11,$10,$1D,$13,$1E,$1D,$67,$16,$10,$1C,$14,$00
+.byte $04,BLANK,$10,$11,$10,$1D,$13,$1E,$1D,BLANK,$16,$10,$1C,$14,$00
 
 ON:
-.byte $67,$1E,$1D,$67,$00
+.byte BLANK,$1E,$1D,BLANK,$00
 
 OFF:
-.byte $1E,$15,$15,$67,$00
+.byte $1E,$15,$15,BLANK,$00
 
 GIVEUP:
-.byte $16,$18,$25,$14,$67,$24,$1F,$67,$22,$10,$25,$18,$1D,$16,$FF
-.byte $67,$23,$17,$14,$67,$10,$13,$1E,$21,$10,$11,$1B,$14,$FF
-.byte $1B,$18,$0B,$1B,$67,$12,$21,$18,$23,$23,$14,$21,$22,$0E,$FF
+.byte $16,$18,$25,$14,BLANK,$24,$1F,BLANK,$22,$10,$25,$18,$1D,$16,$FF
+.byte BLANK,$23,$17,$14,BLANK,$10,$13,$1E,$21,$10,$11,$1B,$14,$FF
+.byte $1B,$18,$0B,$1B,BLANK,$12,$21,$18,$23,$23,$14,$21,$22,$0E,$FF
 .byte $01,$06,$28,$14,$22,$FF
-.byte $01,$06,$1D,$1E,$FE,$01,$05,$00
+.byte $01,$06,$1D,$1E,$3A,$01,$05,$00
 
 STARTMENU:
-.byte $67,$1F,$1B,$10,$28,$67,$16,$10,$1C,$14,$FF,$FF
-.byte $67,$12,$1B,$24,$14,$67,$17,$14,$1B,$1F,$FF,$FF
-.byte $67,$14,$27,$18,$23,$67,$16,$10,$1C,$14,$FF,$FF
-.byte $67,$67,$67,$22,$23,$1E,$21,$28,$00
+.byte BLANK,$1F,$1B,$10,$28,BLANK,$16,$10,$1C,$14,$FF,$FF
+.byte BLANK,$12,$1B,$24,$14,BLANK,$17,$14,$1B,$1F,$FF,$FF
+.byte BLANK,$14,$27,$18,$23,BLANK,$16,$10,$1C,$14,$FF,$FF
+.byte BLANK,BLANK,BLANK,$22,$23,$1E,$21,$28,$00
 
 PUZZLE_NO:
-.byte $1F,$24,$29,$29,$1B,$14,$0D,$67,$00
+.byte $1F,$24,$29,$29,$1B,$14,$0D,BLANK,$00
 
 HELP:
-.byte $C6,$C7,$8C,$8D,$C6,$C7,$67,$23,$17,$14,$67,$12,$10,$21,$10,$25,$10,$1D,$67,$1C,$24,$22,$23,$67,$11,$14,$FF
-.byte $D6,$D7,$9C,$9D,$D6,$D7,$67,$1D,$14,$27,$23,$67,$23,$1E,$67,$23,$17,$14,$67,$13,$1E,$1E,$21,$67,$1E,$1D,$FF
-.byte $01,$07,$14,$18,$23,$17,$14,$21,$67,$22,$18,$13,$14,$0F,$FF,$FF
+.byte $C6,$C7,$8C,$8D,$C6,$C7,BLANK,$23,$17,$14,BLANK,$12,$10,$21,$10,$25,$10,$1D,BLANK,$1C,$24,$22,$23,BLANK,$11,$14,$FF
+.byte $D6,$D7,$9C,$9D,$D6,$D7,BLANK,$1D,$14,$27,$23,BLANK,$23,$1E,BLANK,$23,$17,$14,BLANK,$13,$1E,$1E,$21,BLANK,$1E,$1D,$FF
+.byte $01,$07,$14,$18,$23,$17,$14,$21,BLANK,$22,$18,$13,$14,$0F,$FF,$FF
 
-.byte $88,$89,$86,$87,$88,$89,$67,$16,$1B,$24,$1C,$22,$1A,$24,$1B,$1B,$67,$12,$10,$1D,$1D,$1E,$23,$67,$11,$14,$FF
-.byte $98,$99,$96,$97,$98,$99,$67,$1D,$14,$27,$23,$67,$23,$1E,$67,$23,$17,$14,$67,$1B,$10,$13,$13,$14,$21,$FE,$FF,$FF
+.byte $88,$89,$86,$87,$88,$89,BLANK,$16,$1B,$24,$1C,$22,$1A,$24,$1B,$1B,BLANK,$12,$10,$1D,$1D,$1E,$23,BLANK,$11,$14,$FF
+.byte $98,$99,$96,$97,$98,$99,BLANK,$1D,$14,$27,$23,BLANK,$23,$1E,BLANK,$23,$17,$14,BLANK,$1B,$10,$13,$13,$14,$21,$3A,$FF,$FF
 
-.byte $E8,$E9,$67,$67,$8A,$8B,$67,$23,$17,$14,$67,$11,$18,$21,$13,$67,$1C,$24,$22,$23,$67,$11,$14,$67,$23,$1E,$FF
-.byte $F8,$F9,$67,$67,$9A,$9B,$67,$23,$17,$14,$67,$1B,$14,$15,$23,$67,$1E,$15,$67,$23,$17,$14,$67,$1A,$14,$28,$0F,$FF
-.byte $67,$11,$24,$23,$67,$23,$17,$14,$28,$67,$12,$10,$1D,$67,$11,$14,$67,$15,$10,$21,$67,$10,$1F,$10,$21,$23,$0F,$FF,$FF
+.byte $E8,$E9,BLANK,BLANK,$8A,$8B,BLANK,$23,$17,$14,BLANK,$11,$18,$21,$13,BLANK,$1C,$24,$22,$23,BLANK,$11,$14,BLANK,$23,$1E,$FF
+.byte $F8,$F9,BLANK,BLANK,$9A,$9B,BLANK,$23,$17,$14,BLANK,$1B,$14,$15,$23,BLANK,$1E,$15,BLANK,$23,$17,$14,BLANK,$1A,$14,$28,$0F,$FF
+.byte BLANK,$11,$24,$23,BLANK,$23,$17,$14,$28,BLANK,$12,$10,$1D,BLANK,$11,$14,BLANK,$15,$10,$21,BLANK,$10,$1F,$10,$21,$23,$0F,$FF,$FF
 
-.byte $EC,$ED,$4C,$4D,$82,$83,$67,$23,$17,$14,$22,$14,$67,$23,$18,$1B,$14,$22,$67,$1C,$24,$22,$23,$67,$11,$14,$FF
-.byte $FC,$FD,$5C,$5D,$92,$93,$67,$18,$1D,$67,$10,$67,$21,$1E,$26,$0F,$0F,$0F,$11,$24,$23,$67,$23,$17,$14,$28,$FF
-.byte $67,$67,$12,$1E,$24,$1B,$13,$67,$11,$14,$67,$18,$1D,$67,$14,$18,$23,$17,$14,$21,$67,$1E,$21,$13,$14,$21,$0F,$FF,$FF
+.byte $EC,$ED,$4C,$4D,$82,$83,BLANK,$23,$17,$14,$22,$14,BLANK,$23,$18,$1B,$14,$22,BLANK,$1C,$24,$22,$23,BLANK,$11,$14,$FF
+.byte $FC,$FD,$5C,$5D,$92,$93,BLANK,$18,$1D,BLANK,$10,BLANK,$21,$1E,$26,$0F,$0F,$0F,$11,$24,$23,BLANK,$23,$17,$14,$28,$FF
+.byte BLANK,BLANK,$12,$1E,$24,$1B,$13,BLANK,$11,$14,BLANK,$18,$1D,BLANK,$14,$18,$23,$17,$14,$21,BLANK,$1E,$21,$13,$14,$21,$0F,$FF,$FF
 
-.byte $C2,$C3,$A6,$A7,$C4,$C5,$67,$23,$17,$14,$67,$16,$21,$10,$25,$14,$67,$12,$10,$1D,$1D,$1E,$23,$67,$11,$14,$FF
-.byte $D2,$D3,$B6,$B7,$D4,$D5,$67,$11,$14,$23,$26,$14,$14,$1D,$67,$23,$17,$14,$22,$14,$0F,$0F,$0F,$11,$24,$23,$FF
-.byte $67,$23,$17,$14,$28,$67,$1C,$24,$22,$23,$67,$17,$10,$25,$14,$67,$1E,$1D,$14,$67,$12,$1E,$1B,$24,$1C,$1D,$FF
-.byte $67,$11,$14,$23,$26,$14,$14,$1D,$67,$23,$17,$14,$1C,$0F,$67,$23,$17,$14,$67,$10,$18,$21,$22,$17,$18,$1F,$FF
-.byte $67,$67,$12,$1E,$24,$1B,$13,$67,$11,$14,$67,$23,$1E,$67,$23,$17,$14,$67,$1B,$14,$15,$23,$67,$1E,$21,$FF
-.byte $67,$23,$17,$14,$67,$21,$18,$16,$17,$23,$67,$1E,$15,$67,$23,$17,$14,$67,$12,$10,$21,$21,$18,$10,$16,$14,$FE,$FF,$FF
+.byte $C2,$C3,$A6,$A7,$C4,$C5,BLANK,$23,$17,$14,BLANK,$16,$21,$10,$25,$14,BLANK,$12,$10,$1D,$1D,$1E,$23,BLANK,$11,$14,$FF
+.byte $D2,$D3,$B6,$B7,$D4,$D5,BLANK,$11,$14,$23,$26,$14,$14,$1D,BLANK,$23,$17,$14,$22,$14,$0F,$0F,$0F,$11,$24,$23,$FF
+.byte BLANK,$23,$17,$14,$28,BLANK,$1C,$24,$22,$23,BLANK,$17,$10,$25,$14,BLANK,$1E,$1D,$14,BLANK,$12,$1E,$1B,$24,$1C,$1D,$FF
+.byte BLANK,$11,$14,$23,$26,$14,$14,$1D,BLANK,$23,$17,$14,$1C,$0F,BLANK,$23,$17,$14,BLANK,$10,$18,$21,$22,$17,$18,$1F,$FF
+.byte BLANK,BLANK,$12,$1E,$24,$1B,$13,BLANK,$11,$14,BLANK,$23,$1E,BLANK,$23,$17,$14,BLANK,$1B,$14,$15,$23,BLANK,$1E,$21,$FF
+.byte BLANK,$23,$17,$14,BLANK,$21,$18,$16,$17,$23,BLANK,$1E,$15,BLANK,$23,$17,$14,BLANK,$12,$10,$21,$21,$18,$10,$16,$14,$3A,$FF,$FF
 
-.byte $A0,$A1,$67,$23,$17,$14,$67,$23,$21,$14,$14,$67,$10,$1D,$13,$67,$21,$10,$23,$67,$10,$21,$14,$67,$E4,$E5,$FF
-.byte $B0,$B1,$67,$67,$18,$1D,$67,$23,$17,$14,$67,$22,$10,$1C,$14,$67,$12,$1E,$1B,$24,$1C,$1D,$0F,$67,$F4,$F5,$FF
-.byte $E6,$E7,$67,$26,$17,$18,$1B,$14,$67,$23,$17,$14,$67,$26,$14,$10,$22,$14,$1B,$67,$10,$1D,$13,$67,$68,$69,$FF
-.byte $F6,$F7,$67,$67,$23,$17,$14,$67,$17,$10,$1C,$1C,$14,$21,$67,$10,$21,$14,$67,$1D,$1E,$23,$FE,$67,$78,$79,$00
+.byte $A0,$A1,BLANK,$23,$17,$14,BLANK,$23,$21,$14,$14,BLANK,$10,$1D,$13,BLANK,$21,$10,$23,BLANK,$10,$21,$14,BLANK,$E4,$E5,$FF
+.byte $B0,$B1,BLANK,BLANK,$18,$1D,BLANK,$23,$17,$14,BLANK,$22,$10,$1C,$14,BLANK,$12,$1E,$1B,$24,$1C,$1D,$0F,BLANK,$F4,$F5,$FF
+.byte $E6,$E7,BLANK,$26,$17,$18,$1B,$14,BLANK,$23,$17,$14,BLANK,$26,$14,$10,$22,$14,$1B,BLANK,$10,$1D,$13,BLANK,$68,$69,$FF
+.byte $F6,$F7,BLANK,BLANK,$23,$17,$14,BLANK,$17,$10,$1C,$1C,$14,$21,BLANK,$10,$21,$14,BLANK,$1D,$1E,$23,$3A,BLANK,$78,$79,$00
 
 COPYRIGHT:
-.byte $DF,$67,$32,$30,$32,$31,$67,$19,$18,$16,$16,$14,$21,$28,$DE,$1F,$1E,$1D,$1A,$14,$21,$28,$00
+.byte $CF,BLANK,$32,$30,$32,$31,BLANK,$19,$18,$16,$16,$14,$21,$28,$CE,$1F,$1E,$1D,$1A,$14,$21,$28,$00
 
 GAMEOVER:
-.byte $67,$23,$17,$14,$67,$13,$24,$1D,$16,$14,$1E,$1D,$67,$15,$18,$1B,$1B,$22,$67,$26,$18,$23,$17,$67,$16,$10,$22,$0F,$FF,$FF
-.byte $67,$1E,$1D,$1B,$28,$67,$28,$1E,$24,$67,$1C,$10,$1A,$14,$67,$18,$23,$67,$1E,$24,$23,$67,$10,$1B,$18,$25,$14,$0F,$FF,$FF
-.byte $01,$03,$13,$14,$22,$1F,$18,$23,$14,$67,$23,$10,$1A,$18,$1D,$16,$67,$67,$0C,$67,$67,$0C,$67,$67,$FF,$FF
-.byte $01,$03,$28,$1E,$24,$21,$67,$1B,$1E,$16,$18,$12,$67,$15,$10,$18,$1B,$14,$13,$67,$28,$1E,$24,$0F,$FF,$FF
-.byte $01,$04,$23,$17,$18,$22,$67,$22,$17,$10,$1C,$14,$67,$1C,$10,$28,$67,$17,$10,$24,$1D,$23,$FF,$FF
-.byte $28,$1E,$24,$21,$67,$22,$1E,$24,$1B,$67,$15,$1E,$21,$14,$25,$14,$21,$0F,$0F,$0F,$67,$1E,$21,$67,$1D,$1E,$23,$0F,$FF,$FF
-.byte $01,$08,$14,$18,$23,$17,$14,$21,$67,$26,$10,$28,$0F,$0F,$0F,$FF,$FF
-.byte $01,$04,$23,$17,$14,$67,$20,$24,$14,$14,$1D,$67,$26,$18,$1B,$1B,$67,$15,$14,$10,$22,$23,$0F,$FF,$FF
-.byte $01,$0B,$70,$71,$72,$73,$98,$75,$67,$FF
-.byte $01,$0A,$76,$67,$78,$79,$7A,$7B,$67,$7C,$FF
+.byte BLANK,$23,$17,$14,BLANK,$13,$24,$1D,$16,$14,$1E,$1D,BLANK,$15,$18,$1B,$1B,$22,BLANK,$26,$18,$23,$17,BLANK,$16,$10,$22,$0F,$FF,$FF
+.byte BLANK,$1E,$1D,$1B,$28,BLANK,$28,$1E,$24,BLANK,$1C,$10,$1A,$14,BLANK,$18,$23,BLANK,$1E,$24,$23,BLANK,$10,$1B,$18,$25,$14,$0F,$FF,$FF
+.byte $01,$03,$13,$14,$22,$1F,$18,$23,$14,BLANK,$23,$10,$1A,$18,$1D,$16,BLANK,BLANK,$0C,BLANK,BLANK,$0C,BLANK,BLANK,$FF,$FF
+.byte $01,$03,$28,$1E,$24,$21,BLANK,$1B,$1E,$16,$18,$12,BLANK,$15,$10,$18,$1B,$14,$13,BLANK,$28,$1E,$24,$0F,$FF,$FF
+.byte $01,$04,$23,$17,$18,$22,BLANK,$22,$17,$10,$1C,$14,BLANK,$1C,$10,$28,BLANK,$17,$10,$24,$1D,$23,$FF,$FF
+.byte $28,$1E,$24,$21,BLANK,$22,$1E,$24,$1B,BLANK,$15,$1E,$21,$14,$25,$14,$21,$0F,$0F,$0F,BLANK,$1E,$21,BLANK,$1D,$1E,$23,$0F,$FF,$FF
+.byte $01,$08,$14,$18,$23,$17,$14,$21,BLANK,$26,$10,$28,$0F,$0F,$0F,$FF,$FF
+.byte $01,$04,$23,$17,$14,BLANK,$20,$24,$14,$14,$1D,BLANK,$26,$18,$1B,$1B,BLANK,$15,$14,$10,$22,$23,$0F,$FF,$FF
+.byte $01,$0B,$70,$71,$72,$73,$98,$75,BLANK,$FF
+.byte $01,$0A,$76,BLANK,$78,$79,$7A,$7B,BLANK,$7C,$FF
 .byte $01,$0A,$7D,$7E,$7F,$80,$81,$82,$83,$84,$FF
 .byte $01,$0A,$85,$86,$87,$88,$89,$8A,$8B,$8C,$FF
 .byte $01,$0B,$8D,$8E,$8F,$90,$91,$92,$FF,$FF,$FF
-.byte $01,$04,$23,$24,$21,$1D,$22,$67,$23,$10,$1A,$14,$1D,$0C,$00
+.byte $01,$04,$23,$24,$21,$1D,$22,BLANK,$23,$10,$1A,$14,$1D,$0C,$00
 
 WINNER:
-.byte $01,$03,$18,$23,$67,$23,$1E,$1E,$1A,$67,$28,$1E,$24,$01,$09,$23,$1E,$FF,$FF
-.byte $22,$24,$12,$12,$14,$22,$22,$15,$24,$1B,$1B,$28,$67,$1E,$1F,$14,$1D,$67,$23,$17,$14,$67,$12,$10,$16,$14,$22,$FE,$FF,$FF
-.byte $23,$17,$14,$67,$10,$1D,$18,$1C,$10,$1B,$22,$67,$13,$10,$1D,$12,$14,$67,$1E,$24,$23,$67,$1E,$15,$67,$23,$17,$14,$FF,$FF
-.byte $01,$03,$13,$24,$1D,$16,$14,$1E,$1D,$67,$26,$17,$18,$1B,$14,$67,$12,$17,$14,$14,$21,$18,$1D,$16,$FE,$FF,$FF
-.byte $1E,$1D,$14,$67,$11,$18,$23,$14,$22,$67,$28,$1E,$24,$67,$11,$24,$23,$67,$18,$23,$0B,$22,$67,$1E,$1A,$10,$28,$0F,$FF,$FF,$FF,$FF
-.byte $67,$11,$24,$23,$67,$13,$24,$21,$18,$1D,$16,$67,$10,$1B,$1B,$67,$23,$17,$14,$67,$13,$10,$1D,$12,$18,$1D,$16,$FF,$FF
-.byte $01,$03,$1D,$1E,$67,$1E,$1D,$14,$67,$23,$17,$1E,$24,$16,$17,$23,$67,$23,$1E,$67,$22,$23,$1E,$1F,$FF,$FF
-.byte $67,$67,$20,$24,$14,$14,$1D,$67,$1C,$14,$12,$17,$10,$1D,$18,$12,$10,$0B,$22,$67,$21,$1E,$11,$1E,$23,$22,$0F,$FF,$FF
-.byte $23,$17,$14,$67,$10,$1D,$18,$1C,$10,$1B,$22,$67,$26,$14,$21,$14,$67,$18,$1C,$1C,$14,$13,$18,$10,$23,$14,$1B,$28,$FF,$FF
-.byte $12,$10,$1F,$23,$24,$21,$14,$13,$67,$10,$16,$10,$18,$1D,$0F,$67,$1D,$14,$27,$23,$67,$1F,$24,$29,$29,$1B,$14,$0E,$FF,$FF,$FF
-.byte $01,$04,$23,$24,$21,$1D,$22,$67,$23,$10,$1A,$14,$1D,$0C,$00
+.byte $01,$03,$18,$23,BLANK,$23,$1E,$1E,$1A,BLANK,$28,$1E,$24,$01,$09,$23,$1E,$FF,$FF
+.byte $22,$24,$12,$12,$14,$22,$22,$15,$24,$1B,$1B,$28,BLANK,$1E,$1F,$14,$1D,BLANK,$23,$17,$14,BLANK,$12,$10,$16,$14,$22,$3A,$FF,$FF
+.byte $23,$17,$14,BLANK,$10,$1D,$18,$1C,$10,$1B,$22,BLANK,$13,$10,$1D,$12,$14,BLANK,$1E,$24,$23,BLANK,$1E,$15,BLANK,$23,$17,$14,$FF,$FF
+.byte $01,$03,$13,$24,$1D,$16,$14,$1E,$1D,BLANK,$26,$17,$18,$1B,$14,BLANK,$12,$17,$14,$14,$21,$18,$1D,$16,$3A,$FF,$FF
+.byte $1E,$1D,$14,BLANK,$11,$18,$23,$14,$22,BLANK,$28,$1E,$24,BLANK,$11,$24,$23,BLANK,$18,$23,$0B,$22,BLANK,$1E,$1A,$10,$28,$0F,$FF,$FF,$FF,$FF
+.byte BLANK,$11,$24,$23,BLANK,$13,$24,$21,$18,$1D,$16,BLANK,$10,$1B,$1B,BLANK,$23,$17,$14,BLANK,$13,$10,$1D,$12,$18,$1D,$16,$FF,$FF
+.byte $01,$03,$1D,$1E,BLANK,$1E,$1D,$14,BLANK,$23,$17,$1E,$24,$16,$17,$23,BLANK,$23,$1E,BLANK,$22,$23,$1E,$1F,$FF,$FF
+.byte BLANK,BLANK,$20,$24,$14,$14,$1D,BLANK,$1C,$14,$12,$17,$10,$1D,$18,$12,$10,$0B,$22,BLANK,$21,$1E,$11,$1E,$23,$22,$0F,$FF,$FF
+.byte $23,$17,$14,BLANK,$10,$1D,$18,$1C,$10,$1B,$22,BLANK,$26,$14,$21,$14,BLANK,$18,$1C,$1C,$14,$13,$18,$10,$23,$14,$1B,$28,$FF,$FF
+.byte $12,$10,$1F,$23,$24,$21,$14,$13,BLANK,$10,$16,$10,$18,$1D,$0F,BLANK,$1D,$14,$27,$23,BLANK,$1F,$24,$29,$29,$1B,$14,$0E,$FF,$FF,$FF
+.byte $01,$04,$23,$24,$21,$1D,$22,BLANK,$23,$10,$1A,$14,$1D,$0C,$00
 
 STORY:
-.byte $67,$23,$17,$14,$67,$14,$25,$18,$1B,$67,$20,$24,$14,$14,$1D,$67,$1C,$14,$12,$17,$10,$1D,$18,$12,$10,$FF,$FF
-.byte $17,$10,$22,$67,$22,$23,$1E,$1B,$14,$1D,$67,$10,$26,$10,$28,$67,$23,$17,$14,$67,$1B,$18,$23,$23,$1B,$14,$FF,$FF
-.byte $01,$03,$10,$1D,$18,$1C,$10,$1B,$22,$67,$1E,$15,$67,$23,$17,$14,$67,$26,$1E,$1E,$13,$22,$0F,$FF,$FF
-.byte $01,$03,$23,$17,$14,$28,$67,$22,$24,$15,$15,$14,$21,$67,$18,$1D,$67,$12,$10,$16,$14,$22,$FF,$FF
-.byte $67,$1B,$1E,$12,$1A,$14,$13,$67,$11,$28,$67,$1B,$1E,$16,$18,$12,$67,$1F,$24,$29,$29,$1B,$14,$22,$0F,$FF,$FF
-.byte $67,$23,$17,$14,$67,$22,$14,$25,$14,$1D,$67,$17,$14,$21,$1E,$14,$22,$67,$21,$14,$20,$24,$18,$21,$14,$FF,$FF
-.byte $67,$10,$1D,$67,$10,$24,$13,$10,$12,$18,$1E,$24,$22,$67,$1B,$1E,$16,$18,$12,$18,$10,$1D,$67,$23,$1E,$FF,$FF
-.byte $67,$67,$16,$24,$18,$13,$14,$67,$23,$17,$14,$1C,$67,$23,$17,$21,$1E,$24,$16,$17,$67,$17,$14,$21,$FF,$FF
-.byte $01,$03,$13,$24,$1D,$16,$14,$1E,$1D,$22,$67,$23,$1E,$67,$15,$21,$14,$14,$67,$23,$17,$14,$FF,$FF
-.byte $67,$1F,$1E,$1E,$21,$67,$12,$21,$18,$23,$23,$14,$21,$22,$67,$11,$14,$15,$1E,$21,$14,$67,$23,$17,$14,$FF,$FF
-.byte $20,$24,$14,$14,$1D,$0B,$22,$67,$26,$18,$1B,$13,$67,$15,$14,$10,$22,$23,$67,$11,$14,$16,$18,$1D,$22,$0F,$FF,$FF,$FF
-.byte $01,$F08,$10,$21,$14,$1D,$0B,$23,$67,$28,$1E,$24,$0E,$00
+.byte BLANK,$23,$17,$14,BLANK,$14,$25,$18,$1B,BLANK,$20,$24,$14,$14,$1D,BLANK,$1C,$14,$12,$17,$10,$1D,$18,$12,$10,$FF,$FF
+.byte $17,$10,$22,BLANK,$22,$23,$1E,$1B,$14,$1D,BLANK,$10,$26,$10,$28,BLANK,$23,$17,$14,BLANK,$1B,$18,$23,$23,$1B,$14,$FF,$FF
+.byte $01,$03,$10,$1D,$18,$1C,$10,$1B,$22,BLANK,$1E,$15,BLANK,$23,$17,$14,BLANK,$26,$1E,$1E,$13,$22,$0F,$FF,$FF
+.byte $01,$03,$23,$17,$14,$28,BLANK,$22,$24,$15,$15,$14,$21,BLANK,$18,$1D,BLANK,$12,$10,$16,$14,$22,$FF,$FF
+.byte BLANK,$1B,$1E,$12,$1A,$14,$13,BLANK,$11,$28,BLANK,$1B,$1E,$16,$18,$12,BLANK,$1F,$24,$29,$29,$1B,$14,$22,$0F,$FF,$FF
+.byte BLANK,$23,$17,$14,BLANK,$22,$14,$25,$14,$1D,BLANK,$17,$14,$21,$1E,$14,$22,BLANK,$21,$14,$20,$24,$18,$21,$14,$FF,$FF
+.byte BLANK,$10,$1D,BLANK,$10,$24,$13,$10,$12,$18,$1E,$24,$22,BLANK,$1B,$1E,$16,$18,$12,$18,$10,$1D,BLANK,$23,$1E,$FF,$FF
+.byte BLANK,BLANK,$16,$24,$18,$13,$14,BLANK,$23,$17,$14,$1C,BLANK,$23,$17,$21,$1E,$24,$16,$17,BLANK,$17,$14,$21,$FF,$FF
+.byte $01,$03,$13,$24,$1D,$16,$14,$1E,$1D,$22,BLANK,$23,$1E,BLANK,$15,$21,$14,$14,BLANK,$23,$17,$14,$FF,$FF
+.byte BLANK,$1F,$1E,$1E,$21,BLANK,$12,$21,$18,$23,$23,$14,$21,$22,BLANK,$11,$14,$15,$1E,$21,$14,BLANK,$23,$17,$14,$FF,$FF
+.byte $20,$24,$14,$14,$1D,$0B,$22,BLANK,$26,$18,$1B,$13,BLANK,$15,$14,$10,$22,$23,BLANK,$11,$14,$16,$18,$1D,$22,$0F,$FF,$FF,$FF
+.byte $01,$F08,$10,$21,$14,$1D,$0B,$23,BLANK,$28,$1E,$24,$0E,$00
 
 CLICK:
-.byte $23,$17,$14,$67,$23,$24,$1C,$11,$1B,$14,$21,$22,$67,$12,$1B,$18,$12,$1A,$67,$1E,$1D,$14,$67,$11,$28,$67,$1E,$1D,$14,$0F,$FF
+.byte $23,$17,$14,BLANK,$23,$24,$1C,$11,$1B,$14,$21,$22,BLANK,$12,$1B,$18,$12,$1A,BLANK,$1E,$1D,$14,BLANK,$11,$28,BLANK,$1E,$1D,$14,$0F,$FF
 .byte $01,$14,$00
 CLICK1:
 .byte $12,$1B,$18,$12,$1A,$0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F,$00
 CLICK2:
 .byte $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F,$12,$1B,$18,$12,$1A,$00
 CLICK3:
-.byte $01,$0C,$12,$1B,$18,$12,$1A,$FE,$FF,$FF
-.byte $67,$67,$23,$17,$14,$67,$1B,$1E,$12,$1A,$67,$11,$14,$16,$18,$1D,$22,$67,$23,$1E,$67,$1C,$1E,$25,$14,$0F,$0F,$0F,$00
+.byte $01,$0C,$12,$1B,$18,$12,$1A,$3A,$FF,$FF
+.byte BLANK,BLANK,$23,$17,$14,BLANK,$1B,$1E,$12,$1A,BLANK,$11,$14,$16,$18,$1D,$22,BLANK,$23,$1E,BLANK,$1C,$1E,$25,$14,$0F,$0F,$0F,$00
 
 
 
@@ -351,9 +302,9 @@ MainMenu:
 
     ; load title
     LDA #<TITLE_CHR
-    STA tmp_pointer
+    STA pointer
     LDA #>TITLE_CHR
-    STA tmp_pointer+1
+    STA pointer+1
 
     LDA #$00
     TAX
@@ -363,7 +314,7 @@ MainMenu:
     JSR Load_CHR_0Y
 
     LDA #>TITLE_CHR
-    STA tmp_pointer+1
+    STA pointer+1
 
     LDX #$04
     JSR Load_CHR_0Y
@@ -373,14 +324,24 @@ MainMenu:
     JSR ClearSpriteBuffer
 
     LDA #<TITLE_DOOR
-    STA tmp_pointer
+    STA pointer
     LDA #>TITLE_DOOR
-    STA tmp_pointer+1
+    STA pointer+1
 
     LDA #$20
     LDX #$84
     JSR SetPPUAddress
     JSR Decompress_Loop
+    
+    LDA #$27
+    LDX #$D1
+    JSR SetPPUAddress
+    LDA #$80
+    STA $2007
+    LDA #$A0
+    STA $2007
+    LDA #$10
+    STA $2007        ; title attributes
 
     LDA #1
     STA game_over    ; mark as "in menu"
@@ -427,9 +388,9 @@ ViewHelp:
     JSR LoadGamePalette
 
     LDA #<StaticScreen_HELP_Attributes
-    STA tmp_pointer
+    STA pointer
     LDA #>StaticScreen_HELP_Attributes
-    STA tmp_pointer+1
+    STA pointer+1
     LDA #$23
     LDX #$C1
     JSR Decompress_Attributes
@@ -517,11 +478,11 @@ LoadGame:
 
     ;; draw game area text
     LDA #3
-    STA tmp
+    STA loop
    @PrintLoop:
-    LDA tmp
+    LDA loop
     JSR Print
-    DEC tmp
+    DEC loop
     BPL @PrintLoop
 
    @PrintPuzzleNumber:
@@ -540,22 +501,27 @@ LoadGame:
 
 Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     LDA #$06
-    STA tmp+9       ; row counter
+    STA row         ; row counter
     LDX #48-1
-    STX tmp+8       ; loop counter
+    STX loop        ; loop counter
+    LDA #0
+    STA position
 
    @Clear_Used:     ; clear the temp space with $FF
     LDA #$FF
-    STA tmp+1
-    STA tmp+2
-    STA tmp+3
-    STA tmp+4
-    STA tmp+5
-    STA tmp+6
-    STA tmp+7
+    STA possibilities
+    STA possibilities+1
+    STA possibilities+2
+    STA possibilities+3
+    STA possibilities+4
+    STA possibilities+5
+    STA possibilities+6
 
     LDA puzzle
     STA RNG
+    ASL A
+    EOR #$27
+    STA RNG+1
 
    @GetTileBitLoop:
     JSR Random
@@ -565,31 +531,31 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     TAX
     DEX
     LDA BIT_LUT, X  ; convert 1-7 to 80, 40, 20, 10, 08, 04, 02
-    STA tmp
+    STA cluetile1
 
     LDX #$07
    @Check_Used:
-    LDA tmp, X      ; get the value in this slot
+    LDA possibilities, X ; get the value in this slot
     CMP #$FF
-    BEQ @Write      ; if the value is still $FF, then its not been written yet
-    CMP tmp
-    BEQ @GetTileBitLoop ; if it is equal, then this value has been written already; get a new value
+    BEQ @Write           ; if the value is still $FF, then its not been written yet
+    CMP cluetile1
+    BEQ @GetTileBitLoop  ; if it is equal, then this value has been written already; get a new value
     DEX
     BNE @Check_Used
 
    @Write:
-    LDA tmp
-    STA tmp, X      ; save the temp row value
-    LDY tmp+8       ; then save in the total solved-puzzle string!
+    LDA cluetile1
+    STA possibilities, X ; save the temp row value
+    LDY loop             ; then save in the total solved-puzzle string!
     STA solved-1, Y
-    DEC tmp+8
-    DEX             ; X = 0 when its the last tile in the row
+    DEC loop
+    DEX                  ; X = 0 when its the last tile in the row
     BNE @GetTileBitLoop
-    DEC tmp+8       ; skip the 8th byte
-    DEC tmp+9       ; decrement row counter
+    DEC loop             ; skip the 8th byte
+    DEC row              ; decrement row counter
     BNE @Clear_Used
 
-    LDA #$FE         ; set each game area tile's possible tile list
+    LDA #$FE             ; set each game area tile's possible tile list
     LDX #48
    @ClearPuzzle:
     STA unsolved-1, X
@@ -603,11 +569,12 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     AND #$03              ; get between 1-3 tiles
     BEQ @SetStartingTileAmount
 
-    STA clues  ; tiles to set
+    STA clues             ; tiles to set
 
    @SetStartingTiles:
     JSR GetRandomPosition
 
+    TXA
     PHA
     LDA solved, X
 
@@ -620,9 +587,10 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     TAX
     LDA solved, X
     EOR #$FE
-    STA removed, X ; act as though the player removed all other tiles from possibilities
-    LDA #$FF
-    STA clue_list, X
+    STA removed, X   ; act as though the player removed all other tiles from possibilities
+    INC clue_list, X
+    INC solved, X    ; add 1 to the bit to mark it as "do not touch" for the player
+    INC selected, X
     TXA
 
     DEC clues
@@ -639,14 +607,14 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     ;   $06 - Is NOT in Column
 
     LDA #0
-    STA sprite
-    STA sprite_v
-    STA vert_done
+    STA horz_sprites
+    STA vert_sprites
     STA horz_done
-
+    STA vert_done
+    
     LDA #$FF
     STA vert_clues
-    STA vert_clues_x
+    STA vert_clues_s
     STA horz_clues
     STA clues
 
@@ -674,21 +642,23 @@ Generate_Clues:
     BNE @Continue
     
    @HorzSprites:
-    LDX vert_clues_x
+    LDX vert_clues_s
     CPX #7
     BEQ Generate_Clues
 
    @Continue:
     INC clues
+    LDY #0
+    STY tile2_error
    
     STA clue_type
     ASL A
     TAY
     LDA ClueType_Table, Y
-    STA tmp_pointer
+    STA pointer
     LDA ClueType_Table+1, Y
-    STA tmp_pointer+1
-    JMP (tmp_pointer)
+    STA pointer+1
+    JMP (pointer)
 
 ClueType_Table:
 .word IsNextTo       ; 0
@@ -714,6 +684,7 @@ GetRandomPosition:
 
     LDY position
     LDA solved, Y
+    AND #$FE
 
     LDX #$FF
    @GetFakeCursor2X:
@@ -730,18 +701,13 @@ GetRandomPosition:
     STA cursor_y
 
     LDA position
+    TAX
     AND #$07
     STA cursor_x
-
-    TYA
-    TAX
     RTS
 
 GetClueTile:
     JSR GetRandomPosition
-    LDA clue_list, X
-    CMP #$03
-    BEQ GetClueTile
 
     LDY cursor_y
     LDA TileOffset_LUT, Y
@@ -750,6 +716,7 @@ GetClueTile:
     LDA cursor2_x
     ASL A
     ORA drawtile
+    
     RTS
 
 
@@ -764,19 +731,20 @@ DrawClue:
     ; X 3 = vert: draw tile 1, tile 2
     ; X 4 = vert: draw tile 1, tile 2 in sprite containment box
 
-    STX clue_x
-    STA clue_y
-    LDY #0
-    STY vert_offset
+    STX clue_shape
+    STA clue_sprite
+    LDA #0
+    STA vert_offset
 
     CPX #$03
-    BCS @DrawVerticalClue
+    BCC :+
+    JMP @DrawVerticalClue
 
-    LDA horz_clues
+  : LDA horz_clues
     ASL A
     TAY
 
-    LDA clue_y
+    LDA clue_sprite
     BEQ @NoHorzSprite
 
     LDX sprite
@@ -816,15 +784,36 @@ DrawClue:
     LDX horz_done
     LDA cluetile1
     STA horz_complete, X
-    LDA cluetile2
+    LDA tile1_row
     STA horz_complete+1, X
-    LDA cluetile2
+    LDA tile1_col
     STA horz_complete+2, X
-    LDA clue_type
+    LDA tile1_pos
     STA horz_complete+3, X
+    
+    LDA cluetile2
+    STA horz_complete+4, X
+    LDA tile2_row
+    STA horz_complete+5, X
+    LDA tile2_col
+    STA horz_complete+6, X
+    LDA tile2_pos
+    STA horz_complete+7, X
+    
+    LDA cluetile3
+    STA horz_complete+8, X
+    LDA tile3_row
+    STA horz_complete+9, X
+    LDA tile3_col
+    STA horz_complete+10, X
+    LDA tile3_pos
+    STA horz_complete+11, X
+
+    LDA clue_type
+    STA horz_complete+12, X
     TXA
     CLC
-    ADC #$04
+    ADC #$10
     STA horz_done
 
     JSR UpdateClueAttribute_Horz
@@ -835,22 +824,22 @@ DrawClue:
    @DrawVerticalClue:
     BEQ @WithoutSprite
 
-    LDA vert_clues_x
+    LDA vert_clues_s
     CMP #$04
     BCC :+
         INC vert_offset
         SBC #$04
   : TAY
 
-    LDX sprite_v
-    LDA clue_y
+    LDX vert_sprites
+    LDA clue_sprite
     STA spritebuffer2, X
     LDA #$8C          ; Y position is $8C for first row
     LDX vert_offset
     BEQ :+
     CLC
     ADC #$30          ; $BC for second row
-  : LDX sprite_v
+  : LDX vert_sprites
     STA spritebuffer2+2, X
     LDA VertSpriteLocations_S, Y
     STA spritebuffer2+1, X
@@ -858,7 +847,7 @@ DrawClue:
     TXA
     CLC
     ADC #$04
-    STA sprite_v
+    STA vert_sprites
 
     LDA VertClueLocations_S, Y
     BNE @VerticalTiles
@@ -897,16 +886,31 @@ DrawClue:
     LDX vert_done
     LDA cluetile1
     STA vert_complete, X
-    LDA cluetile2
+    LDA tile1_row
     STA vert_complete+1, X
-    LDA clue_type
+    LDA tile1_col
+    STA vert_complete+2, X
+    LDA tile1_pos
     STA vert_complete+3, X
+    
+    LDA cluetile2
+    STA vert_complete+4, X
+    LDA tile2_row
+    STA vert_complete+5, X
+    LDA tile2_col
+    STA vert_complete+6, X
+    LDA tile2_pos
+    STA vert_complete+7, X
+    
+    LDA clue_type
+    STA vert_complete+8, X    
+    
     TXA
     CLC
-    ADC #$04
+    ADC #$10
     STA vert_done
 
-    LDA clue_x
+    LDA clue_shape
     CMP #$03
     BEQ :+
 
@@ -917,29 +921,61 @@ DrawClue:
     JMP Generate_Clues
 
 
+SetHorzPrevClue:
+    LDA #0
+    STA vert_offset
+    LDY #$C0            ; look to see if this tile was involved in another clue
+  : LDA horz_complete, Y
+    CMP cluetile1  
+    BEQ @WhatTileIsIt   ; if it was, check what row the second tile was in
+    LDA horz_complete+1, Y
+    CMP cluetile1  
+    BEQ @WhatTileIsIt   ; if it was, check what row the second tile was in    
+    TYA
+    SEC
+    SBC #$08
+    TAY 
+    CMP #$F8
+    BNE :-
+    RTS
+    
+   @WhatTileIsIt:      
+    LDA horz_complete+2, Y
+    STA vert_offset
+    RTS
+
+    ;; ^ this is because if you get a "tree is above the frog" clue and a
+    ;; "tree is not above the rat" clue, they're... they're the same clue! no good
+
+
 IsNextTo:
     JSR GetClueTile
     STA cluetile1
     STA cluetile3
 
+    LDA clue_list, X
+    CMP #$03
+    BEQ IsNextTo
+
     LDA cursor_x
-    STA clue_x      ; backup X position of first tile
+    STA tile1_col   ; backup X position of first tile
+    INC clue_list, X    
 
    @SecondTile:
     JSR GetClueTile
     STA cluetile2
 
     LDY cursor_x
-    CPY clue_x
+    CPY tile1_col
     BEQ @SecondTile ; they're in the same column, re-do
 
     INY
-    CPY clue_x
+    CPY tile1_col
     BEQ @ClueGood   ; if this = then the second tile is to the left
 
     DEY
     DEY
-    CPY clue_x      ; and if this = then the second tile is to the right
+    CPY tile1_col   ; and if this = then the second tile is to the right
     BNE @SecondTile ; if not, try again
 
    @ClueGood:
@@ -954,25 +990,30 @@ IsNotNextTo:
     JSR GetClueTile
     STA cluetile1
     STA cluetile3
+    
+    LDA clue_list, X
+    CMP #$03
+    BEQ IsNotNextTo
 
     LDA cursor_x
-    STA clue_x
+    STA tile1_col
+    INC clue_list, X
 
    @SecondTile:
     JSR GetClueTile
     STA cluetile2
 
     LDY cursor_x
-    CPY clue_x
+    CPY tile1_col
     BEQ @ClueGood   ; they're in the same column, so not next to each other!
 
     INY
-    CPY clue_x
+    CPY tile1_col
     BEQ @SecondTile ; second tile is to the left; re-do!
 
     DEY
     DEY
-    CPY clue_x
+    CPY tile1_col
     BEQ @SecondTile ; second tile is to the right; re-do! otherwise its somewhere else entirely
 
    @ClueGood:
@@ -987,11 +1028,15 @@ IsLeftOf:
     ;; cluetile 1 <?> cluetile 2
     JSR GetClueTile
     STA cluetile1
+    
+    LDA clue_list, X
+    CMP #$03
+    BEQ IsLeftOf
 
     LDA cursor_x
     CMP #$06          ; if the first tile is on the right, then...
     BEQ IsLeftOf
-    STA clue_x
+    STA tile1_col
 
     INC clue_list, X
 
@@ -1000,7 +1045,7 @@ IsLeftOf:
     STA cluetile3
 
     LDY cursor_x
-    CPY clue_x        ; If X (column) is same or less than column of previous clue, then the tile cannot be used for this clue.
+    CPY tile1_col     ; If X (column) is same or less than column of previous clue, then the tile cannot be used for this clue.
     BEQ @SecondTile
     BCC @SecondTile
 
@@ -1018,9 +1063,13 @@ IsLeftOf:
 IsInRow:
     JSR GetClueTile
     STA cluetile1
+    
+    LDA clue_list, X
+    CMP #$03
+    BEQ IsInRow
 
     LDA cursor_x
-    STA clue_x
+    STA tile1_col
 
     INC clue_list, X
 
@@ -1033,41 +1082,41 @@ IsInRow:
     CPY #$06
     BEQ @SecondTile
 
-    CPY clue_x
+    CPY tile1_col
     BEQ @SecondTile    ; they're in the same column, so not next to each other!
 
     INY
-    CPY clue_x
+    CPY tile1_col
     BEQ @SecondTileGood
 
     DEY
     DEY
-    CPY clue_x
+    CPY tile1_col
     BNE @SecondTile
 
    @SecondTileGood:
     INC clue_list, X
     LDA cursor_x
-    STA clue_y
+    STA tile2_col
 
    @ThirdTile:
     JSR GetClueTile
     STA cluetile3
 
     LDY cursor_x
-    CPY clue_x
+    CPY tile1_col
     BEQ @ThirdTile       ; third tile cannot be in first tile's column
 
-    CPY clue_y
+    CPY tile2_col
     BEQ @ThirdTile       ; or in second tile's column
 
     DEY
-    CPY clue_y
+    CPY tile2_col
     BEQ @ClueGood        ; order is tile 3 < tile 2 < tile 1
 
     INY
     INY
-    CPY clue_y
+    CPY tile2_col
     BNE @ThirdTile       ; order is NOT tile 1 > tile 2 > tile 3... so it must be re-done
 
    @ClueGood:
@@ -1081,9 +1130,13 @@ IsInRow:
 IsNotInRow:
     JSR GetClueTile
     STA cluetile1
+    
+    LDA clue_list, X
+    CMP #$03
+    BEQ IsNotInRow    
 
     LDA cursor_x
-    STA clue_x
+    STA tile1_col
 
     INC clue_list, X
 
@@ -1094,16 +1147,16 @@ IsNotInRow:
     STA cluetile2
 
     LDY cursor_x
-    CPY clue_x
+    CPY tile1_col
     BEQ @SecondTileGood ; they're in the same column, so not next to each other!
 
     DEY
-    CPY clue_x
+    CPY tile1_col
     BEQ @SecondTile     ; Its to the right, so get a different tile
 
     INY
     INY
-    CPY clue_x
+    CPY tile1_col
     BEQ @SecondTile     ; Its to the left, so get a different tile
 
    @SecondTileGood:
@@ -1116,25 +1169,25 @@ IsNotInRow:
     STA cluetile3
 
     LDY cursor_x
-    CPY clue_x
+    CPY tile1_col
     BEQ @ThirdTile      ; third tile is same column as first tile; no good!
 
     DEY
-    CPY clue_x
+    CPY tile1_col
     BEQ @ThirdTile      ; also cannot be beside first tile!
 
     DEY
-    CPY clue_x
+    CPY tile1_col
     BEQ @ClueGood       ; but if its 2 columns away, woo! Third tile is on the right.
 
     INY
     INY
     INY
-    CPY clue_x          ; see if its to the left of first tile
+    CPY tile1_col       ; see if its to the left of first tile
     BEQ @ThirdTile
 
     INY
-    CPY clue_x
+    CPY tile1_col
     BNE @ThirdTile      ; now if its NOT here, then it must be tossed
 
    @ClueGood:
@@ -1148,29 +1201,47 @@ IsNotInRow:
 IsInColumn:
     JSR GetClueTile
     STA cluetile1
+    
+    LDA clue_list, X
+    CMP #$03
+    BEQ IsInColumn    
 
     LDA cursor_y
     CMP #$05
     BEQ IsInColumn    ; first tile cannot be in the bottom row
 
+    STA tile1_row
+    LDA cursor_x
+    STA tile1_col
+
+    JSR SetVertRow
     INC clue_list, X
 
-    STA clue_y
-    LDA cursor_x
-    STA clue_x
-
-   @SecondTile:
+   @SecondTile:        ; failsafe check--if the first tile is in row 5,
+    INC tile2_error     ; then the only possible row for clue tile 2 is in row 6
+    LDA tile2_error     ; and if that clue already exists, this would be an infinite loop
+    CMP #6
+    BCS IsInColumn 
+    
     JSR GetClueTile
     STA cluetile2
 
+    LDY cursor_x
+    CPY tile1_col
+    BNE @SecondTile    ; must be in same column
+
     LDY cursor_y
-    CPY clue_y
+    CPY tile1_row
     BEQ @SecondTile    ; cannot be in the same row
     BCC @SecondTile    ; second tile should be below first tile's row
 
-    LDY cursor_x
-    CPY clue_x
-    BNE @SecondTile    ; must be in same column
+    CPY vert_offset    
+    BEQ @SecondTile    ; already have a clue for first tile + this row
+
+    INC clue_list, X
+    LDX vert_done
+    TYA
+    STA vert_complete+2, X    
 
     INC vert_clues
     LDA #0             ; no sprite
@@ -1179,40 +1250,82 @@ IsInColumn:
 
 
 IsNotInColumn:
-    LDA vert_clues_x
+    LDA vert_clues_s
     CMP #7
     BEQ IsInColumn     ; cannot draw any more sprites; no more of these clues
 
     JSR GetClueTile
     STA cluetile1
 
+    LDA clue_list, X
+    CMP #$03
+    BEQ IsNotInColumn
+
     LDA cursor_y
     CMP #$05
     BEQ IsNotInColumn
 
+    STA tile1_row
+    LDA cursor_x
+    STA tile1_col
+    
+    JSR SetVertRow
     INC clue_list, X
 
-    STA clue_y
-    LDA cursor_x
-    STA clue_x
-
-   @SecondTile:
+   @SecondTile:        ; failsafe check--if the first tile is in row 5,
+    INC tile2_error     ; then the only possible row for clue tile 2 is in row 6
+    LDA tile2_error     ; and if that clue already exists, this would be an infinite loop
+    CMP #6
+    BCS IsNotInColumn 
+    
     JSR GetClueTile
     STA cluetile2
 
+    LDY cursor_x
+    CPY tile1_col
+    BEQ @SecondTile    ; cannot be in same column
+
     LDY cursor_y
-    CPY clue_y
+    CPY tile1_row
     BEQ @SecondTile    ; cannot be in the same row
     BCC @SecondTile    ; second tile should be below first tile's row
 
-    LDY cursor_x
-    CPY clue_x
-    BEQ @SecondTile    ; cannot be in same column
+    CPY vert_offset    ; see if the first tile has already been paired with
+    BEQ @SecondTile    ; a tile from this row
 
-    INC vert_clues_x
+    INC clue_list, X    
+    LDX vert_done
+    TYA
+    STA vert_complete+2, X
+
+    INC vert_clues_s
     LDA #2             ; use /// sprite
     LDX #4             ; vertical tiles with sprite
     JMP DrawClue
+
+
+SetVertRow:
+    LDA #0
+    STA vert_offset
+    STA tile2_error
+    LDY #$70           ; look to see if this tile was involved in another clue
+  : LDA vert_complete, Y
+    CMP cluetile1  
+    BEQ @WhatRowIsIt   ; if it was, check what row the second tile was in
+    DEY
+    DEY
+    DEY
+    DEY    
+    BPL :-
+    RTS
+    
+   @WhatRowIsIt:      
+    LDA vert_complete+2, Y
+    STA vert_offset
+    RTS
+
+    ;; ^ this is because if you get a "tree is above the frog" clue and a
+    ;; "tree is not above the rat" clue, they're... they're the same clue! no good
 
 
 HorzClueLocations:
@@ -1284,29 +1397,10 @@ VertSpriteLocations_S:
 
 
 PrepGame:
-    LDX #1
-    STX row1_solved+7 ;; clear these out to 1
-    STX row2_solved+7
-    STX row3_solved+7
-    STX row4_solved+7
-    STX row5_solved+7
-    STX row6_solved+7
+    JSR ClearButtons ; clear cursor variables, set A to 0
 
     ;; start prepping variables for gameplay
 
-    STX drawjob      ; immediately update possibilities
-    STX update_attr  ; and their attributes
-    STX music_track
-    STX options      ; mark as needing values updated on screen
-    STX row1_player+7
-    STX row2_player+7
-    STX row3_player+7
-    STX row4_player+7
-    STX row5_player+7
-    STX row6_player+7
-    STX border
-
-    JSR ClearButtons ; then clear cursor variables
     STA game_over    ; mark as "in game"
     STA cursor
     STA cursor_x
@@ -1324,6 +1418,26 @@ PrepGame:
     STA moves+2
     STA clues
     STA abandon
+
+    LDA #1
+    STA row1_solved+7 ;; clear these out to 1
+    STA row2_solved+7
+    STA row3_solved+7
+    STA row4_solved+7
+    STA row5_solved+7
+    STA row6_solved+7
+
+    STA drawjob      ; immediately update possibilities
+    STA update_attr  ; and their attributes
+    STA music_track
+    STA options      ; mark as needing values updated on screen
+    STA row1_player+7
+    STA row2_player+7
+    STA row3_player+7
+    STA row4_player+7
+    STA row5_player+7
+    STA row6_player+7
+    STA border
 
     JSR UpdateOptionText
 
@@ -1537,9 +1651,9 @@ GameOver:
     STX scroll+1
 
     LDA #<QUEEN_CHR
-    STA tmp_pointer
+    STA pointer
     LDA #>QUEEN_CHR
-    STA tmp_pointer+1
+    STA pointer+1
 
     LDA #$07
     LDX #$00
@@ -1551,9 +1665,9 @@ GameOver:
     JSR LoadGameOverPalette
 
     LDA #<Queen_Attributes
-    STA tmp_pointer
+    STA pointer
     LDA #>Queen_Attributes
-    STA tmp_pointer+1
+    STA pointer+1
     LDA #$23
     LDX #$E3
     JSR Decompress_Attributes
@@ -1704,7 +1818,7 @@ UpdateJoy:
     LDA JoyData, X  ; get button value from mini table
     STA joy_tmp     ; save it for doing stuff with
     TYA             ; restore transition byte
-    AND joy_tmp     ; see if button has transitioned (if so, some people would say this is a lucky button)
+    AND joy_tmp     ; see if button has transitioned 
     BEQ @Nope       ; if not, skip it
     LDA joy
     AND joy_tmp     ; see if it is being pressed (else, its being released)
@@ -1824,12 +1938,12 @@ PlayerInput_Menu:
         ASL A
         TAX
         LDA MenuList, X
-        STA tmp_pointer
+        STA pointer
         LDA MenuList+1, X
-        STA tmp_pointer+1
+        STA pointer+1
         PLA
         PLA
-        JMP (tmp_pointer)
+        JMP (pointer)
 
    @Done:
     JMP ClearButtons
@@ -2023,7 +2137,7 @@ UpdateOptionText:
     JSR SetPPUAddress
     LDA music_track
     JSR Convert_Number
-    LDX #$67
+    LDX #BLANK
     STX $2007
     STY $2007
     STA $2007
@@ -2056,7 +2170,7 @@ UpdateOptionText:
     JSR Convert_Number
     STY $2007
     STA $2007
-    LDA #$67
+    LDA #BLANK
     STA $2007
 
    @Done:
@@ -2095,7 +2209,7 @@ Load_Possibilities:
 
     LDX cursor_y
     LDA TileOffset_LUT, X
-    STA tmp
+    STA tile_tmp
 
     LDA cursor_y    ; get the tile position
     ASL A
@@ -2116,7 +2230,7 @@ Load_Possibilities:
     PHA
     TXA
     ASL A           ; X * 2 + TileOffseT_LUT value =
-    ORA tmp         ; the tile graphic for this slot
+    ORA tile_tmp    ; the tile graphic for this slot
     STA possibilities, X
     PLA
 
@@ -2125,7 +2239,7 @@ Load_Possibilities:
     BPL @Loop
 
     LDA #$01
-    STA tmp         ; tmp will be loop counter
+    STA loop      
 
     LDA #>$20D2
     LDX #<$20D2
@@ -2138,7 +2252,7 @@ Load_Possibilities:
     BNE @Draw
 
    @NoTile:
-    LDA #$67        ; $67 = blank tile
+    LDA #BLANK        ; blank tile
     STA $2007
     STA $2007
     BNE @Next
@@ -2162,8 +2276,8 @@ Load_Possibilities:
     STA $2006
     STX $2006
 
-    DEC tmp         ; decrement the loop counter
-    LDX tmp         ; so it will = 0, then put in X
+    DEC loop        ; decrement the loop counter
+    LDX loop        ; so it will = 0, then put in X
     BEQ @GetTile    ; for the next loop!
 
     DEC drawjob     ; remove low bit from drawjob
@@ -2208,7 +2322,22 @@ Swap_Possibility:
     LDA BIT_LUT, X      ; now get the tile's ID bit
     STA newtile
 
+    LDY row
+    LDX #$06
+    CLC
+    ADC #01
+   @GameSetCheck: 
+    CMP solved, Y
+    BEQ @Nothing        ; the tile trying to be swapped was set by the game
+    INY                 ; and cannot be messed with
+    DEX
+    BPL @GameSetCheck
+    
     LDY position
+    LDA solved, Y
+    AND #$01
+    BNE @Nothing
+    
     LDA unsolved, Y
     AND newtile
     BEQ @RemoveFromRemoved
@@ -2229,6 +2358,7 @@ Swap_Possibility:
     EOR newtile
     STA unsolved, Y
     INC drawjob         ; and mark possibilities to be updated on screen
+   @Nothing: 
     RTS
 
 
@@ -2242,6 +2372,10 @@ Choose_Possibility:
     TAY
     STY position        ; save position
 
+    LDA solved, Y
+    AND #$01
+    BNE @Done           ; this tile was set by the game and cannot be changed!
+
     LDX cursor2_x
     LDA possibilities, X; so get the tile image ID from the possibilities list
     BEQ @Done           ; but if its 0, then do nothing!
@@ -2251,7 +2385,19 @@ Choose_Possibility:
 
     LDA BIT_LUT, X      ; now get the tile's ID bit
     STA newtile
+    
+    LDY row
+    LDX #$06
+    CLC
+    ADC #01             
+   @GameSetCheck: 
+    CMP solved, Y
+    BEQ @Done           ; the tile trying to be swapped was set by the game
+    INY                 ; and cannot be messed with
+    DEX
+    BPL @GameSetCheck    
 
+    LDY position
     LDA selected, Y
     BEQ @SetTileNormal
 
@@ -2279,7 +2425,6 @@ Choose_Possibility:
     JSR Refill_Possibility
     LDY position
     STY old_position
-    EOR #$FE
     EOR removed, Y
     STA unsolved, Y     ; and refill this byte's possibilities
     LDA cursor_x
@@ -2295,9 +2440,6 @@ Choose_Possibility:
     STA cursor
    @Done:
     RTS
-
-
-
 
 
 PreviouslySet:
@@ -2323,7 +2465,6 @@ PreviouslySet:
     STY old_position ; backup Y
     JSR Refill_Possibility
     LDY old_position
-    EOR #$FE
     EOR removed, Y
     ORA oldtile
     STA unsolved, Y ; put the new possibilities back
@@ -2375,14 +2516,15 @@ Refill_Possibility:  ; refreshes a byte with all possible tiles that haven't bee
     LDY row
     LDX #6
     LDA #$00
-    STA tmp+2
+    STA tile_tmp
    @Loop:
     LDA selected, Y
-    ORA tmp+2
-    STA tmp+2
+    ORA tile_tmp
+    STA tile_tmp
     INY
     DEX
     BPL @Loop
+    EOR #$FE    
     RTS
 
 
@@ -2626,7 +2768,7 @@ UpdateClueAttribute_Vert:
     RTS
 
 UpdateClueAttribute_VertSprite:
-    LDA vert_clues_x
+    LDA vert_clues_s
     ASL A
     ASL A
     STA tile_address
@@ -3195,7 +3337,7 @@ SpriteTable:
 ;      |   attributes
 ;      |   |  tile IDs
 .byte $80,$02,$2C,$2D,$00,$00 ; 1: <.?.>
-.byte $80,$03,$EE,$EF,$00,$00 ; 2: ///
+.byte $80,$03,$2A,$2B,$00,$00 ; 2: ///
 .byte $80,$00,$3C,$3D,$00,$00 ; 3: <-->
 
 .byte $00,$01,$E0,$E1,$F0,$F1 ; 4: squirrel
@@ -3220,10 +3362,16 @@ SpriteTable:
 .byte $00,$01,$EC,$ED,$9E,$9F ; 11: snake twitch
 
 .byte $03,$00,$93,$94,$95,$96 ; 12: blood
-.byte $80,$00,$77,$67,$00,$00 ; 13: eye
+.byte $80,$00,$77,BLANK,$00,$00 ; 13: eye
 
 .byte $00,$02,$CE,$CF,$DE,$DF ; 14: weasel flip    crescent moon D
 .byte $00,$C2,$F5,$F4,$E5,$E4 ; 15: weasel flip 2 boat shape
+
+.byte $80,$03,$EE,$EF,$00,$00 ; 16: hearts
+.byte $80,$03,$EE,$EF,$00,$00 ; 17: hearts 1
+
+.byte $80,$03,$EE,$EF,$00,$00 ; 18: hearts 2
+.byte $80,$03,$EE,$EF,$00,$00 ; 19: hearts 3
 
 
 DrawSprite0:
@@ -3329,8 +3477,8 @@ StaticScreen_HELP_Sprites:
 .byte $02,$28,$37,$00
 .byte $02,$28,$8F,$00
 .byte $02,$D8,$CB,$00
-.byte $01,$28,$4A,$00
-.byte $03,$28,$70,$00
+.byte $01,$28,$4F,$00
+.byte $03,$28,$6F,$00
 
 WinningSprites:
 .byte $0E,$08,$13,$00
@@ -3340,6 +3488,13 @@ WinningSprites:
 .byte $06,$E8,$62,$00
 .byte $0A,$E8,$CA,$00
 .byte $08,$18,$62,$00
+.byte $16,$00,$00,$00 ; hearts
+.byte $16,$00,$00,$00
+.byte $16,$00,$00,$00
+.byte $18,$00,$00,$00
+.byte $18,$00,$00,$00
+.byte $18,$00,$00,$00
+
 
 Queen_Sprites:
 ;Sprite ID, X,  Y,
@@ -3540,7 +3695,7 @@ ClearNametable:
     JSR SetPPUAddress
 
    @Clear:
-    LDA #$67
+    LDA #BLANK
     LDY #$04
 
    @OuterLoop:
@@ -3565,7 +3720,7 @@ Decompress_Attributes:
 
     LDY #$00
    @AttriLoop:
-    LDA (tmp_pointer), Y
+    LDA (pointer), Y
     BEQ @Done
     CMP #$0F
     BCS @Normal
@@ -3596,23 +3751,23 @@ Queen_Attributes:
 
 LoadGameOverPalette:
     LDA #<GameOverPalette-$E0
-    STA tmp_pointer
+    STA pointer
     LDA #>GameOverPalette-$01
     BNE LoadPalette
 
 LoadMenuPalette:
     LDA #<MenuPalette-$E0
-    STA tmp_pointer
+    STA pointer
     LDA #>MenuPalette-$01
     BNE LoadPalette
 
 LoadGamePalette:
     LDA #<GamePalette-$E0
-    STA tmp_pointer
+    STA pointer
     LDA #>GamePalette-$01
 
 LoadPalette:
-    STA tmp_pointer+1
+    STA pointer+1
     LDY #$E0          ; start with Y = 0 - $20
     LDA #$3F
     LDX #$00
@@ -3628,26 +3783,26 @@ LoadPuzzleTiles:
 
 LoadPuzzleSprites:
     LDA #<PUZZLE_CHR
-    STA tmp_pointer
+    STA pointer
     LDA #>PUZZLE_CHR
-    STA tmp_pointer+1
+    STA pointer+1
     LDX #$0C
 
 Load_CHR_0Y:
     LDY #$00
 
 Load_CHR:
-    LDA (tmp_pointer), Y
+    LDA (pointer), Y
     STA $2007
     INY
     BNE Load_CHR
-    INC tmp_pointer+1
+    INC pointer+1
     DEX
     BNE Load_CHR
     RTS
 
 Decompress_Loop:
-    LDA (tmp_pointer), Y
+    LDA (pointer), Y
     BEQ @Done
     BPL @Write
 
@@ -3655,14 +3810,8 @@ Decompress_Loop:
     BCC @Write
 
     AND #$1F      ; remove high bit
-    ;PHA
- ;   INY
- ;   BNE :+
- ;    INC tmp_pointer+1
- ; : ;LDA (tmp_pointer), Y
     TAX
-    ;PLA
-    LDA #$67
+    LDA #BLANK
     DEX
 
    @WriteLoop:
@@ -3674,7 +3823,7 @@ Decompress_Loop:
     STA $2007
     INY
     BNE Decompress_Loop
-    INC tmp_pointer+1
+    INC pointer+1
     JMP Decompress_Loop
 
    @Done:
@@ -3767,7 +3916,7 @@ DrawBoxTile:
 
 BoxTiles:
     .byte $01, $02, $03
-    .byte $04, $67, $05
+    .byte $04, BLANK, $05
     .byte $06, $07, $08
 
 BoxList:
@@ -3823,7 +3972,7 @@ Draw_NewTile:
     LDA cursor_x         ; but the low bit still needs an offset!
 RemoveOldTile_EntryPoint:
     ASL A
-    ADC #$02             ; double the cursor X position and add +2, then combine with tmp+2
+    ADC #$02             ; double the cursor X position and add +2, then combine with tile address
     ORA tile_address
     STA dest+1           ; dest and dest+1 are now $2x, $xx: a PPU address for the tile to draw to
 
@@ -3920,7 +4069,7 @@ Print:
     INC text+1
   : LDA (text), Y
     TAX
-    LDA #$67
+    LDA #BLANK
    @Spaces:
     STA $2007
     DEX
@@ -3949,83 +4098,6 @@ Print:
    @Done:
     RTS
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;
-;;          PALETTES
-;;
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-.align $100
-
-GamePalette:
-.byte $3F,$01,$21,$30
-.byte $3F,$17,$28,$30
-.byte $3F,$06,$0A,$36
-.byte $3F,$04,$15,$30
-
-;; sprites
-.byte $3F,$0A,$1A,$2A
-.byte $3F,$01,$11,$21
-.byte $3F,$0C,$1C,$2C
-.byte $3F,$06,$3F,$26
-
-
-GameOverPalette:
-.byte $3F,$06,$10,$30
-.byte $3F,$2D,$10,$16
-.byte $3F,$2D,$10,$30
-.byte $3F,$04,$15,$30
-
-;; sprites
-.byte $3F,$06,$16,$16
-.byte $3F,$0F,$0F,$0F
-.byte $3F,$0F,$0F,$0F
-.byte $3F,$0F,$0F,$0F
-
-
-MenuPalette:
-.byte $3F,$2D,$10,$30
-.byte $3F,$17,$28,$30
-.byte $3F,$06,$0A,$36
-.byte $3F,$04,$15,$30
-
-;; sprites
-.byte $3F,$0A,$1A,$2A
-.byte $3F,$17,$28,$30
-.byte $3F,$06,$0A,$36
-.byte $3F,$3F,$3F,$3F
-
-
-BorderPalettes:
-.byte $01,$21 ;
-.byte $02,$22 ;
-.byte $03,$23 ;
-.byte $04,$24 ;
-.byte $05,$25 ;
-.byte $06,$26 ;
-.byte $07,$27 ;
-.byte $08,$28 ;
-.byte $09,$29 ;
-.byte $0A,$2A ;
-.byte $0B,$2B ;
-.byte $0C,$2C ;
-.byte $00,$3D ;
-.byte $2D,$10 ;
-.byte $01,$11 ;
-.byte $02,$12 ;
-.byte $03,$13 ;
-.byte $04,$14 ;
-.byte $05,$15 ;
-.byte $06,$16 ;
-.byte $07,$17 ;
-.byte $08,$18 ;
-.byte $09,$19 ;
-.byte $0A,$1A ;
-.byte $0B,$1B ;
-.byte $0C,$1C ;
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4066,10 +4138,89 @@ LockClick:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;
+;;          PALETTES
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+.align $100
+
+GamePalette:
+.byte $3F,$01,$21,$30
+.byte $3F,$17,$28,$30
+.byte $3F,$06,$0A,$36
+.byte $3F,$04,$15,$30
+
+;; sprites
+.byte $3F,$0A,$1A,$2A
+.byte $3F,$01,$11,$21
+.byte $3F,$0C,$1C,$2C
+.byte $3F,$06,$16,$26
+
+
+GameOverPalette:
+.byte $3F,$06,$10,$30
+.byte $3F,$2D,$10,$16
+.byte $3F,$2D,$10,$30
+.byte $3F,$04,$15,$30
+
+;; sprites
+.byte $3F,$06,$16,$16
+.byte $3F,$0F,$0F,$0F
+.byte $3F,$0F,$0F,$0F
+.byte $3F,$0F,$0F,$0F
+
+
+MenuPalette:
+.byte $3F,$2D,$10,$30
+.byte $3F,$2D,$06,$30
+.byte $3F,$2D,$36,$16
+.byte $3F,$04,$15,$30
+
+;; sprites
+.byte $3F,$0A,$1A,$2A
+.byte $3F,$17,$28,$30
+.byte $3F,$06,$0A,$36
+.byte $3F,$3F,$3F,$3F
+
+
+BorderPalettes:
+.byte $01,$21 ;
+.byte $02,$22 ;
+.byte $03,$23 ;
+.byte $04,$24 ;
+.byte $05,$25 ;
+.byte $06,$26 ;
+.byte $07,$27 ;
+.byte $08,$28 ;
+.byte $09,$29 ;
+.byte $0A,$2A ;
+.byte $0B,$2B ;
+.byte $0C,$2C ;
+.byte $00,$3D ;
+.byte $2D,$10 ;
+.byte $01,$11 ;
+.byte $02,$12 ;
+.byte $03,$13 ;
+.byte $04,$14 ;
+.byte $05,$15 ;
+.byte $06,$16 ;
+.byte $07,$17 ;
+.byte $08,$18 ;
+.byte $09,$19 ;
+.byte $0A,$1A ;
+.byte $0B,$1B ;
+.byte $0C,$1C ;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
 ;;          MISC NES STUFF
 ;;
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;.align $100
 
 TurnOffScreen_ClearOAM:
     JSR ClearOAM
@@ -4097,32 +4248,30 @@ Random:
 	RTS
 
 
-MultiplyXA:
-;; Using Tepples' first method from - https://wiki.nesdev.com/w/index.php/8-bit_Multiply
-;; Because I would probably have figured it out on my own after a few days and written
-;; something basically almost exactly the same... so just saving a few days.
-    LSR A
-    STA mult_A
-    STX mult_X
-    LDA #0
-    LDX #8
-
-   @Loop:
-    BCC @Next
-    CLC
-    ADC mult_X
-
-   @Next:
-    ROR A
-    ROR mult_A
-    DEX
-    BNE @Loop
-
-    TAX
-    LDA mult_A
-    RTS
-
-.align $100
+;MultiplyXA:
+;;; Using Tepples' first method from - https://wiki.nesdev.com/w/index.php/8-bit_Multiply
+;;; Because I would probably have figured it out on my own after a few days and written
+;;; something basically almost exactly the same... so just saving a few days.
+;    LSR A
+;    STA mult_A
+;    STX mult_X
+;    LDA #0
+;    LDX #8
+;
+;   @Loop:
+;    BCC @Next
+;    CLC
+;    ADC mult_X
+;
+;   @Next:
+;    ROR A
+;    ROR mult_A
+;    DEX
+;    BNE @Loop
+;
+;    TAX
+;    LDA mult_A
+;    RTS
 
 ;; [18:46] Fiskbit: This is not a good way to wait for vblank, FYI. It works, but it can miss frames altogether, causing you to wait longer.
 ;; [18:47] Fiskbit: The reliable way is to have NMI enabled, have the NMI set a variable, and wait in a loop outside the NMI for that variable to change.

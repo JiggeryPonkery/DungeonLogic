@@ -90,6 +90,7 @@ tile2_pos     = $5B
 tile3_row     = $5C
 tile3_col     = $5D
 tile3_pos     = $5E
+tilecheck     = $5F
 
 horz_clues    = $60
 vert_clues    = $61
@@ -105,50 +106,90 @@ clue_shape    = $6A
 clue_limit    = $6B
 clue_error    = $6C
 
+old_cluetile1 = $70
+old_cluetile2 = $71
+old_cluetile3 = $72
+old_tile1_row = $73
+old_tile1_col = $74
+old_tile1_pos = $75
+old_tile2_row = $76
+old_tile2_col = $77
+old_tile2_pos = $78
+old_tile3_row = $79
+old_tile3_col = $7A
+old_tile3_pos = $7B
+old_cluetype  = $7C
+tilecheck_pos = $7D
+
+
+
+
+
+
+
+
+
 channels        = $B0
-score           = $B0 + 1
-tempo           = $B2
-DPCM            = $B3
+score           = $B0 ; + 1
+channel         = $B2
+instrument      = $B3 ; + 4
+octave          = $B5
+tempo           = $B6
+DPCM            = $B7
+sq1_duty        = $B8
+sq2_duty        = $B9
+music_loop      = $BA
+music_goto      = $BA ; + B
+music_notes     = $BA ; + B
+music_length    = $BA ; + B 
+music_vibrato   = $BA ; + B
+safezone        = $BC
+vibrato_speed   = $BD
+m_tmp           = $BF
 
-square1         = $C0
-square2         = $D0
-triangle        = $E0
-noise           = $F0
+sq1_loop        = $C0
+sq1_vol         = $C1
+sq1_octave      = $C2
+sq1_instrument  = $C2
+sq1_env_pos     = $C3
+sq1_env_speed   = $C4
+sq1_env_time    = $C5
+sq1_vibrato     = $C6
+sq1_viblimit    = $C7
+sq1_freq        = $C8 ; + 9
+sq1_length      = $CA ; + B
+sq1_pointer     = $CC ; + D
+sq1_return      = $CE ; + F
 
-sq1_pointer     = $C0 ; + 1
-sq1_freq        = $C2 ; + 3
-sq1_vol         = $C4 
-sq1_loop        = $C5
-sq1_octave      = $C6
-sq1_instrument  = $C7
-sq1_return      = $C8 ; + 9
-sq1_goto        = $CA ; + B
+sq2_loop        = $D0
+sq2_vol         = $D1
+sq2_octave      = $D2
+sq2_instrument  = $D2
+sq2_env_pos     = $D3
+sq2_env_speed   = $D4
+sq2_env_time    = $D5
+sq2_vibrato     = $D6
+sq2_viblimit    = $D7
+sq2_freq        = $D8 ; + 9
+sq2_length      = $DA ; + B
+sq2_pointer     = $DC ; + D
+sq2_return      = $DE ; + F
 
-sq2_pointer     = $D0 ; + 1
-sq2_freq        = $D2 ; + 3
-sq2_vol         = $D4 
-sq2_loop        = $D5
-sq2_octave      = $D6
-sq2_instrument  = $D7
-sq2_return      = $D8 ; + 9
-sq2_goto        = $DA ; + B
+tri_loop        = $E0
+tri_vol         = $E1
+tri_octave      = $E2
+tri_instrument  = $E2
+tri_env_pos     = $E3
+tri_env_speed   = $E4
+tri_env_time    = $E5
+tri_vibrato     = $E6
+tri_viblimit    = $E7
+tri_freq        = $E8 ; + 9
+tri_length      = $EA ; + B
+tri_pointer     = $EC ; + D
+tri_return      = $EE ; + F
 
-tri_pointer     = $E0 ; + 1
-tri_freq        = $E2 ; + 3
-tri_vol         = $E4 
-tri_loop        = $E5
-tri_octave      = $E6
-tri_return      = $E8 ; + 9
-tri_goto        = $EA ; + B
 
-noise_pointer   = $F0 ; + 1
-noise_freq      = $F2 ; + 3
-noise_vol       = $F4 
-noise_loop      = $F5
-noise_octave    = $F6
-noise_instrument= $F7
-noise_return    = $F8 ; + 9
-noise_goto      = $FA ; + B
 
 
 
@@ -186,6 +227,8 @@ row5_removed  = $3B0
 row6_removed  = $3B8
 
 clue_list     = $3C0
+
+known         = $4C0
 
 spritebuffer  = $400
 spritebuffer2 = $480

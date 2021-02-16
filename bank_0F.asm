@@ -364,6 +364,9 @@ MainMenu:
     JSR Print
     JSR WaitForVBlank ; to fix bad timing with the first wait
 
+    LDA #$81
+    STA music_track ; first song!
+
     LDA #$1E        ; turn on screen/clear emphasis
     STA soft2001
     JMP MenuFrame
@@ -721,13 +724,12 @@ GetClueTile3:
 GetClueTile:
     PHA
     STX clue_limit
-    LDA #0
+    LDA #$70
     STA clue_error
 
-  : INC clue_error
-    LDA clue_error
-    CMP #$08
-    BCC :+
+   @Error:
+    INC clue_error
+    BPL :+
         PLA
         PLA ; go back to clue type
         PLA ; pull last push
@@ -747,7 +749,7 @@ GetClueTile:
 
     LDA clue_list, X
     CMP clue_limit
-    BCS :--
+    BCS @Error
 
     PLA
     BEQ @Tile1
@@ -783,6 +785,64 @@ GetClueTile:
     STX tile1_pos
     TYA
     RTS
+    
+WhereIsTile_Horz:
+    LDA #>horz_complete
+    STA pointer
+    LDA #<horz_complete
+    STA pointer+1
+    JMP WhereIsTile
+    
+WhereIsTile_Vert:
+    LDA #>vert_complete
+    STA pointer
+    LDA #<vert_complete
+    STA pointer+1
+
+WhereIsTile:
+    STA tilecheck
+    LDY #0
+  : LDA (pointer), Y
+    CMP tilecheck
+    BEQ @Found
+    INY
+    BNE :-
+    RTS ;; this should never get a hit... as this routine shouldn't be called unless the tile is known to exist in this list!
+    
+   @Found:
+    INY
+    LDA (pointer), Y
+    STA tilecheck_pos   
+    TYA
+    AND #$F8
+    TAY
+    LDA (pointer), Y
+    STA old_cluetile1
+    INY
+    LDA (pointer), Y
+    STA old_tile1_pos
+    INY
+    LDA (pointer), Y
+    STA old_cluetile2
+    INY
+    LDA (pointer), Y
+    STA old_tile2_pos
+    INY
+    LDA (pointer), Y
+    STA old_cluetile3
+    INY
+    LDA (pointer), Y
+    STA old_tile3_pos
+    INY
+    LDA (pointer), Y
+    STA old_cluetype
+    RTS
+    
+    
+    
+    
+    
+    
 
 
 DrawClue:
@@ -948,7 +1008,7 @@ DrawClue:
     STA vert_complete+3, X
 
     LDA clue_type
-    STA vert_complete+4, X
+    STA vert_complete+6, X
 
     TXA
     CLC
@@ -972,6 +1032,10 @@ IsNextTo:
     JSR GetClueTile1
     STA cluetile3
     STX tile3_pos
+    
+    LDA known, X
+    CMP #$02
+    BCS IsNextTo
 
    @SecondTile:
     JSR Tile2_Error
@@ -979,6 +1043,10 @@ IsNextTo:
 
     LDX #03
     JSR GetClueTile2
+
+    LDY known, X
+    CPY #$03
+    BCS @SecondTile
 
     LDY tile2_col
     CPY tile1_col
@@ -995,8 +1063,10 @@ IsNextTo:
 
    @ClueGood:
     INC clue_list, X
+    INC known, X
     LDX tile1_pos
     INC clue_list, X
+    INC known, X
 
     INC horz_clues
     LDA #0          ; no sprite
@@ -1018,7 +1088,14 @@ IsNotNextTo:
     LDX #03
     JSR GetClueTile2
 
-    LDY tile2_col
+    LDY known, X
+    BEQ :+
+    
+    JSR WhereIsTile_Horz
+    ;; if the "not next to" tile is known, then figure out where it is...?
+    ;; but I can't think of what to do here...
+
+  : LDY tile2_col
     CPY tile1_col
     BEQ @ClueGood   ; they're in the same column, so not next to each other!
 
@@ -1032,6 +1109,7 @@ IsNotNextTo:
     BEQ @SecondTile ; second tile is to the right; re-do! otherwise its somewhere else entirely
 
    @ClueGood:
+    LDX tile2_pos
     INC clue_list, X
     LDX tile1_pos
     INC clue_list, X
@@ -1291,36 +1369,38 @@ IsNotInColumn:
 
 
 Tile1_Error:
-    LDA #0
-    STA tile2_error
-    STA tile3_error
-
-    INC tile1_error
-    LDA tile1_error
-    CMP #$08
-    BCC :+
-    PLA
-    PLA
-    DEC clues
-    JMP Generate_Clues
-  : RTS
+    RTS
+  ;  LDA #0
+  ;  STA tile2_error
+  ;  STA tile3_error
+  ;
+  ;  INC tile1_error
+  ;  LDA tile1_error
+  ;  CMP #$08
+  ;  BCC :+
+  ;  PLA
+  ;  PLA
+  ;  DEC clues
+  ;  JMP Generate_Clues
+  ;: RTS
 
 Tile2_Error:
-    LDA #0
-    STA tile1_error
-
-    INC tile2_error
-    LDA tile2_error
-    CMP #$08
-    RTS
+   ; LDA #0
+   ; STA tile1_error
+   ;
+   ; INC tile2_error
+   ; LDA tile2_error
+   ; CMP #$08
+   ; RTS
 
 Tile3_Error:
-    LDA #0
-    STA tile2_error
-
-    INC tile3_error
-    LDA tile3_error
-    CMP #$08
+    CLC
+  ;  LDA #0
+  ;  STA tile2_error
+  ;
+  ;  INC tile3_error
+  ;  LDA tile3_error
+  ;  CMP #$08
     RTS
 
 
@@ -1530,6 +1610,7 @@ MenuFrame:
     JSR DrawMenuCursor
     JSR UpdateJoy
     JSR MoveMenuCursor
+    JSR Music
     JSR PlayerInput_Menu
     JMP MenuFrame
 

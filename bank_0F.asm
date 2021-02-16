@@ -572,10 +572,16 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     BEQ @SetStartingTileAmount
 
     STA clues             ; tiles to set
+    LDA #$FF
+    STA tilecheck
 
    @SetStartingTiles:
     JSR GetRandomPosition
 
+    CPX tilecheck
+    BEQ @SetStartingTiles  ; duplicate starting tile!
+    STX tilecheck
+    
     TXA
     PHA
     LDA solved, X
@@ -608,27 +614,38 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     ;   $05 - Is in Column
     ;   $06 - Is NOT in Column
 
-    LDA #0
-    STA horz_sprites
-    STA vert_sprites
-    STA horz_done
-    STA vert_done
-
     LDA #$FF
     STA vert_clues
     STA vert_clues_s
     STA horz_clues
     STA clues
+    
+    JSR ClearErrors
+    JSR GetFirstClue
+    JSR Random
+    AND #01
+    BEQ :+
+        LDA #6
+        STA clue_type
+        JMP IsInColumn_FirstClue
+  : LDA #1
+    STA clue_type
+    LDA cluetile1
+    LDX tile1_pos
+    JMP IsNextTo_FirstClue
 
 Generate_Clues:
     LDA clues
-    CMP #51
+    CMP #50
     BNE :+
         JMP PrepGame
   : JSR Random
     AND #$07
+    BNE :+ 
+        CLC
+        ADC #1      ; turn clue type 0 into clue type 1
 
-    CMP #6
+  : CMP #6
     BCS :+
 
     LDX horz_clues
@@ -650,10 +667,7 @@ Generate_Clues:
 
    @Continue:
     INC clues
-    LDY #0
-    STY tile1_error
-    STY tile2_error
-    STY tile3_error
+    JSR ClearErrors
 
     STA clue_type
     ASL A
@@ -663,6 +677,13 @@ Generate_Clues:
     LDA ClueType_Table+1, Y
     STA pointer+1
     JMP (pointer)
+
+ClearErrors:
+    LDY #0
+    STY tile1_error
+    STY tile2_error
+    STY tile3_error
+    RTS
 
 ClueType_Table:
 .word IsNextTo       ; 0
@@ -686,6 +707,7 @@ GetRandomPosition:
     CMP #$0F
     BEQ GetRandomPosition
 
+FirstClueEntryPoint_Position:   
     LDY position
     LDA solved, Y
     AND #$FE
@@ -710,6 +732,18 @@ GetRandomPosition:
     STA cursor_x
     RTS
 
+GetFirstClue:
+    LDX #48+1
+    STA clue_limit
+  : DEX
+    LDA clue_list, X
+    BEQ :-
+    STX position
+    JSR FirstClueEntryPoint_Position
+    LDA #0
+    PHA
+    JMP FirstClueEntryPoint_GetClueTile
+
 GetClueTile1:
     LDA #0
     BEQ GetClueTile
@@ -727,7 +761,7 @@ GetClueTile:
     LDA #$70
     STA clue_error
 
-   @Error:
+GetClueTileError:
     INC clue_error
     BPL :+
         PLA
@@ -738,6 +772,7 @@ GetClueTile:
 
   : JSR GetRandomPosition
 
+FirstClueEntryPoint_GetClueTile:
     LDY cursor_y
     LDA TileOffset_LUT, Y
     STA drawtile
@@ -749,7 +784,7 @@ GetClueTile:
 
     LDA clue_list, X
     CMP clue_limit
-    BCS @Error
+    BCS GetClueTileError
 
     PLA
     BEQ @Tile1
@@ -1080,6 +1115,8 @@ IsNextTo:
     JSR Tile1_Error
     LDX #03
     JSR GetClueTile1
+
+IsNextTo_FirstClue:   
     STA cluetile3
     STX tile3_pos
     
@@ -1352,6 +1389,7 @@ IsInColumn:
     CMP #$05
     BEQ IsInColumn    ; first tile cannot be in the bottom row
 
+IsInColumn_FirstClue:
    @SecondTile:
     JSR Tile2_Error
     BCS IsInColumn

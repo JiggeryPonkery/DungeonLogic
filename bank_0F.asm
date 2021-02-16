@@ -840,12 +840,7 @@ WhereIsTile:
     
     
     
-    
-    
-    
-
-
-DrawClue:
+SaveClue:
     ; A 0 = no sprite
     ; A 1 = <?>
     ; A 2 = ///
@@ -856,22 +851,102 @@ DrawClue:
     ; X 3 = vert: draw tile 1, tile 2
     ; X 4 = vert: draw tile 1, tile 2 in sprite containment box
 
-    STX clue_shape
     STA clue_sprite
+    STX clue_shape
     LDA #0
     STA vert_offset
 
     CPX #$03
     BCC :+
-    JMP @DrawVerticalClue
+    JMP @SaveVerticalClue
 
-  : LDA horz_clues
+  : LDX horz_done
+    LDA cluetile1
+    STA horz_complete, X
+    LDA tile1_pos
+    STA horz_complete+1, X
+
+    LDA cluetile2
+    STA horz_complete+2, X
+    LDA tile2_pos
+    STA horz_complete+3, X
+
+    LDA cluetile3
+    STA horz_complete+4, X
+    LDA tile3_pos
+    STA horz_complete+5, X
+
+    LDA clue_type
+    STA horz_complete+6, X
+    LDA clue_sprite
+    STA horz_complete+7, X
+    
+    TXA
+    CLC
+    ADC #$08
+    STA horz_done 
+    JMP Generate_Clues
+    
+   @SaveVerticalClue: 
+    LDX vert_done
+    LDA cluetile1
+    STA vert_complete, X
+    LDA tile1_pos
+    STA vert_complete+1, X
+
+    LDA cluetile2
+    STA vert_complete+2, X
+    LDA tile2_pos
+    STA vert_complete+3, X
+
+    LDA clue_type
+    STA vert_complete+6, X
+    LDA clue_sprite
+    STA vert_complete+7, X
+    
+    TXA
+    CLC
+    ADC #$08
+    STA vert_done
+    JMP Generate_Clues
+
+
+DrawClues:
+    LDA #0
+    STA horz_clues
+    STA horz_sprites
+    STA vert_clues
+    STA vert_clues_s
+    STA vert_sprites
+
+   @DrawNext: 
+    JSR Random
+    AND #01
+    BEQ @Vertical
+    
+   @Horizontal:
+    JSR Random
+    AND #$F8
+    TAX
+    LDA horz_complete, X
+    BEQ @Horizontal         ;; put in an error counter here!
+
+    STA cluetile1
+    LDA horz_complete+2, X
+    STA cluetile2
+    LDA horz_complete+4, X
+    STA cluetile3
+  
+    LDA horz_clues
     ASL A
     TAY
 
+    LDA horz_complete+7, X
+    BEQ @NoHorzSprite
+    
     LDA clue_sprite
     BEQ @NoHorzSprite
-
+    
     LDX horz_sprites
     STA spritebuffer, X
     LDA HorzSpriteLocations, Y
@@ -906,35 +981,29 @@ DrawClue:
     LDA cluetile3
     JSR DrawTile_Generation
 
-    LDX horz_done
-    LDA cluetile1
-    STA horz_complete, X
-    LDA tile1_pos
-    STA horz_complete+1, X
-
-    LDA cluetile2
-    STA horz_complete+2, X
-    LDA tile2_pos
-    STA horz_complete+3, X
-
-    LDA cluetile3
-    STA horz_complete+4, X
-    LDA tile3_pos
-    STA horz_complete+5, X
-
-    LDA clue_type
-    STA horz_complete+6, X
-    TXA
-    CLC
-    ADC #$08
-    STA horz_done
-
     JSR UpdateClueAttribute_Horz
-    JMP Generate_Clues
+    JMP @DrawNext
 
     ;;;;;; Vertical Clues ;;;;;;
 
-   @DrawVerticalClue:
+   @Vertical:
+    JSR Random
+    AND #$F8
+    TAX
+    LDA vert_complete, X
+    BEQ @Vertical              ;; put in an error counter here!
+   
+    STA cluetile1
+    LDA vert_complete+2, X
+    STA cluetile2
+    LDA vert_complete+6, X
+    STA clue_shape
+
+    LDA #0
+    STA vert_offset
+    
+    LDA vert_complete+7, X
+    STA clue_sprite
     BEQ @WithoutSprite
 
     LDA vert_clues_s
@@ -995,35 +1064,16 @@ DrawClue:
 
     LDA cluetile2
     JSR DrawTile_Generation
-
-    LDX vert_done
-    LDA cluetile1
-    STA vert_complete, X
-    LDA tile1_pos
-    STA vert_complete+1, X
-
-    LDA cluetile2
-    STA vert_complete+2, X
-    LDA tile2_pos
-    STA vert_complete+3, X
-
-    LDA clue_type
-    STA vert_complete+6, X
-
-    TXA
-    CLC
-    ADC #$08
-    STA vert_done
-
+ 
     LDA clue_shape
     CMP #$03
     BEQ :+
 
     JSR UpdateClueAttribute_VertSprite
-    JMP Generate_Clues
+    JMP @DrawNext
 
   : JSR UpdateClueAttribute_Vert
-    JMP Generate_Clues
+    JMP @DrawNext
 
 
 IsNextTo:
@@ -1071,7 +1121,7 @@ IsNextTo:
     INC horz_clues
     LDA #0          ; no sprite
     TAX             ; Tile 1, Tile 2, Tile 1
-    JMP DrawClue
+    JMP SaveClue
 
 
 IsNotNextTo:
@@ -1116,7 +1166,7 @@ IsNotNextTo:
     INC horz_clues
     LDA #2          ; use /// sprite
     LDX #0          ; Tile 1, Tile 2, Tile 1
-    JMP DrawClue
+    JMP SaveClue
 
 
 IsLeftOf:
@@ -1151,7 +1201,7 @@ IsLeftOf:
     INC horz_clues
     LDA #1            ; use <?> sprite
     TAX               ; and tile 1, space, tile 2
-    JMP DrawClue
+    JMP SaveClue
 
 
 IsInRow:
@@ -1216,7 +1266,7 @@ IsInRow:
     INC horz_clues
     LDA #3               ; use <-> sprite
     LDX #2               ; and tile 1, tile 2, tile 3
-    JMP DrawClue
+    JMP SaveClue
 
 
 IsNotInRow:
@@ -1290,7 +1340,7 @@ IsNotInRow:
     INC horz_clues
     LDA #2               ; use /// sprite
     TAX                  ; and tile 1, tile 2, tile 3
-    JMP DrawClue
+    JMP SaveClue
 
 
 IsInColumn:
@@ -1325,7 +1375,7 @@ IsInColumn:
     INC vert_clues
     LDA #0             ; no sprite
     LDX #3             ; vertical tiles
-    JMP DrawClue
+    JMP SaveClue
 
 
 IsNotInColumn:
@@ -1365,7 +1415,7 @@ IsNotInColumn:
     INC vert_clues_s
     LDA #2             ; use /// sprite
     LDX #4             ; vertical tiles with sprite
-    JMP DrawClue
+    JMP SaveClue
 
 
 Tile1_Error:
@@ -1547,6 +1597,7 @@ GameFrame:
     JSR UpdateJoy
     JSR CheckGameOver
     JSR MoveGameCursor
+    JSR Music
     JSR PlayerInput_Game
     JMP GameFrame
 
@@ -1558,6 +1609,7 @@ GameFrame_Over:
     JSR DrawSprite0
     JSR DrawAllSprites
     JSR UpdateJoy
+    JSR Update_Gametime    
     JSR WaitForVBlank
     LDA wait_input
     BNE :+
@@ -1580,7 +1632,8 @@ GameFrame_Printing:
     LDA game_over
     BNE :+
     JSR DrawCursor
-  : JMP WaitForVBlank
+  : JSR Music
+    JMP WaitForVBlank
 
 StaticFrame:
     JSR WaitForVBlank
@@ -1588,9 +1641,10 @@ StaticFrame:
     STA $4014
     JSR SetScroll
     JSR ClearOAM
-    JSR Update_Gametime
     JSR DrawAllSprites
     JSR UpdateJoy
+    JSR Update_Gametime
+    JSR Music
     JSR PlayerInput_Other
     JMP StaticFrame
 
@@ -1610,6 +1664,7 @@ MenuFrame:
     JSR DrawMenuCursor
     JSR UpdateJoy
     JSR MoveMenuCursor
+    JSR Update_Gametime
     JSR Music
     JSR PlayerInput_Menu
     JMP MenuFrame

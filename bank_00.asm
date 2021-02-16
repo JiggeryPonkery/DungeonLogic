@@ -37,33 +37,8 @@ ScoreTable:
 
 
 SONG1_SQ1:
-    .byte TEMPO,$00,SPEED,$15
-    .byte INSTRUMENT,$05,OCTAVE_3,$95,OCTAVE_4,$15,$25,$45
-    SLAIN_LOOP0:
-    .byte $52,OCTAVE_3,$95,$A3,OCTAVE_4,$75,$55,$45,$55
-    .byte $45,OCTAVE_3,$75,$91,OCTAVE_4,$22,OCTAVE_3,$55,$43,$B5,OCTAVE_4,$25,$25,$15,$42,$15
-    .byte $25,$45,$52,OCTAVE_3,$95,$A3,OCTAVE_4,$75,$55,$45,$55,$45,OCTAVE_3,$75,$93,$A5
-    .byte OCTAVE_4,$05,$22,$45,$23,$13,$21,$C1
-    .byte LOOP_FOREVER
-    .word SLAIN_LOOP0
-
 SONG1_SQ2:
-    .byte SPEED,$15,INSTRUMENT,$06,$C1
-    SLAIN_LOOP1:
-    .byte OCTAVE_3,$93,$53,$73,$A3,$73,$43,$53,$03,$53,$23,OCTAVE_2,$B3,OCTAVE_3,$83,$91
-    .byte $71,OCTAVE_3,$93,$53,$73,$A3,$73,$43,$53,$03,$53,$93,$73,$43,$51,$C1
-    .byte LOOP_FOREVER
-    .word SLAIN_LOOP1
-
 SONG1_TRI:
-    .byte SPEED,$15,INSTRUMENT,$00,$C1
-    SLAIN_LOOP2:
-    .byte OCTAVE_4,$21,$71,$01,$51,OCTAVE_3,$A1,OCTAVE_4
-    .byte $41,OCTAVE_3,$91,OCTAVE_4,$93,$43,OCTAVE_4,$21,$71,$01,$51,OCTAVE_3,$B1,$91,OCTAVE_5,$25
-    .byte OCTAVE_4,$95,$75,$95,$22,$C5
-    .byte LOOP_FOREVER
-    .word SLAIN_LOOP2
-
 
 SONG2_SQ1:
 SONG2_SQ2:
@@ -326,7 +301,17 @@ UpdateChannel:
     DEC vibrato_speed ; 0 = every frame, 1 = every 2 frames, 2 = every 4 frames
     BEQ @StartVibrato
     
+    LDA vibrato_speed
+    CMP #01
+    BNE :+
+    
     LDA gametime
+    AND #$01
+    CMP vibrato_speed
+    BNE @Next
+    BEQ @StartVibrato
+    
+  : LDA gametime
     AND #$03
     CMP vibrato_speed
     BNE @Next
@@ -340,7 +325,7 @@ UpdateChannel:
     
    @Higher: 
     AND #$0F
-    CMP safezone
+    CMP VIBRATO_SAFE, x
     BEQ @Reverse
    
     INC VIBRATO, X
@@ -567,8 +552,8 @@ Music_Note:     ; $95
     LSR A
     LSR A
     TAY
-    STY m_tmp
     LDA Octaves, Y
+    STA m_tmp
     CLC
     ADC #<Notes
     STA music_notes
@@ -587,8 +572,9 @@ Music_Note:     ; $95
     STA ENV_POS, X
     STA VIBRATO, X
     
-    LDY m_tmp
-    LDA VibOctaves, Y
+    LDA m_tmp
+    LSR A
+    ;LDA VibOctaves, Y
     CLC
     ADC #<VibratoSafe
     STA music_vibrato
@@ -667,7 +653,7 @@ InstrumentTable:
 ;; %75 = $Cx ?
 
 Instrument0:
-.byte $00,$FE
+.byte $20,$FE
 
 Instrument1:
 Instrument2:
@@ -691,19 +677,19 @@ Lengths: ; frames to play a note
 .word 240,  180,   120,  90,      60,  45,      30,  22,       15,  11,        7,   4,    4,   3,    2,   1 ; 100 bpm
 .word 240,  180,   120,  90,      60,  45,      30,  22,       15,  11,        7,   4,    4,   3,    2,   1 ; 90  bpm
 .word 240,  180,   120,  90,      60,  45,      30,  22,       15,  11,        7,   4,    4,   3,    2,   1 ; 80  bpm 
-.word 240,  180,   120,  90,      60,  45,      30,  22,       15,  11,        7,   4,    4,   3,    2,   1 ; 70  bpm
+;.word 240,  180,   120,  90,      60,  45,      30,  22,       15,  11,        7,   4,    4,   3,    2,   1 ; 70  bpm
 
 VibratoSafe:
-   ;     C   C#  D   D#  E   F   F#  G   G#  A   A#  B    v - pitch octave for standard notation
-  .byte $07,$07,$06,$06,$06,$01,$05,$05,$05,$05,$05,$05 ; 2 ; 0 < - this driver's pitch ID 
-  .byte $04,$04,$04,$04,$04,$04,$04,$04,$04,$03,$04,$04 ; 3 ; 1 
-  .byte $03,$03,$03,$03,$03,$03,$03,$03,$03,$01,$03,$03 ; 4 ; 2
-  .byte $03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03 ; 5 ; 3 
-  .byte $03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03 ; 6 ; 4
-  .byte $02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$01 ; 7 ; 5
+   ;     C   C#  D   D#  E   F   F#  G   G#  A   A#  B    
+  .byte $07,$07,$06,$06,$06,$01,$05,$05,$05,$05,$05,$05 ; 0 octaves
+  .byte $04,$04,$04,$04,$04,$04,$04,$04,$04,$03,$04,$04 ; 1 
+  .byte $03,$03,$03,$03,$03,$03,$03,$03,$03,$01,$03,$03 ; 2
+  .byte $03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03 ; 3 
+  .byte $03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03 ; 4
+  .byte $02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$01 ; 5
 
-VibOctaves:
-.byte 0, 12, 24, 36, 48, 60
+;VibOctaves:
+;.byte 0, 12, 24, 36, 48, 60
 
 Octaves:
 .byte 0, 24, 48, 72, 96, 120

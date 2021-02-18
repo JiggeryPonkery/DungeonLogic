@@ -1249,7 +1249,7 @@ SetThirdToLast:
 ;; so that for every clue type, it won't use a tile if the other clues are over-saturated with it.
 ;; This just seems to cause a lockup in generation, so I've disabled that for now.
 
-;; I also have known incremented each time a tile is used in a "this is next to this" type clue.
+;; I also have a known list incremented each time a tile is used in a "this is next to this" type clue.
 ;; It is not incremented in "this is NOT next to this" clues. I also don't know what to do with this information.    
     
 

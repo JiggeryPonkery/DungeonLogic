@@ -12,9 +12,11 @@ joy_ignore    = $07
 joy_tmp       = $08
 puzzle        = $09 ; puzzle #
 RNG           = $0A ; + 0B
-scroll        = $0C ; + D
-soft2000      = $0E
-soft2001      = $0F
+TileRNG       = $0C
+scroll        = $0D ; + E
+soft2000      = $0E ; is not used...
+soft2001      = $0F 
+
 
 cursor        = $10
 cursor_x      = $11

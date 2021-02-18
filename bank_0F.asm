@@ -243,7 +243,7 @@ OnReset:
     STX $4017      ; disable APU frame IRQ
     LDX #$00
     STX $2000
-    STX soft2000
+    ;STX soft2000
     STX $2001
     STX soft2001
     STX $4010      ; disble DMC IRQs
@@ -383,7 +383,7 @@ QuitGame:
     ;; return to Action 52 menu somehow
     JSR TurnOffScreen_ClearOAM
     STX $2000
-    STX soft2000
+    ;STX soft2000
     STX $2001
     STX soft2001
     JMP OnIRQ
@@ -515,6 +515,8 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
 
     LDA puzzle
     STA RNG
+    LDA #$00
+    STA RNG+1
 
    @Clear_Used:     ; clear the temp space with $FF
     LDA #$FF
@@ -576,6 +578,10 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     LDA #$FF
     STA tilecheck
 
+    JSR Random
+    AND #$3F
+    STA TileRNG
+
    @SetStartingTiles:
     JSR GetRandomPosition
 
@@ -597,6 +603,8 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
 
     DEC clues
     BNE @SetStartingTiles
+    
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -623,15 +631,11 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     STA clues
 
     JSR GetFirstClue
-    JSR Random
+    JSR RandomTile
     AND #01
     BEQ :+
-        LDA #6
-        STA clue_type
         JMP IsInColumn_FirstClue
-  : LDA #1
-    STA clue_type
-    LDA cluetile1
+  : LDA cluetile1
     LDX tile1_pos
     JMP IsNextTo_FirstClue
 
@@ -652,17 +656,18 @@ Generate_Clues:
 
    @NotDone:
     LDA clues
-    CMP #40 ; 50     ; or see if the screen is just filled with clues and can't fit any more
+    CMP #50         ; or see if the screen is just filled with clues and can't fit any more
     BNE :+
         JMP DrawClues
   : JSR Random
-    AND #$07
+    AND #$0F
     BNE :+
         CLC
         ADC #1       ; turn clue type 0 into clue type 1, for SaveClue
 
-  : CMP #6
-    BCS @CheckVertical ; if its 6 or 7, its a vertical clue
+  : TAX
+    LDA ClueType_VerticalTable, X
+    BNE @CheckVertical ; use this table to see if the clue type is a vertical one
 
     LDX horz_clues
     CPX #23
@@ -670,12 +675,14 @@ Generate_Clues:
     BNE @Continue
 
    @CheckVertical:
-    BEQ @Vertical    ; if it = 6 exactly, its a normal vertical clue, else its a clue with a sprite
+    CMP #1
+    BEQ @Vertical    ; if it = 1, its a normal vertical clue, else its a clue with a sprite
     
    @VertSprites:
     LDX vert_clues_s ; if 8 vertical clues have been made with sprites, cannot do any more
     CPX #7
     BNE @Continue    ; so move on to doing a normal one
+    LDA #$0F
 
    @Vertical:
     LDX vert_clues
@@ -686,7 +693,6 @@ Generate_Clues:
     INC clues
     JSR ClearErrors
 
-    STA clue_type
     ASL A
     TAY
     LDA ClueType_Table, Y
@@ -695,7 +701,7 @@ Generate_Clues:
     STA pointer+1
     JMP (pointer)
 
-ClueType_Table:
+ClueType_Table:      ; randomized this a little and added more options so that "normal" clues are more likely
 .word IsNextTo       ; 0
 .word IsNextTo       ; 1
 .word IsNotNextTo    ; 2
@@ -703,7 +709,18 @@ ClueType_Table:
 .word IsInRow        ; 4
 .word IsNotInRow     ; 5
 .word IsInColumn     ; 6
-.word IsNotInColumn  ; 7
+.word IsNextTo       ; 7
+.word IsNotInColumn  ; 8
+.word IsInColumn     ; 9
+.word IsNextTo       ; A
+.word IsNotNextTo    ; B
+.word IsNextTo       ; C
+.word IsNextTo       ; D
+.word IsInColumn     ; E
+.word IsInColumn     ; F
+
+ClueType_VerticalTable:
+.byte 0, 0, 0, 0, 0, 0, 1, 0, 2, 1, 0, 0, 0, 0, 1, 1
 
 ClearErrors:
     LDY #0
@@ -713,7 +730,7 @@ ClearErrors:
     RTS
 
 GetRandomPosition:
-    JSR Random
+    JSR RandomTile
     TAY
     
     ;; this is so Mesen's memory viewer will highlight the tile position
@@ -924,7 +941,7 @@ SaveClue:
     ;;  logically, if its above the Frog, the player already knows its not above the Bird!)
 
     STA clue_sprite
-    LDX clue_type
+    STX clue_type
 
     CPX #$06
     BCS @SaveVerticalClue
@@ -1289,6 +1306,7 @@ IsNextTo_FirstClue: ; first tile is already set, so start from here
 
     INC horz_clues
     LDA #0          ; no sprite
+    LDX #1          ; clue type
     JMP SaveClue
 
 
@@ -1328,6 +1346,7 @@ IsNotNextTo:
 
     INC horz_clues
     LDA #2          ; use /// sprite
+    TAX 
     JMP SaveClue
 
 IsLeftOf_Random:
@@ -1364,6 +1383,7 @@ IsLeftOf:
 
     INC horz_clues
     LDA #1            ; use <?> sprite
+    LDX #3
     JMP SaveClue
 
 
@@ -1426,6 +1446,7 @@ IsInRow:
 
     INC horz_clues
     LDA #3               ; use <-> sprite
+    LDX #4
     JMP SaveClue
 
 
@@ -1493,6 +1514,7 @@ IsNotInRow:
 
     INC horz_clues
     LDA #2               ; use /// sprite
+    LDX #5
     JMP SaveClue
 
 IsInColumn_Random:
@@ -1538,11 +1560,8 @@ IsInColumn_FirstClue:
 
     INC vert_clues
     LDA #0             ; no sprite
+    LDX #6
     JMP SaveClue
-
-SwitchTo_IsInColumn:
-    DEC clue_type      ; turn clue_type from 7 to 6
-    BNE IsInColumn
 
 IsNotInColumn_Random:
     JSR GetClueTile1
@@ -1551,7 +1570,7 @@ IsNotInColumn_Random:
 IsNotInColumn:
     LDA vert_clues_s
     CMP #7             ; if equal, cannot draw any more sprites, so no more of these clues
-    BEQ SwitchTo_IsInColumn   
+    BEQ IsInColumn     ; do the spriteless version instead!
 
     JSR SetLastToFirst
 
@@ -1589,6 +1608,7 @@ IsNotInColumn:
 
     INC vert_clues_s
     LDA #2             ; use /// sprite
+    LDX #7
     JMP SaveClue
 
 Scan_VertClues:
@@ -4547,23 +4567,28 @@ TurnOffScreen:
 ;; it has come to my attention that this isn't working for what I want to do.
 ;; I don't know why, but its not producing every value.
 
-;Random:
-;	LDY #8     ; iteration count (generates 8 bits)
-;   LDA RNG
-;  :	ASL A      ; shift the register
-;	ROL RNG+1
-;	BCC :+
-;	EOR #$39   ; apply XOR feedback whenever a 1 bit is shifted out
-;  :	DEY
-;	BNE :--
-;	STA RNG
-;	CMP #0     ; reload flags
-;	RTS
-
 Random:
-    LDY RNG
+	LDY #8     ; iteration count (generates 8 bits)
+    LDA RNG
+  :	ASL A      ; shift the register
+	ROL RNG+1
+	BCC :+
+	EOR #$39   ; apply XOR feedback whenever a 1 bit is shifted out
+  :	DEY
+	BNE :--
+	STA RNG
+	CMP #0     ; reload flags
+	RTS
+
+RandomTile:
+    INC TileRNG    
+    LDA TileRNG
+    CMP #$30
+    BCC :+
+        LDA #$00
+        STA TileRNG
+  : LDY TileRNG
     LDA RNG_LUT, Y
-    INC RNG    
     RTS
 
 RNG_LUT:
@@ -4574,30 +4599,30 @@ RNG_LUT:
     .byte $2B,$12,$0B,$26,$15,$08,$2C,$1C
     .byte $20,$09,$2D,$11,$06,$29,$08,$24
     
-    .byte $01,$1D,$0D,$2B,$17,$22,$07,$1B
-    .byte $23,$0E,$1E,$03,$2E,$08,$24,$06
-    .byte $0F,$29,$12,$1F,$09,$1C,$2A,$14
-    .byte $2C,$10,$2F,$25,$0A,$21,$19,$05
-    .byte $18,$11,$28,$0B,$15,$26,$20,$04
-    .byte $02,$27,$16,$0C,$2D,$13,$1A,$00
-    
-    ;; first two were done manually, then I switched to using 
-    ;; https://www.random.org/sequences/?min=0&max=47&col=16&format=html&rnd=new
-    
-    .byte 10,24,20,41,25, 9,39,15,28,16,31,18,19, 7,23,30
-    .byte 14,42,40,45, 5, 2, 8, 6, 3,37,47, 1,22,12,21,27
-    .byte 43,26,46,34,13,36,38,17,29,11,33, 0,35,32, 4,44
-    
-    .byte 38,30,40,25,36,43,39,46,41,15,42,16,21,6, 10,19
-    .byte 3, 22,34,17,13, 5,14,23, 8,7, 27,47,18,9, 32,29
-    .byte 26,45,33,35,37, 4,28,24,12,44,11,31,1, 0, 2, 20
-
-    .byte 2, 34,16,26,30,10, 3,40,33,22,38,15,39, 6,42,47
-    .byte 7, 13,44,32,29, 4,43,12,28,24,36, 9,14,23,21,25
-    .byte 31,27,11, 1,35,20,19,45,41,17, 5,37,18, 8, 0,46
-
-    .byte 2, 41,46,26,31,14,44,37,19, 6,39,21,15,43, 4, 3
-    .byte 47,22,18,33,16,27,23,24,32,12, 0,20, 9,34,17,13
+;   .byte $01,$1D,$0D,$2B,$17,$22,$07,$1B
+;   .byte $23,$0E,$1E,$03,$2E,$08,$24,$06
+;   .byte $0F,$29,$12,$1F,$09,$1C,$2A,$14
+;   .byte $2C,$10,$2F,$25,$0A,$21,$19,$05
+;   .byte $18,$11,$28,$0B,$15,$26,$20,$04
+;   .byte $02,$27,$16,$0C,$2D,$13,$1A,$00
+;   
+;   ;; first two were done manually, then I switched to using 
+;   ;; https://www.random.org/sequences/?min=0&max=47&col=16&format=html&rnd=new
+;   
+;   .byte 10,24,20,41,25, 9,39,15,28,16,31,18,19, 7,23,30
+;   .byte 14,42,40,45, 5, 2, 8, 6, 3,37,47, 1,22,12,21,27
+;   .byte 43,26,46,34,13,36,38,17,29,11,33, 0,35,32, 4,44
+;   
+;   .byte 38,30,40,25,36,43,39,46,41,15,42,16,21,6, 10,19
+;   .byte 3, 22,34,17,13, 5,14,23, 8,7, 27,47,18,9, 32,29
+;   .byte 26,45,33,35,37, 4,28,24,12,44,11,31,1, 0, 2, 20
+;
+;   .byte 2, 34,16,26,30,10, 3,40,33,22,38,15,39, 6,42,47
+;   .byte 7, 13,44,32,29, 4,43,12,28,24,36, 9,14,23,21,25
+;   .byte 31,27,11, 1,35,20,19,45,41,17, 5,37,18, 8, 0,46
+;
+;   .byte 2, 41,46,26,31,14,44,37,19, 6,39,21,15,43, 4, 3
+;   .byte 47,22,18,33,16,27,23,24,32,12, 0,20, 9,34,17,13
 
 ;MultiplyXA:
 ;;; Using Tepples' first method from - https://wiki.nesdev.com/w/index.php/8-bit_Multiply
@@ -4650,8 +4675,9 @@ WaitForVBlank:
     BNE @Loop
 
    @Wait:
-    LDA soft2000   ; Load desired PPU state
-    ORA #$80       ; flip on the Enable NMI bit
+    ;LDA soft2000   ; Load desired PPU state
+    ;ORA #$80       ; flip on the Enable NMI bit
+    LDA #$80
     STA $2000      ; and write it to PPU status reg
 
    @ClueCheck:
@@ -4708,7 +4734,8 @@ OnIRQ:
     JMP OnIRQ
 
 OnNMI:
-    LDA soft2000
+    ;LDA soft2000
+    LDA #$00
     STA $2000      ; set the PPU state
     LDA $2002      ; clear VBlank flag and reset 2005/2006 toggle
     LDA soft2001
@@ -4725,7 +4752,8 @@ SetScroll_Game:
     STA scroll+1
 
 SetScroll:
-    LDA soft2000
+    ;LDA soft2000
+    LDA #$00
     STA $2000
     LDA scroll
     STA $2005

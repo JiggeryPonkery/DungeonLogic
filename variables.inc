@@ -66,6 +66,7 @@ sprite_shape  = $44
 sprite_over   = $45
 sprite_loop   = $46
 sprite_anim   = $47
+sprite_timer  = $48
 
 box_overdraw  = $48
 box_width     = $49
@@ -102,9 +103,15 @@ vert_done     = $66
 horz_done     = $67
 clue_sprite   = $68
 clue_type     = $69
-clue_shape    = $6A
-clue_limit    = $6B
-clue_error    = $6C
+clue_limit    = $6A
+clue_error    = $6B
+clue_error_horz = $6C
+clue_error_vert = $6D
+
+last_clue     = $70
+last_row      = $71
+last_col      = $72
+last_pos      = $73
 
 old_cluetile1 = $70
 old_cluetile2 = $71

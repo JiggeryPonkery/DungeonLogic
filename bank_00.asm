@@ -165,13 +165,13 @@ Play:
     LDA sq2_freq+1
     BMI :+
 
-    LDY sq2_freq
-    STY $4006
     STA $4007
     ORA #$80
     STA sq2_freq+1
 
-  : LDA sq2_vol
+  : LDA sq2_freq
+    STA $4006
+    LDA sq2_vol
     ORA #$30          ; set constant length counter and volume
     STA $4004
     LDA #$3F

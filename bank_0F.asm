@@ -364,8 +364,8 @@ MainMenu:
     JSR Print
     JSR WaitForVBlank ; to fix bad timing with the first wait
 
-    LDA #$81
-    STA music_track ; first song!
+   ; LDA #$81
+   ; STA music_track ; first song!
 
     LDA #$1E        ; turn on screen/clear emphasis
     STA soft2001
@@ -510,6 +510,9 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     LDA #0
     STA position
 
+    LDA puzzle
+    STA RNG
+
    @Clear_Used:     ; clear the temp space with $FF
     LDA #$FF
     STA possibilities
@@ -519,11 +522,6 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     STA possibilities+4
     STA possibilities+5
     STA possibilities+6
-
-    LDA puzzle
-    STA RNG
-    LDA #0
-    STA RNG+1
 
    @GetTileBitLoop:
     JSR Random
@@ -535,7 +533,7 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     LDA BIT_LUT, X  ; convert 1-7 to 80, 40, 20, 10, 08, 04, 02
     STA cluetile1
 
-    LDX #$07
+    LDX #$06
    @Check_Used:
     LDA possibilities, X ; get the value in this slot
     CMP #$FF
@@ -551,8 +549,8 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     LDY loop             ; then save in the total solved-puzzle string!
     STA solved-1, Y
     DEC loop
-    DEX                  ; X = 0 when its the last tile in the row
-    BNE @GetTileBitLoop
+    DEX                  ; X = $FF when its the last tile in the row
+    BPL @GetTileBitLoop
     DEC loop             ; skip the 8th byte
     DEC row              ; decrement row counter
     BNE @Clear_Used
@@ -581,46 +579,46 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     CPX tilecheck
     BEQ @SetStartingTiles  ; duplicate starting tile!
     STX tilecheck
-    
-    TXA
-    PHA
-    LDA solved, X
 
     INC drawjob
     JSR Load_Possibilities
     JSR Choose_Possibility
     JSR Draw_NewTile
 
-    PLA
-    TAX
+    LDX tilecheck
     LDA solved, X
     EOR #$FE
     STA removed, X   ; act as though the player removed all other tiles from possibilities
-    INC clue_list, X
     INC solved, X    ; add 1 to the bit to mark it as "do not touch" for the player
     INC selected, X
-    TXA
 
     DEC clues
     BNE @SetStartingTiles
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;         BEGIN CLUE FORMING
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
     ;; and now to generate some clues:
     ;Clue_Table:
-    ;   $00 - Is Next To
-    ;   $01 - Is NOT Next to
-    ;   $02 - Is Left Of
-    ;   $03 - Is in Row
-    ;   $04 - Is NOT in row
-    ;   $05 - Is in Column
-    ;   $06 - Is NOT in Column
+    ;$00/$01 - Is Next To
+    ;    $02 - Is NOT Next to
+    ;    $03 - Is Left Of
+    ;    $04 - Is in Row
+    ;    $05 - Is NOT in row
+    ;    $06 - Is in Column
+    ;    $07 - Is NOT in Column
 
     LDA #$FF
     STA vert_clues
     STA vert_clues_s
     STA horz_clues
     STA clues
-    
-    JSR ClearErrors
+
     JSR GetFirstClue
     JSR Random
     AND #01
@@ -635,34 +633,50 @@ Generate_Puzzle:    ; this code is very volatile...? Or it was, once.
     JMP IsNextTo_FirstClue
 
 Generate_Clues:
+    LDX #48
+    LDY #42
+  : DEX
+    BPL @NotDone
+    LDA clue_list, X
+    BEQ :-
+    DEY
+    BNE :-
+
+    ;; if all 42 tiles of Y are decremented, then each tile in the puzzle has a clue bound to it
+    ;; which theoretically should be enough to solve the puzzle?
+
+    JMP DrawClues
+
+   @NotDone:
     LDA clues
-    CMP #50
+    CMP #40 ; 50     ; or see if the screen is just filled with clues and can't fit any more
     BNE :+
-        JMP PrepGame
+        JMP DrawClues
   : JSR Random
     AND #$07
-    BNE :+ 
+    BNE :+
         CLC
-        ADC #1      ; turn clue type 0 into clue type 1
+        ADC #1       ; turn clue type 0 into clue type 1, for SaveClue
 
   : CMP #6
-    BCS :+
+    BCS @CheckVertical ; if its 6 or 7, its a vertical clue
 
     LDX horz_clues
     CPX #23
-    BEQ :-          ; if horizontal clues are at max, then don't do any more
+    BEQ :--          ; if horizontal clues are at max, then don't do any more
     BNE @Continue
 
-  : BEQ @HorzSprites
-
-    LDX vert_clues
-    CPX #19         ; if vertical clues are at max, that's way too many anyway, so keep looping until it breaks out of generation
-    BEQ Generate_Clues
-    BNE @Continue
-
-   @HorzSprites:
-    LDX vert_clues_s
+   @CheckVertical:
+    BEQ @Vertical    ; if it = 6 exactly, its a normal vertical clue, else its a clue with a sprite
+    
+   @VertSprites:
+    LDX vert_clues_s ; if 8 vertical clues have been made with sprites, cannot do any more
     CPX #7
+    BNE @Continue    ; so move on to doing a normal one
+
+   @Vertical:
+    LDX vert_clues
+    CPX #19          ; if vertical clues are at max, that's way too many anyway, so keep looping until it breaks out of generation
     BEQ Generate_Clues
 
    @Continue:
@@ -678,13 +692,6 @@ Generate_Clues:
     STA pointer+1
     JMP (pointer)
 
-ClearErrors:
-    LDY #0
-    STY tile1_error
-    STY tile2_error
-    STY tile3_error
-    RTS
-
 ClueType_Table:
 .word IsNextTo       ; 0
 .word IsNextTo       ; 1
@@ -695,22 +702,33 @@ ClueType_Table:
 .word IsInColumn     ; 6
 .word IsNotInColumn  ; 7
 
+ClearErrors:
+    LDY #0
+    STY tile1_error
+    STY tile2_error
+    STY tile3_error
+    RTS
+
 GetRandomPosition:
     JSR Random
-    AND #$3F    ; cap at 48-1
-    CMP #$2F
-    BCS GetRandomPosition
-    STA position
-    AND #$0F    ; see if it = 7 or 15; these tiles do not exist in the puzzle
+    TAY
+    
+    ;; this is so Mesen's memory viewer will highlight the tile position
+    ;; so I can make sure the RNG is being fair
+    LDA clue_list, Y
+    STA clue_list, Y
+    TYA
+    
+    AND #$0F     ; see if it = 7 or 15; these tiles do not exist in the puzzle
     CMP #$07
     BEQ GetRandomPosition
     CMP #$0F
     BEQ GetRandomPosition
 
-FirstClueEntryPoint_Position:   
-    LDY position
+FirstClueEntryPoint_Position:
+    STY position
     LDA solved, Y
-    AND #$FE
+    AND #$FE      ; clear out the low bit to get the tile ID proper
 
     LDX #$FF
    @GetFakeCursor2X:
@@ -719,28 +737,28 @@ FirstClueEntryPoint_Position:
     BNE @GetFakeCursor2X
     STX cursor2_x
 
-    LDA position
+    TYA
     AND #$38
     LSR A
     LSR A
     LSR A
     STA cursor_y
 
-    LDA position
+    TYA
     TAX
     AND #$07
     STA cursor_x
     RTS
 
-GetFirstClue:
-    LDX #48+1
-    STA clue_limit
+GetFirstClue:  ; start the clues off by linking off a known tile
+    LDX #48
+    STX clue_limit
   : DEX
-    LDA clue_list, X
+    LDA solved, X ; just scan the list for the last confirmed tile generated, and start making clues from that one
     BEQ :-
     STX position
     JSR FirstClueEntryPoint_Position
-    LDA #0
+    LDA #0     ; tile's position in the clue
     PHA
     JMP FirstClueEntryPoint_GetClueTile
 
@@ -756,7 +774,7 @@ GetClueTile3:
     LDA #2
 
 GetClueTile:
-    PHA
+    PHA         ; backup the tile's position in the clue
     STX clue_limit
     LDA #$70
     STA clue_error
@@ -782,23 +800,24 @@ FirstClueEntryPoint_GetClueTile:
     ORA drawtile
     TAY
 
-    LDA clue_list, X
-    CMP clue_limit
-    BCS GetClueTileError
+  ;; enable this to limit the amount of times a tile can be used in a clue
+  ;  LDA clue_list, X
+  ;  CMP clue_limit
+  ;  BCS GetClueTileError
 
-    PLA
+    PLA          ; get the tile's position in the clue 
     BEQ @Tile1
     CMP #$01
     BEQ @Tile2
 
    @Tile3:
-    STY cluetile3
+    STY cluetile3  ; save tile ID as the background tile to draw
     LDA cursor_y
-    STA tile3_row
+    STA tile3_row  ; save the row its in
     LDA cursor_x
-    STA tile3_col
-    STX tile3_pos
-    TYA
+    STA tile3_col  ; and the column its in
+    STX tile3_pos  ; and row+column combined
+    TYA            ; then put the ID in A before exiting
     RTS
 
    @Tile2:
@@ -820,82 +839,95 @@ FirstClueEntryPoint_GetClueTile:
     STX tile1_pos
     TYA
     RTS
-    
-WhereIsTile_Horz:
-    LDA #>horz_complete
-    STA pointer
-    LDA #<horz_complete
-    STA pointer+1
-    JMP WhereIsTile
-    
-WhereIsTile_Vert:
-    LDA #>vert_complete
-    STA pointer
-    LDA #<vert_complete
-    STA pointer+1
 
-WhereIsTile:
-    STA tilecheck
-    LDY #0
-  : LDA (pointer), Y
-    CMP tilecheck
-    BEQ @Found
-    INY
-    BNE :-
-    RTS ;; this should never get a hit... as this routine shouldn't be called unless the tile is known to exist in this list!
-    
-   @Found:
-    INY
-    LDA (pointer), Y
-    STA tilecheck_pos   
-    TYA
-    AND #$F8
-    TAY
-    LDA (pointer), Y
-    STA old_cluetile1
-    INY
-    LDA (pointer), Y
-    STA old_tile1_pos
-    INY
-    LDA (pointer), Y
-    STA old_cluetile2
-    INY
-    LDA (pointer), Y
-    STA old_tile2_pos
-    INY
-    LDA (pointer), Y
-    STA old_cluetile3
-    INY
-    LDA (pointer), Y
-    STA old_tile3_pos
-    INY
-    LDA (pointer), Y
-    STA old_cluetype
-    RTS
-    
-    
-    
+;; I made this to check if a tile was used in a previous clue, and if so, what kind of clue it was
+;; I wasn't sure what to actually do with this information.
+;; In previous attempts to check the last clue a tile was used in, the problem was that it only checked the LAST clue
+;; so if the Frog is beside the Tree, then the next clue is the Frog is beside the Boat, then it could still use the Frog>Tree clue again...
+
+;WhereIsTile_Horz:
+;    LDA #>horz_complete
+;    STA pointer
+;    LDA #<horz_complete
+;    STA pointer+1
+;    JMP WhereIsTile
+;
+;WhereIsTile_Vert:
+;    LDA #>vert_complete
+;    STA pointer
+;    LDA #<vert_complete
+;    STA pointer+1
+;
+;WhereIsTile:
+;    STA tilecheck
+;    LDY #0
+;  : LDA (pointer), Y
+;    CMP tilecheck
+;    BEQ @Found
+;    INY
+;    BNE :-
+;    RTS ;; this should never get a hit... as this routine shouldn't be called unless the tile is known to exist in this list!
+;
+;   @Found:
+;    INY
+;    LDA (pointer), Y
+;    STA tilecheck_pos
+;    TYA
+;    AND #$F8
+;    TAY
+;    LDA (pointer), Y
+;    STA old_cluetile1
+;    INY
+;    LDA (pointer), Y
+;    STA old_tile1_pos
+;    INY
+;    LDA (pointer), Y
+;    STA old_cluetile2
+;    INY
+;    LDA (pointer), Y
+;    STA old_tile2_pos
+;    INY
+;    LDA (pointer), Y
+;    STA old_cluetile3
+;    INY
+;    LDA (pointer), Y
+;    STA old_tile3_pos
+;    INY
+;    LDA (pointer), Y
+;    STA old_cluetype
+;    RTS
+
+
+
 SaveClue:
     ; A 0 = no sprite
     ; A 1 = <?>
     ; A 2 = ///
     ; A 3 = <->
-    ; X 0 = horz: draw tile 1, tile 2, tile 1
-    ; X 1 = horz: draw tile 1, space, tile 2
-    ; X 2 = horz: draw tile 1, tile 2, tile 3
-    ; X 3 = vert: draw tile 1, tile 2
-    ; X 4 = vert: draw tile 1, tile 2 in sprite containment box
+    
+    ; X 1 = horz: draw tile 1, tile 2, tile 1
+    ; X 2 = horz: draw tile 1, tile 2, tile 1
+    ; X 3 = horz: draw tile 1, space, tile 2
+    ; X 4 = horz: draw tile 1, tile 2, tile 3
+    ; X 5 = horz: draw tile 1, tile 2, tile 3
+    ; X 6 = vert: draw tile 1, tile 2
+    ; X 7 = vert: draw tile 1, tile 2 in sprite containment box
+
+    ;; this routine will fill $0500 and $0600 with tile IDs and positions, then save the clue shape and sprite, for drawing later
+    ;; This is so the drawing routine can randomize where they appear on the screen and its not so obvious that clues were generated
+    ;; by linking off the previous tile used in each clue.
+    
+    ;; this is also used to see if tiles have been used in clues before; see the vertical clues for how it avoids making a useless clue
+    ;; (a useless clue being, if the Sword is above the Frog, then why have a tile that says the Sword can NOT be above the Bird?
+    ;;  logically, if its above the Frog, the player already knows its not above the Bird!)
 
     STA clue_sprite
-    STX clue_shape
-    LDA #0
-    STA vert_offset
+    LDX clue_type
 
-    CPX #$03
-    BCC :+
-    JMP @SaveVerticalClue
+    CPX #$06
+    BCS @SaveVerticalClue
 
-  : LDX horz_done
+    LDX horz_done
     LDA cluetile1
     STA horz_complete, X
     LDA tile1_pos
@@ -915,14 +947,14 @@ SaveClue:
     STA horz_complete+6, X
     LDA clue_sprite
     STA horz_complete+7, X
-    
+
     TXA
     CLC
     ADC #$08
-    STA horz_done 
+    STA horz_done
     JMP Generate_Clues
-    
-   @SaveVerticalClue: 
+
+   @SaveVerticalClue:
     LDX vert_done
     LDA cluetile1
     STA vert_complete, X
@@ -938,7 +970,7 @@ SaveClue:
     STA vert_complete+6, X
     LDA clue_sprite
     STA vert_complete+7, X
-    
+
     TXA
     CLC
     ADC #$08
@@ -954,34 +986,47 @@ DrawClues:
     STA vert_clues_s
     STA vert_sprites
 
-   @DrawNext: 
-    JSR Random
-    AND #01
-    BEQ @Vertical
+   @DrawNext:
+    LDA #0
+    STA clue_error_horz
+    STA clue_error_vert
     
    @Horizontal:
     JSR Random
-    AND #$F8
+    ASL A
+    ASL A
+    ASL A
+   @LoadHorzClue: 
     TAX
     LDA horz_complete, X
-    BEQ @Horizontal         ;; put in an error counter here!
+    BNE @Do_Horizontal         
+    
+    INC clue_error_horz
+    LDA clue_error_horz
+    CMP #$20
+    BNE @Vertical
+    
+    TXA
+    CLC
+    ADC #08
+    JMP @LoadHorzClue
 
+   @Do_Horizontal: 
     STA cluetile1
+    LDA #0
+    STA horz_complete, X    ; set to 0 so as not to draw this clue again
     LDA horz_complete+2, X
     STA cluetile2
     LDA horz_complete+4, X
     STA cluetile3
-  
+
     LDA horz_clues
     ASL A
     TAY
 
     LDA horz_complete+7, X
     BEQ @NoHorzSprite
-    
-    LDA clue_sprite
-    BEQ @NoHorzSprite
-    
+
     LDX horz_sprites
     STA spritebuffer, X
     LDA HorzSpriteLocations, Y
@@ -1017,29 +1062,50 @@ DrawClues:
     JSR DrawTile_Generation
 
     JSR UpdateClueAttribute_Horz
+    INC horz_clues    
     JMP @DrawNext
+
+   @Done:
+    JMP PrepGame
 
     ;;;;;; Vertical Clues ;;;;;;
 
    @Vertical:
     JSR Random
-    AND #$F8
+    ASL A
+    ASL A
+    ASL A
+   @LoadVertClue: 
     TAX
     LDA vert_complete, X
-    BEQ @Vertical              ;; put in an error counter here!
-   
+    BNE @Do_Vertical    
+
+    INC clue_error_vert
+    LDA clue_error_vert
+    CMP #$20
+    BEQ @Done
+    
+    TXA
+    CLC
+    ADC #08
+    JMP @LoadVertClue
+
+   @Do_Vertical:
     STA cluetile1
+    LDA #0
+    STA vert_complete, X
     LDA vert_complete+2, X
     STA cluetile2
     LDA vert_complete+6, X
-    STA clue_shape
+    STA clue_type
 
     LDA #0
     STA vert_offset
-    
+
     LDA vert_complete+7, X
-    STA clue_sprite
     BEQ @WithoutSprite
+    
+    STA clue_sprite
 
     LDA vert_clues_s
     CMP #$04
@@ -1051,6 +1117,9 @@ DrawClues:
     LDX vert_sprites
     LDA clue_sprite
     STA spritebuffer2, X
+    LDA VertSpriteLocations_S, Y
+    STA spritebuffer2+1, X
+    
     LDA #$8C          ; Y position is $8C for first row
     LDX vert_offset
     BEQ :+
@@ -1058,8 +1127,6 @@ DrawClues:
     ADC #$30          ; $BC for second row
   : LDX vert_sprites
     STA spritebuffer2+2, X
-    LDA VertSpriteLocations_S, Y
-    STA spritebuffer2+1, X
 
     TXA
     CLC
@@ -1076,7 +1143,7 @@ DrawClues:
         INC vert_offset
         SBC #$0A
   : TAY
-
+   
     LDA VertClueLocations, Y
 
    @VerticalTiles:
@@ -1099,45 +1166,106 @@ DrawClues:
 
     LDA cluetile2
     JSR DrawTile_Generation
- 
-    LDA clue_shape
-    CMP #$03
+
+    LDA clue_type
+    CMP #$06
     BEQ :+
 
     JSR UpdateClueAttribute_VertSprite
+    INC vert_clues_s
     JMP @DrawNext
 
   : JSR UpdateClueAttribute_Vert
+    INC vert_clues
     JMP @DrawNext
 
 
-IsNextTo:
-    JSR Tile1_Error
-    LDX #03
-    JSR GetClueTile1
 
-IsNextTo_FirstClue:   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;
+;;          CLUE LOGIC
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetLastToFirst:
+    LDA last_row
+    STA tile1_row
+    LDA last_col
+    STA tile1_col
+    LDA last_pos
+    STA tile1_pos
+    LDA last_clue
+    STA cluetile1
+    RTS
+
+SetFirstToLast:
+    LDA tile1_row
+    STA last_row
+    LDA tile1_col
+    STA last_col
+    LDA tile1_pos
+    STA last_pos
+    LDA cluetile1
+    STA last_clue
+    RTS
+
+SetSecondToLast:
+    LDA tile2_row
+    STA last_row
+    LDA tile2_col
+    STA last_col
+    LDA tile2_pos
+    STA last_pos
+    LDA cluetile2
+    STA last_clue
+    RTS
+
+SetThirdToLast:
+    LDA tile3_row
+    STA last_row
+    LDA tile3_col
+    STA last_col
+    LDA tile3_pos
+    STA last_pos
+    LDA cluetile3
+    STA last_clue
+    RTS
+    
+
+;; This is where things get super tricky.
+;; My latest attempt to get a solvable puzzle involves linking clues together
+;; So the last tile of a clue is the first tile of the next clue.    
+;; The idea being that the player can follow this string of logic to begin solving the puzzle.
+;; But as always, the RNG is just not playing along, and certain tiles are not being chosen at all.
+;; I even re-did the RNG so that its just different combinations of $00-$2F in $30-sized chunks,
+;; hoping that would eventually grab each tile in turn for a clue.
+;; I don't know where to go from here!
+
+;; I have clue_list incremented each time a tile is used, and X can be modified before each randomized tile fetch
+;; so that for every clue type, it won't use a tile if the other clues are over-saturated with it.
+;; This just seems to cause a lockup in generation, so I've disabled that for now.
+
+;; I also have known incremented each time a tile is used in a "this is next to this" type clue.
+;; It is not incremented in "this is NOT next to this" clues. I also don't know what to do with this information.    
+    
+
+IsNextTo:
+    JSR SetLastToFirst 
+    LDX tile1_pos   ; begin by using the last tile of the last clue, to link clues together
+
+IsNextTo_FirstClue: ; first tile is already set, so start from here
     STA cluetile3
     STX tile3_pos
-    
-    LDA known, X
-    CMP #$02
-    BCS IsNextTo
 
    @SecondTile:
-    JSR Tile2_Error
-    BCS IsNextTo
-
-    LDX #03
+    LDX #03         ; X is the amount of times the generated tile can be used in clues
     JSR GetClueTile2
-
-    LDY known, X
-    CPY #$03
-    BCS @SecondTile
 
     LDY tile2_col
     CPY tile1_col
-    BEQ @SecondTile ; they're in the same column, re-do
+    BEQ @SecondTile ; the two tiles cannot be in the same column
 
     INY
     CPY tile1_col
@@ -1150,39 +1278,30 @@ IsNextTo_FirstClue:
 
    @ClueGood:
     INC clue_list, X
-    INC known, X
+    INC known, X   
     LDX tile1_pos
     INC clue_list, X
     INC known, X
 
+    JSR SetSecondToLast
+
     INC horz_clues
     LDA #0          ; no sprite
-    TAX             ; Tile 1, Tile 2, Tile 1
     JMP SaveClue
 
 
 IsNotNextTo:
-    JSR Tile1_Error
-    LDX #03
-    JSR GetClueTile1
+    JSR SetLastToFirst
+    LDX tile1_pos
+
     STA cluetile3
     STX tile3_pos
 
    @SecondTile:
-    JSR Tile2_Error
-    BCS IsNotNextTo
-
     LDX #03
     JSR GetClueTile2
 
-    LDY known, X
-    BEQ :+
-    
-    JSR WhereIsTile_Horz
-    ;; if the "not next to" tile is known, then figure out where it is...?
-    ;; but I can't think of what to do here...
-
-  : LDY tile2_col
+    LDY tile2_col
     CPY tile1_col
     BEQ @ClueGood   ; they're in the same column, so not next to each other!
 
@@ -1198,28 +1317,30 @@ IsNotNextTo:
    @ClueGood:
     LDX tile2_pos
     INC clue_list, X
+    ;; don't set known here, because this clue only shows where the second tile is NOT
     LDX tile1_pos
     INC clue_list, X
+    INC known, X
+
+    JSR SetSecondToLast
+
     INC horz_clues
     LDA #2          ; use /// sprite
-    LDX #0          ; Tile 1, Tile 2, Tile 1
     JMP SaveClue
 
+IsLeftOf_Random:
+    JSR GetClueTile1
+    JSR SetFirstToLast
 
 IsLeftOf:
-    JSR Tile1_Error
-    LDX #03
-    JSR GetClueTile1
+    JSR SetLastToFirst
 
     LDA tile1_col
-    CMP #$06          ; if the first tile is on the right, then...
-    BEQ IsLeftOf
+    CMP #$06            ; if the first tile is on the right, then...
+    BEQ IsLeftOf_Random ; get a new first tile
 
    @ThirdTile:
-    JSR Tile3_Error
-    BCS IsLeftOf
-
-    LDX #04
+    LDX #03
     JSR GetClueTile3
 
     LDY tile3_col
@@ -1228,8 +1349,12 @@ IsLeftOf:
     BCC @ThirdTile
 
     INC clue_list, X
+    INC known, X
     LDX tile1_pos
     INC clue_list, X
+    INC known, X
+
+    JSR SetThirdToLast
 
     LDA #0
     STA cluetile2
@@ -1237,19 +1362,13 @@ IsLeftOf:
 
     INC horz_clues
     LDA #1            ; use <?> sprite
-    TAX               ; and tile 1, space, tile 2
     JMP SaveClue
 
 
 IsInRow:
-    JSR Tile1_Error
-    LDX #03
-    JSR GetClueTile1
+    JSR SetLastToFirst
 
    @SecondTile:
-    JSR Tile2_Error
-    BCS IsInRow
-
     LDX #03
     JSR GetClueTile2
 
@@ -1271,11 +1390,9 @@ IsInRow:
     BNE @SecondTile
 
    @ThirdTile:
-    JSR Tile3_Error
-    BCS @SecondTile
-    
     LDX #04
     JSR GetClueTile3
+    ;; not checking clue_list here because its already picky enough to get this far
 
     LDY tile3_col
     CPY tile1_col
@@ -1295,29 +1412,25 @@ IsInRow:
 
    @ClueGood:
     INC clue_list, X
+    INC known, X
     LDX tile2_pos
     INC clue_list, X
+    INC known, X
     LDX tile1_pos
     INC clue_list, X
+    INC known, X
+
+    JSR SetThirdToLast
 
     INC horz_clues
     LDA #3               ; use <-> sprite
-    LDX #2               ; and tile 1, tile 2, tile 3
     JMP SaveClue
 
 
 IsNotInRow:
-    JSR Tile1_Error
-    LDX #03
-    JSR GetClueTile1
-
-    LDA cursor_x
-    STA tile1_col
+    JSR SetLastToFirst
 
    @SecondTile:
-    JSR Tile2_Error
-    BCS IsNotInRow
-    
     LDX #03
     JSR GetClueTile2
     CMP cluetile1
@@ -1337,9 +1450,6 @@ IsNotInRow:
     BEQ @SecondTile     ; Its to the left, so get a different tile
 
    @ThirdTile:
-    JSR Tile3_Error
-    BCS @SecondTile
-
     LDX #03
     JSR GetClueTile3
     CMP cluetile2
@@ -1369,31 +1479,37 @@ IsNotInRow:
 
    @ClueGood:
     INC clue_list, X
+    INC known, X
     LDX tile2_pos
     INC clue_list, X
+    ;; not setting known here, since its a "not" clue
     LDX tile1_pos
     INC clue_list, X
+    INC known, X
+
+    JSR SetThirdToLast
 
     INC horz_clues
     LDA #2               ; use /// sprite
-    TAX                  ; and tile 1, tile 2, tile 3
     JMP SaveClue
 
+IsInColumn_Random:
+    JSR GetClueTile1
+    JSR SetFirstToLast
 
 IsInColumn:
-    JSR Tile1_Error
-    LDX #03
-    JSR GetClueTile1
-
-    LDA tile1_row
-    CMP #$05
-    BEQ IsInColumn    ; first tile cannot be in the bottom row
+    JSR SetLastToFirst
 
 IsInColumn_FirstClue:
-   @SecondTile:
-    JSR Tile2_Error
-    BCS IsInColumn
+    LDA tile1_row
+    CMP #$05
+    BEQ IsInColumn_Random ; first tile cannot be in the bottom row
 
+   @SecondTile:
+    LDA tile1_error
+    CMP #$05
+    BCS IsInColumn_Random ; get new first tile
+    
     LDX #03
     JSR GetClueTile2
 
@@ -1401,41 +1517,56 @@ IsInColumn_FirstClue:
     CPY tile1_col
     BNE @SecondTile    ; must be in same column
 
+    JSR Scan_VertClues ; make sure its not a useless clue
+    BCS @SecondTile
+
     LDY tile2_row
     CPY tile1_row
     BEQ @SecondTile    ; cannot be in the same row
     BCC @SecondTile    ; second tile should be below first tile's row
 
+    LDX tile2_pos
     INC clue_list, X
+    INC known, X
     LDX tile1_pos
     INC clue_list, X
+    INC known, X
+
+    JSR SetSecondToLast
 
     INC vert_clues
     LDA #0             ; no sprite
-    LDX #3             ; vertical tiles
     JMP SaveClue
 
+SwitchTo_IsInColumn:
+    DEC clue_type      ; turn clue_type from 7 to 6
+    BNE IsInColumn
+
+IsNotInColumn_Random:
+    JSR GetClueTile1
+    JSR SetFirstToLast
 
 IsNotInColumn:
     LDA vert_clues_s
-    CMP #7
-    BEQ IsInColumn     ; cannot draw any more sprites; no more of these clues
+    CMP #7             ; if equal, cannot draw any more sprites, so no more of these clues
+    BEQ SwitchTo_IsInColumn   
 
-    JSR Tile1_Error
-
-    LDX #03
-    JSR GetClueTile1
+    JSR SetLastToFirst
 
     LDA tile1_row
-    CMP #$05
-    BEQ IsNotInColumn
+    CMP #$05           ; don't have the first tile in the bottom row
+    BEQ IsNotInColumn_Random
 
    @SecondTile:
-    JSR Tile2_Error
-    BCS IsNotInColumn
-
+    LDA tile1_error
+    CMP #$05
+    BCS IsNotInColumn_Random ; get new first tile
+   
     LDX #03
     JSR GetClueTile2
+
+    JSR Scan_VertClues
+    BCS @SecondTile
 
     LDY tile2_col
     CPY tile1_col
@@ -1446,51 +1577,46 @@ IsNotInColumn:
     BEQ @SecondTile    ; cannot be in the same row
     BCC @SecondTile    ; second tile should be below first tile's row
 
+    LDX tile2_pos
     INC clue_list, X
     LDX tile1_pos
     INC clue_list, X
+    ;; don't bother increasing either known states, I guess?
+
+    JSR SetSecondToLast
 
     INC vert_clues_s
     LDA #2             ; use /// sprite
-    LDX #4             ; vertical tiles with sprite
     JMP SaveClue
 
-
-Tile1_Error:
-    RTS
-  ;  LDA #0
-  ;  STA tile2_error
-  ;  STA tile3_error
-  ;
-  ;  INC tile1_error
-  ;  LDA tile1_error
-  ;  CMP #$08
-  ;  BCC :+
-  ;  PLA
-  ;  PLA
-  ;  DEC clues
-  ;  JMP Generate_Clues
-  ;: RTS
-
-Tile2_Error:
-   ; LDA #0
-   ; STA tile1_error
-   ;
-   ; INC tile2_error
-   ; LDA tile2_error
-   ; CMP #$08
-   ; RTS
-
-Tile3_Error:
+Scan_VertClues:
+    LDX #0
+  : LDA vert_complete+2, X ; check tiles in the second slot
+    CMP cluetile2
+    BEQ @CheckFirst
+    TXA
     CLC
-  ;  LDA #0
-  ;  STA tile2_error
-  ;
-  ;  INC tile3_error
-  ;  LDA tile3_error
-  ;  CMP #$08
+    ADC #$08
+    TAX
+    BNE :-
+   @Return:    
+    CLC
     RTS
 
+   @CheckFirst:
+    LDA cluetile1
+    AND #$F0
+    STA tilecheck
+    LDA vert_complete, X
+    AND #$F0      ; if high bits match, this clue is useless--a clue already exists
+    CMP tilecheck ; that matches the second tile with a tile from this row!
+    BCC :+
+    INC tile1_error 
+  : RTS           
+    ;; I had the problem where the first tile was in position $22, so the only viable position for tile 2
+    ;; was in $2A, but the tile set there was in another clue already, resulting in a forever loop
+    ;; increasing the error counter every time this check fails, then comparing to the max number of rows
+    ;; and when that max is met, choosing a new first tile, seems to have solved the issue
 
 
 HorzClueLocations:
@@ -1594,7 +1720,7 @@ PrepGame:
 
     STA drawjob      ; immediately update possibilities
     STA update_attr  ; and their attributes
-    STA music_track
+    ;STA music_track
     STA options      ; mark as needing values updated on screen
     STA row1_player+7
     STA row2_player+7
@@ -1647,7 +1773,7 @@ GameFrame_Over:
     JSR DrawSprite0
     JSR DrawAllSprites
     JSR UpdateJoy
-    JSR Update_Gametime    
+    JSR Update_Gametime
     JSR WaitForVBlank
     LDA wait_input
     BNE :+
@@ -3556,12 +3682,12 @@ DrawSprite0:
     RTS
 
 AnimateAnimals:
-    INC gametime
-    LDA gametime
+    INC sprite_timer
+    LDA sprite_timer
     CMP #64
     BNE :+
         LDA #0
-        STA gametime
+        STA sprite_timer
         BEQ @Frame1
 
   : CMP #32
@@ -3577,7 +3703,7 @@ AnimateAnimals:
     STA sprite_anim
 
    @WeaselDance:
-    LDA gametime
+    LDA sprite_timer
   ; BEQ @Flip
   ; CMP #15
   ; BEQ @Flip
@@ -4404,28 +4530,60 @@ TurnOffScreen:
     RTS
 
 ;; from https://wiki.nesdev.com/w/index.php/Random_number_generator
+;; it has come to my attention that this isn't working for what I want to do.
+;; I don't know why, but its not producing every value.
 
-Random_7:
-	LDY #3     ; iteration count (generates 6 bits)
-    BNE :+
+;Random:
+;	LDY #8     ; iteration count (generates 8 bits)
+;   LDA RNG
+;  :	ASL A      ; shift the register
+;	ROL RNG+1
+;	BCC :+
+;	EOR #$39   ; apply XOR feedback whenever a 1 bit is shifted out
+;  :	DEY
+;	BNE :--
+;	STA RNG
+;	CMP #0     ; reload flags
+;	RTS
 
 Random:
-	LDY #6     ; iteration count (generates 6 bits)
-  : LDA RNG
-  :	ASL A      ; shift the register
-	ROL RNG+1
-	BCC :+
-	EOR #$39   ; apply XOR feedback whenever a 1 bit is shifted out
-  :	DEY
-	BNE :--
-	STA RNG
-	CMP #0     ; reload flags
-	RTS
+    LDY RNG
+    LDA RNG_LUT, Y
+    INC RNG    
+    RTS
 
+RNG_LUT:
+    .byte $14,$21,$03,$00,$24,$0C,$1D,$28
+    .byte $1F,$17,$27,$0B,$2A,$04,$22,$0E
+    .byte $10,$0D,$2E,$01,$13,$0A,$25,$07
+    .byte $05,$0F,$12,$2F,$23,$1E,$02,$21
+    .byte $2B,$12,$0B,$26,$15,$08,$2C,$1C
+    .byte $20,$09,$2D,$11,$06,$29,$08,$24
+    
+    .byte $01,$1D,$0D,$2B,$17,$22,$07,$1B
+    .byte $23,$0E,$1E,$03,$2E,$08,$24,$06
+    .byte $0F,$29,$12,$1F,$09,$1C,$2A,$14
+    .byte $2C,$10,$2F,$25,$0A,$21,$19,$05
+    .byte $18,$11,$28,$0B,$15,$26,$20,$04
+    .byte $02,$27,$16,$0C,$2D,$13,$1A,$00
+    
+    ;; first two were done manually, then I switched to using 
+    ;; https://www.random.org/sequences/?min=0&max=47&col=16&format=html&rnd=new
+    
+    .byte 10,24,20,41,25, 9,39,15,28,16,31,18,19, 7,23,30
+    .byte 14,42,40,45, 5, 2, 8, 6, 3,37,47, 1,22,12,21,27
+    .byte 43,26,46,34,13,36,38,17,29,11,33, 0,35,32, 4,44
+    
+    .byte 38,30,40,25,36,43,39,46,41,15,42,16,21,6, 10,19
+    .byte 3, 22,34,17,13, 5,14,23, 8,7, 27,47,18,9, 32,29
+    .byte 26,45,33,35,37, 4,28,24,12,44,11,31,1, 0, 2, 20
 
+    .byte 2, 34,16,26,30,10, 3,40,33,22,38,15,39, 6,42,47
+    .byte 7, 13,44,32,29, 4,43,12,28,24,36, 9,14,23,21,25
+    .byte 31,27,11, 1,35,20,19,45,41,17, 5,37,18, 8, 0,46
 
-
-
+    .byte 2, 41,46,26,31,14,44,37,19, 6,39,21,15,43, 4, 3
+    .byte 47,22,18,33,16,27,23,24,32,12, 0,20, 9,34,17,13
 
 ;MultiplyXA:
 ;;; Using Tepples' first method from - https://wiki.nesdev.com/w/index.php/8-bit_Multiply

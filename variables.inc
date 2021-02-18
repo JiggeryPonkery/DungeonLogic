@@ -40,8 +40,7 @@ game_over     = $24 ; $8x = game won, $x1 = game over/menu, $00 = game in progre
 wait_input    = $25
 row           = $26
 col           = $27
-loop          = $28
-moves         = $29 ; + A + B; moves taken
+moves         = $28 ; + 9 + A ; moves taken
 gametime      = $2B ; frames
 ;             = $2D ; seconds
 ;             = $2E ; minutes
@@ -107,6 +106,8 @@ clue_limit    = $6A
 clue_error    = $6B
 clue_error_horz = $6C
 clue_error_vert = $6D
+
+loop          = $6F
 
 last_clue     = $70
 last_row      = $71

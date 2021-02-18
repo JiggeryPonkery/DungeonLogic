@@ -6,7 +6,9 @@
 .import Music
 .import PUZZLE_CHR
 
-
+;; BUGS - "the tumblers click" text isn't setting scroll right for a frame
+;; disable sprites for a frame during clue swaps
+;; confirm game over and game won screens work as intended
 
 
 TITLE_CHR:
@@ -387,8 +389,11 @@ QuitGame:
     JMP OnIRQ
 
 ViewHelp:
-    JSR StaticScreen_Setup
+    JSR TurnOffScreen_ClearOAM
     JSR LoadGamePalette
+    JSR ClearNametable
+    JSR LoadPuzzleTiles
+    JSR ClearButtons
 
     LDA #<StaticScreen_HELP_Attributes
     STA pointer
@@ -410,7 +415,11 @@ ViewHelp:
     JMP StaticFrame_Start
 
 ViewStory:
-    JSR StaticScreen_Setup
+    JSR TurnOffScreen_ClearOAM
+    JSR ClearNametable
+    JSR LoadPuzzleTiles
+    JSR ClearButtons
+    
     LDX #$0F
    @Sprites:
     LDA StaticScreen_STORY_Sprites, X
@@ -434,12 +443,6 @@ StaticFrame_Start:
     LDA #$1E
     STA soft2001
     JMP StaticFrame
-
-StaticScreen_Setup:
-    JSR TurnOffScreen_ClearOAM
-    JSR ClearNametable
-    JSR LoadPuzzleTiles
-    JMP ClearButtons
 
 LoadGame:
     LDX #$FF      ; set stack pointer!
@@ -751,12 +754,11 @@ FirstClueEntryPoint_Position:
     RTS
 
 GetFirstClue:  ; start the clues off by linking off a known tile
-    LDX #48
-    STX clue_limit
-  : DEX
-    LDA solved, X ; just scan the list for the last confirmed tile generated, and start making clues from that one
+    LDY #48
+    STY clue_limit ; to bypass any wonkiness when the limit is enabled
+  : DEY
+    LDA selected, Y ; just scan the list for the last confirmed tile generated, and start making clues from that one
     BEQ :-
-    STX position
     JSR FirstClueEntryPoint_Position
     LDA #0     ; tile's position in the clue
     PHA
@@ -1773,7 +1775,6 @@ GameFrame_Over:
     JSR DrawSprite0
     JSR DrawAllSprites
     JSR UpdateJoy
-    JSR Update_Gametime
     JSR WaitForVBlank
     LDA wait_input
     BNE :+
@@ -1781,6 +1782,18 @@ GameFrame_Over:
     JMP GameFrame_Over
 
   : RTS
+
+GameFrame_Won:
+    LDA #>oam
+    STA $4014
+    JSR SetScroll
+    JSR ClearOAM
+    JSR DrawAllSprites
+    JSR AnimateAnimals    
+    JSR UpdateJoy
+    JSR PlayerInput_GameWon
+    JSR WaitForVBlank
+    JMP GameFrame_Over
 
 GameFrame_Printing:
     LDA #>oam
@@ -2025,7 +2038,7 @@ GameWon:
     JSR ClearNametable
     STX clues
 
-    LDX #$1B
+    LDX #$33
    @LoadSprites:
     LDA WinningSprites, X
     STA spritebuffer, X
@@ -2047,12 +2060,8 @@ GameWon:
     JSR PrintMoves
 
     JSR WaitForVBlank
-    INC wait_input
-   @Loop:
-    JSR GameFrame_Over
-    JSR AnimateAnimals
-    JSR PlayerInput_GameWon
-    JMP @Loop
+    JMP GameFrame_Won
+
 
 
 
@@ -3665,10 +3674,13 @@ SpriteTable:
 .byte $00,$C2,$F5,$F4,$E5,$E4 ; 15: weasel flip 2 boat shape
 
 .byte $80,$03,$EE,$EF,$00,$00 ; 16: hearts
-.byte $80,$03,$EE,$EF,$00,$00 ; 17: hearts 1
+.byte $80,$03,$EF,$FE,$00,$00 ; 17: hearts 1
 
-.byte $80,$03,$EE,$EF,$00,$00 ; 18: hearts 2
-.byte $80,$03,$EE,$EF,$00,$00 ; 19: hearts 3
+.byte $03,$03,BLANK,BLANK,$FE,$EE ; 18: hearts 2
+.byte $03,$03,BLANK,BLANK,$EE,$FE ; 19: hearts 3
+
+.byte $80,$03,$FE,$EE,$00,$00 ; 16: hearts
+.byte $80,$03,$EE,$FE,$00,$00 ; 17: hearts 1
 
 
 DrawSprite0:
@@ -3778,19 +3790,21 @@ StaticScreen_HELP_Sprites:
 .byte $03,$28,$6F,$00
 
 WinningSprites:
-.byte $0E,$08,$13,$00
-.byte $04,$08,$62,$00
-.byte $0C,$08,$CA,$00
-.byte $10,$E8,$13,$00
-.byte $06,$E8,$62,$00
-.byte $0A,$E8,$CA,$00
-.byte $08,$18,$62,$00
-.byte $16,$00,$00,$00 ; hearts
-.byte $16,$00,$00,$00
-.byte $16,$00,$00,$00
-.byte $18,$00,$00,$00
-.byte $18,$00,$00,$00
-.byte $18,$00,$00,$00
+.byte $0E,$08,$13,$00 ; frog
+.byte $04,$08,$62,$00 ; squirrel
+.byte $0C,$08,$CA,$00 ; bird
+.byte $10,$E8,$13,$00 ; snake
+.byte $06,$E8,$62,$00 ; rabbit
+.byte $0A,$E8,$CA,$00 ; rat
+
+.byte $08,$18,$62,$00 ; weasel
+
+.byte $16,$08,$0B,$00 ; hearts
+.byte $18,$08,$43,$00
+.byte $20,$08,$C2,$00
+.byte $16,$E8,$0B,$00
+.byte $18,$F0,$43,$00
+.byte $20,$E8,$C2,$00
 
 
 Queen_Sprites:
@@ -4478,7 +4492,7 @@ MenuPalette:
 .byte $3F,$0A,$1A,$2A
 .byte $3F,$17,$28,$30
 .byte $3F,$06,$0A,$36
-.byte $3F,$3F,$3F,$3F
+.byte $3F,$06,$16,$26
 
 
 BorderPalettes:
